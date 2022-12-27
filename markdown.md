@@ -196,7 +196,15 @@ Anakin Skywalker
 
 
 ### ***Task List***
-
+#### **Example**
+- [X] Go to Padme's Apartment
+- [ ] Meditate with Obi-Wan
+- [ ] Have dinner with Ahsoka
+```
+- [X] Go to Padme's Apartment
+- [ ] Meditate with Obi-Wan
+- [ ] Have dinner with Ahsoka
+```
 
 ### ***Emoji***
 
