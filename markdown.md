@@ -187,8 +187,12 @@ Anakin Skywalker
 ```
 
 
-
 ### ***Strikethrough***
+#### **Example**
+~~Chancellor Sheev Palpatine is Darth Sidious.~~
+```
+~~Chancellor Sheev Palpatine is Darth Sidious.~~
+```
 
 
 ### ***Task List***
