@@ -215,6 +215,11 @@ Live long and prosper! :Vulcan Salute:
 
 
 ### ***Highlight***
+#### **Example**
+Vulcan? There is ==no== Vulcan in ==Star Wars==!
+```
+Vulcan? There is ==no== Vulcan in ==Star Wars==!
+```
 
 
 ### ***Subscript***
