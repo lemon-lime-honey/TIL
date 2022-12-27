@@ -207,6 +207,11 @@ Anakin Skywalker
 ```
 
 ### ***Emoji***
+#### **Example**
+Live long and prosper! :Vulcan Salute:
+```
+Live long and prosper! :Vulcan Salute:
+```
 
 
 ### ***Highlight***
