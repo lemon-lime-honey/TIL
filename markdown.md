@@ -223,6 +223,11 @@ Vulcan? There is ==no== Vulcan in ==Star Wars==!
 
 
 ### ***Subscript***
+#### **Example**
+SF~6~ Gas
+```
+SF~6~ Gas
+```
 
 
 ### ***Superscript***
