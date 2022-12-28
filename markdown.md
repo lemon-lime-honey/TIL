@@ -130,7 +130,7 @@ ___
 ## Extended Syntax
 ***모든 환경에서 지원하는 것은 아님***
 
-### ***Table***
+### ***Table*** [^GH]
 > 표를 만든다.
 #### **Example**
 | name | rank |
@@ -145,7 +145,7 @@ ___
 ```
 
 
-### ***Fenced Code Block***
+### ***Fenced Code Block*** [^GH]
 > backtick 세 개 씩을 사이에 두고 사용한다.
 >
 > 특정 언어를 명시하면 Syntax Highlighting을 적용할 수 있다.
@@ -160,11 +160,11 @@ ___
     ```Python
     def sith():
         theMostBad = "Darth Sidious"
-        wasJediBefore = "Darth Vader
+        wasJediBefore = "Darth Vader"
     ```
 
 
-### ***Footnote***
+### ***Footnote*** [^GH]
 >각주를 달 수 있다.
 
 #### **Example**
@@ -178,7 +178,7 @@ Obi-Wan Kenobi: So, what I told you was true...from a certain point of view. [^1
 [^1]: 스타워즈 에피소드 6
 ```
 
-### ***Heading ID***
+### ***Heading ID*** [^GH]
 > Heading에 ID를 부여하고 싶을 때 사용한다.
 #### **Example**
 ##### Coruscant {#1}
@@ -198,7 +198,7 @@ Anakin Skywalker
 ```
 
 
-### ***Strikethrough***
+### ***Strikethrough*** [^GH]
 > 취소선
 #### **Example**
 ~~Chancellor Sheev Palpatine is Darth Sidious.~~
@@ -207,7 +207,7 @@ Anakin Skywalker
 ```
 
 
-### ***Task List***
+### ***Task List*** [^GH]
 > 체크 리스트를 만들 수 있다.
 #### **Example**
 - [X] Go to Padme's Apartment
@@ -253,3 +253,5 @@ SF~6~ Gas
 ```
 2^2^ = 4
 ```
+
+[^GH]: GitHub에서 지원함
