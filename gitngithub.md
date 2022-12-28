@@ -44,7 +44,7 @@
 # Git 저장소
 ## 필수 설정
 ### 사용자 정보(commit author): 커밋을 하기 위해 반드시 필요
-*Github에서 설정한 username과 email 이용*
+*GitHub에서 설정한 username과 email 이용*
 - git config --global user.name "username"
 - git config --global user.email "my@email.com"
 
@@ -65,7 +65,7 @@
     - 특정 저장소에만 적용되는 설정
 <br><br/>
 
-## 명령어
+## 기본 명령어
 ### $ git init
 - 특정 폴더에 git 저장소(repository)를 만들고 버전 관리
     - .git 폴더(숨김)가 생성되며 git bash에서는 (master)라는 표기를 확인할 수 있음
@@ -95,3 +95,61 @@
         - Changes not staged for commit
         - Changes to be commited
     - Nothing to commit, working tree clean: 파일이 모두 최신 상태로 커밋됨
+
+## 원격 저장소 활용하기
+### $ git push
+- 로컬 저장소의 버전을 원격 저장소로 보낸다.
+
+### $ git pull
+- 원격 저장소의 버전을 로컬 저장소로 가져온다.
+<br><br/>
+
+# GitHub
+## 원격 저장소 설정하기
+1. GitHub에서 `New Repository`를 선택해 저장소를 만든다.
+2. URL을 복사한다.
+3. 로컬에서 `$ git remote add origin [url]`을 이용해 로컬 저장소에 원격 저장소 정보를 설정한다.
+4. `$ git remote -v`로 원격 저장소의 정보를 확인할 수 있다.
+<br><br/>
+
+## 로컬 저장소 버전을 원격 저장소로 Push하기
+**`$ git push [remote_name] [branch_name]`**
+- 원격 저장소로 로컬 저장소 변경 사항(커밋)을 push
+    - 원격 저장소는 로컬 폴더의 파일이나 폴더가 아닌 저장소의 버전(커밋)을 관리한다.
+- 참고: push를 할 때에는 인증 정보가 필수적이다.
+<br><br/>
+
+## 원격 저장소의 버전을 로컬 저장소로 Pull하기
+**`$ git pull [remote_name] [branch_name]
+- 원격 저장소로부터 변경된 내역을 받아와 이력을 병합한다.
+<br><br/>
+
+## 원격 저장소 복제하기
+**`$ git clone [url]`**
+- 원격 저장소를 복제하여 가져온다.
+- 원격 저장소의 `커밋`을 가져오는 pull과는 다르다.
+
+## 명령어
+| 명령어 | 내용|
+| :-- | --: |
+| `git clone [url]` | 원격 저장소 복제 |
+| `git remote -v` | 원격 저장소 정보 확인 |
+| `git remote add [remote_name] [url]` | 원격 저장소 추가 <br/> (일반적으로 origin)|
+| `git remote rm [remote_name]` | 원격 저장소 삭제|
+| `git push [remote_name] [branch_name]` | 원격 저장소에 push |
+| `git pull [remote_name] [branch_name]` | 원격저장소로부터 pull |
+<br><br/>
+
+# Push Conflict
+- 로컬과 원격 저장소의 커밋 이력이 다를 때 발생한다.
+- 해결방법
+    1. 원격 저장소의 커밋을 로컬 저장소로 가져온다. (pull)
+    2. 로컬에서 두 커밋을 병합한다. (추가 커밋 발생)
+    3. 다시 GitHub로 push한다.
+<br><br/>
+
+# .gitignore
+- 버전 관리를 하지 않아도 되는 파일이나 디렉토리가 있을 때 사용한다.
+- Git 저장소에 `.gitignore` 파일을 생성하고 해당 내용을 관리한다.
+- ***이미 커밋된 파일***은 삭제를 해야 적용이 된다.
+- [gitignore.io](https://gitignore.io)를 이용하면 편하다.
