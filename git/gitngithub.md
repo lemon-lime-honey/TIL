@@ -120,7 +120,7 @@
 <br><br/>
 
 ## 원격 저장소의 버전을 로컬 저장소로 Pull하기
-**`$ git pull [remote_name] [branch_name]
+**`$ git pull [remote_name] [branch_name]`**
 - 원격 저장소로부터 변경된 내역을 받아와 이력을 병합한다.
 <br><br/>
 
