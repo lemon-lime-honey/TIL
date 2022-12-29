@@ -9,4 +9,4 @@
 
 # 2022-12-29
 - Branch에 관해 배웠다.
-- Git Flow에 관해 배웠다.
+- GitHub Flow에 관해 배웠다.
