@@ -3,14 +3,19 @@
 * 텍스트 형식 문법의 일종
 * 특정한 형식의 텍스트를 HTML로 변환시켜주는 도구
 * 읽기 용이한 것을 목표로 한다.
-    
+* 여기서는 GitHub에서 지원하는 것을 정리한다.
+* [참조1](https://github.github.com/gfm/#what-is-github-flavored-markdown-)
+ [참조2](https://docs.github.com/ko/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+
 ## Basic Syntax
 ***띄어쓰기와 줄바꿈 매우 중요***
 
 ### ***Heading***
 > 제목. 가장 큰 것부터 가장 작은 것까지 여섯가지.
 >
->문서의 구조를 위해 사용되기 때문에 글자 크기를 조절하기 위한 목적으로는 사용하지 않는다.
+> 문서의 구조를 위해 사용되기 때문에 글자 크기를 조절하기 위한 목적으로는 사용하지 않는다.
+>
+> 문구 아래에 ===를 쓰면 가장 큰 Heading, ---을 쓰면 그 다음으로 큰 Heading으로 변환된다.
 
 #### **Example**
     # Yoda
@@ -25,18 +30,18 @@
 > 볼드체. 글자를 두껍게 만들어준다.
 
 #### **Example**
-**Grogu**
+**Grogu**, __Yoda__, **Yaddle**
 
-`**Grogu**`
+`**Grogu**, __Yoda__, **Yaddle**`
 
 
 ### ***Italic***
 > 이탤릭체. 글자를 기울여준다.
 
 #### **Example**
-*Din Djarin*
+*Din Djarin*, _Paz Vizsla_
 
-`*Din Djarin*`
+`*Din Djarin*,  _Paz Vizsla_`
 
 
 ### ***Blockquote***
@@ -114,26 +119,30 @@ ___
 
 #### **Example**
 [The Mandalorian](https://en.wikipedia.org/wiki/The_Mandalorian)
-```
-[The Mandalorian](https://en.wikipedia.org/wiki/The_Mandalorian)
-```
+
+`[The Mandalorian](https://en.wikipedia.org/wiki/The_Mandalorian)`
 
 
 ### ***Image***
 > 이미지를 첨부할 때 사용한다.
 #### **Example**
+![rose](/etc/images/example.jpg)
 ```
-![name](image.jpg)
+![rose](/etc/images/example.jpg)
 ```
 
 
 ## Extended Syntax
 ***모든 환경에서 지원하는 것은 아님***
 <br/>
-*(GH): GitHub에서 지원함*
 
-### ***Table (GH)***
+### ***Table***
 > 표를 만든다.
+> 
+> 중간 구분선에 콜론을 위치시켜 정렬 방법을 지정할 수 있다.
+>
+> ex) ---:
+
 #### **Example**
 | name | rank |
 | --- | --- |
@@ -147,8 +156,8 @@ ___
 ```
 
 
-### ***Fenced Code Block (GH)***
-> backtick 세 개 씩을 사이에 두고 사용한다.
+### ***Fenced Code Block***
+> ` 또는 ~ 세 개 씩을 위 아래로 두고 사용한다.
 >
 > 특정 언어를 명시하면 Syntax Highlighting을 적용할 수 있다.
 
@@ -166,7 +175,7 @@ ___
     ```
 
 
-### ***Footnote (GH)***
+### ***Footnote***
 >각주를 달 수 있다.
 
 #### **Example**
@@ -180,7 +189,7 @@ Obi-Wan Kenobi: So, what I told you was true...from a certain point of view. [^1
 [^1]: 스타워즈 에피소드 6
 ```
 
-### ***Heading ID (GH)***
+### ***Heading ID***
 > Heading에 ID를 부여하고 싶을 때 사용한다.
 #### **Example**
 ##### Coruscant {#1}
@@ -189,18 +198,7 @@ Obi-Wan Kenobi: So, what I told you was true...from a certain point of view. [^1
 ```
 
 
-### ***Definition List***
-> 어떤 용어와 그에 관한 설명을 사전처럼 나타내고 싶을 때 사용할 수 있다.
-#### **Example**
-Anakin Skywalker
-: Padawan of Obi-Wan Kenobi
-```
-Anakin Skywalker
-: Padawan of Obi-Wan Kenobi
-```
-
-
-### ***Strikethrough (GH)***
+### ***Strikethrough***
 > 취소선
 #### **Example**
 ~~Chancellor Sheev Palpatine is Darth Sidious.~~
@@ -209,7 +207,7 @@ Anakin Skywalker
 ```
 
 
-### ***Task List (GH)***
+### ***Task List***
 > 체크 리스트를 만들 수 있다.
 #### **Example**
 - [X] Go to Padme's Apartment
@@ -221,37 +219,38 @@ Anakin Skywalker
 - [ ] Have dinner with Ahsoka
 ```
 
-### ***Emoji (GH)***
+### ***Emoji***
 > 이모지를 사용할 수 있다.
 #### **Example**
 Live long and prosper! :vulcan_salute:
 ```
-Live long and prosper! :vulcan salute:
-```
-
-
-### ***Highlight***
-> 형광펜으로 강조한 효과를 얻을 수 있다.
-#### **Example**
-Vulcan? There is ==no== Vulcan in ==Star Wars==!
-```
-Vulcan? There is ==no== Vulcan in ==Star Wars==!
+Live long and prosper! :vulcan_salute:
 ```
 
 
 ### ***Subscript***
 > 아래 첨자
 #### **Example**
-SF~6~ Gas
+SF<sub>6</sub> Gas
 ```
-SF~6~ Gas
+SF<sub>6</sub> Gas
 ```
 
 
 ### ***Superscript***
 > 위 첨자
 #### **Example**
-2^2^ = 4
+2<sup>2</sup> = 4
 ```
-2^2^ = 4
+2<sup>2</sup> = 4
 ```
+
+
+### ***Supported color models***
+> ` 한 쌍 사이에 특정 형식의 색상코드를 입력하면 그 색을 나타낸다.
+#### **Example**
+| color | code |
+| --- | --- |
+| LEMON | `#FFF700` |
+| KEY LIME | `RGB(174, 255, 110)` |
+| HONEY | `HSL(38, 81.8%, 56.9%)` |
