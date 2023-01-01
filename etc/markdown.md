@@ -248,9 +248,11 @@ SF<sub>6</sub> Gas
 
 ### ***Supported color models***
 > ` 한 쌍 사이에 특정 형식의 색상코드를 입력하면 그 색을 나타낸다.
+>
+> Issue, pull request 그리고 discussion에서만 지원한다.
 #### **Example**
-| color | code |
-| --- | --- |
-| LEMON | `#FFF700` |
-| KEY LIME | `RGB(174, 255, 110)` |
-| HONEY | `HSL(38, 81.8%, 56.9%)` |
+```
+- LEMON `#FFF700`
+- KEY LIME `rgb(174, 255, 110)`
+- HONEY `hsl(38, 81.8%, 56.9%)`
+```
