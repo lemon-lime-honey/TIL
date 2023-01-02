@@ -5,6 +5,10 @@
 - [branch](/git/branch.md)
 - [git_flow](/git/git_flow.md)
 
+# python
+- [object and variable](/python/object_variable.md)
+- [data type and operator](/python/datatype_operator.md)
+
 # etc
 - [CLI](/etc/cli.md)
 - [markdown](/etc/markdown.md)
