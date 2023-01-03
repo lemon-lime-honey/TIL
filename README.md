@@ -8,6 +8,7 @@
 # python
 - [object and variable](/python/object_variable.md)
 - [data type and operator](/python/datatype_operator.md)
+- [control statement](/python/control_statement.md)
 
 # etc
 - [CLI](/etc/cli.md)
