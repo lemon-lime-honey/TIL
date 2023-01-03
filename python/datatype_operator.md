@@ -55,6 +55,41 @@
     | `\'` | 작은 따옴표 |
     | `\"` | 큰 따옴표 |
 
+#### String Formatting
+- 문자열을 변수를 활용하여 만드는 법
+- %-formatting
+    ```python
+    master = 'Qui-Gon Jinn'
+    padawan = 'Obi-Wan Kenobi'
+    age = 25
+
+    print('When %s, the Padawan of %s, went to Tatooine, he was %d years old.' % (padawan, master, age))
+
+    # When Obi-Wan Kenobi, the Padawan of Qui-Gon Jinn, went to Tatooine, he was 25 years old.
+    ```
+- str.format
+    ```python
+    master = 'Obi-Wan Kenobi'
+    padawan = 'Anakin Skywalker'
+    age = 19
+
+    print('{} is the Padawan of {}.'.format(padawan, master))
+    print('{} became Knight when he was {} years old.'.format(padawan, age))
+
+    # Anakin Skywalker is Padawan of Obi-Wan Kenobi.
+    # Anakin Skywalker became Knight when he was 19 years old.
+    ```
+- f-string
+    ```python
+    master = 'Anakin Skywalker'
+    padawan = 'Ahsoka Tano'
+    age = 14
+
+    print(f'When {padawan} became {master}\'s Padawan, she was {age} years old.')
+
+    # When Ahsoka Tano became Anakin Skywalker's Padawan, she was 14 years old.
+    ```
+
 ### Tuple
 
 ### List (Mutable, Iterable)
@@ -67,7 +102,11 @@
 - 값 추가: `.append()`
 - 값 삭제: `.pop()`
 
-### Range
+### Range (Immutable, Iterable)
+- 숫자의 시퀀스를 나타내기 위해 사용
+- 기본형: `range(n)`
+- 범위 지정: `range(n, m)`
+- 범위 및 스텝 지정: `range(n, m, s)`
 <br></br>
 
 ## Collection
@@ -79,6 +118,17 @@
 - 파이썬 자료형 중 하나
 - 파이썬에서는 값이 없음을 표현하기 위해 None 타입이 존재한다.
 - 일반적으로 반환 값이 없는 함수에서 사용하기도 한다.
+<br></br>
+
+## Typecasting
+- Implicit Typecasting
+    - 사용자가 의도하지 않고 파이썬 내부적으로 자료형을 변환하는 경우
+- Explicit Typecasting
+    - 사용자가 특정 함수를 활용하여 의도적으로 자료형을 변환하는 경우
+    - `str*`, `float` to `int`
+    - `str*`, `int` to `float`
+    - `int`, `float`, `list`, `tuple`, `dict` to `str`
+    - *: 형식에 맞는 문자열만 가능
 <br></br>
 
 # Operator
