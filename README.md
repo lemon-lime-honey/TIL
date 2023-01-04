@@ -6,9 +6,10 @@
 - [git_flow](/git/git_flow.md)
 
 # python
-- [object and variable](/python/object_variable.md)
-- [data type and operator](/python/datatype_operator.md)
 - [control statement](/python/control_statement.md)
+- [data type and operator](/python/datatype_operator.md)
+- [fuction](/python/function.md)
+- [object and variable](/python/object_variable.md)
 
 # etc
 - [CLI](/etc/cli.md)
