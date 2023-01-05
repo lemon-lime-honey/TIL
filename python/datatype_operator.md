@@ -111,7 +111,20 @@
 
 ## Collection
 ### Set
-### Dictionary
+### Dictionary (Mutable, Iterable)
+- key-value 쌍으로 이뤄진 [Mapping Type](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict)
+    - key: immutable 자료형만 가능(List, Dictionary 등은 불가)
+    - value: 제한 없음
+- key와 value는 콜론으로, 개별 요소는 반점으로 구분된다.
+- 기본적으로 반복하면 key를 순회하며, key를 통해 value를 활용할 수 있다.
+- `dict_name[key_name] = value`: key와 value의 값 추가 또는 변경
+    - 이미 key가 존재하면 value의 값이 바뀐다.
+    - key가 존재하지 않으면 새로운 쌍이 추가된다.
+- `dict_name.pop()`: key 삭제
+- `KeyError`: key가 존재하지 않는 경우 발생한다.
+- `dict_name.keys()`: key의 모음을 반환한다.
+- `dict_name.values()`: value의 모음을 반환한다.
+- `dict_name.items()`: `(key, value)`의 튜플의 모음을 반환한다.
 <br></br>
 
 ## None
