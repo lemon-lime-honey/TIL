@@ -8,7 +8,9 @@
 # python
 - [control statement](/python/control_statement.md)
 - [data type and operator](/python/datatype_operator.md)
+- [error/exception handling](/python/error_exception.md)
 - [fuction](/python/function.md)
+- [module](/python/module.md)
 - [object and variable](/python/object_variable.md)
 
 # etc
