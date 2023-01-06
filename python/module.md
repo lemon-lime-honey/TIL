@@ -10,6 +10,7 @@
 # Python Standard Library
 - 파이썬에 기본적으로 설치된 모듈과 내장 함수이다.
 - 여러가지가 있지만, 우선 `random`, `datetime`, `os` 모듈을 살펴본다.
+- (230106 추가) `pprint`
 ## random
 - 숫자/수학 모듈 중 의사 난수(pseudo random number)를 생성하는 모듈이다.
     - 임의의 숫자 생성, 무작위 요소의 선택, 무작위 비복원 추출(샘플링)을 위한 함수를 제공한다.
@@ -51,6 +52,17 @@
     - 리스트는 임의의 순서로 나열되며, 특수 항목은 포함하지 않는다.
 - `os.mkdir(path)`: path라는 디렉토리를 만든다.
 - `os.chdir(path)`: path를 변경한다.
+<br></br>
+
+## pprint
+- 임의의 파이썬 데이터 구조를 인터프리터의 입력으로 사용할 수 있는 형태로 *예쁘게 출력*할 수 있는 기능을 제공한다.
+- 가능하면 객체를 한 줄에 유지하고, 허용된 너비에 맞지 않으면 여러 줄로 나눈다.
+- 너비 제한을 조정하려면 `PrettyPrinter` 객체를 만든다.
+- 딕셔너리는 우선 키로 정렬된다.
+- `pprint.pprint(object, stream = None, indent = 1, width = 80, depth = None, *, compact = False, sort_dict = True, underscore_numbers = False)`
+    - 사용할 수 있는 인자에 관한 설명은 [공식문서](https://docs.python.org/3/library/pprint.html?highlight=pprint#pprint.PrettyPrinter)에 나와있다.
+    - 별 다른 설정을 할 필요가 없다면 `pprint(object)`로 사용할 수 있다.
+    - 딕셔너리를 출력할 때 정렬되는게 싫다면 `sort_dict = False`를 추가하면 된다.
 <br></br>
 
 # Python Package
