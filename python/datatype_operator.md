@@ -90,10 +90,16 @@
     # When Ahsoka Tano became Anakin Skywalker's Padawan, she was 14 years old.
     ```
 
-### Tuple
+### Tuple (Immutable, Iterable)
+- 변경 불가능한 값들이 나열된 자료형
+- 순서를 가지며, 서로 다른 타입의 요소를 가질 수 있다.
+- 항상 소괄호 형태로 정의하며 원소는 반점으로 구분한다.
+- 생성과 접근
+    - 생성: `()` 또는 `tuple()`
+    - 접근: 인덱스를 통해 접근할 수 있다.
 
 ### List (Mutable, Iterable)
-- 변경 가능한 값들의 나열된 자료형
+- 변경 가능한 값들이 나열된 자료형
 - 순서를 가지며, 서로 다른 타입의 요소를 가질 수 있다.
 - 항상 대괄호 형태로 정의하며 원소는 반점으로 구분한다.
 - 생성과 접근
@@ -110,7 +116,19 @@
 <br></br>
 
 ## Collection
-### Set
+### Set (Mutable, Iterable)
+- 유일한 값들의 모음
+- 순서와 중복된 값이 없다.
+- 순서가 없으므로 반복의 결과가 정의한 순서와 다를 수 있다.
+- 다른 컨테이너에서 중복된 값을 쉽게 제거할 수 있으나 이후 순서가 무시되기 때문에 순서가 중요한 경우에는 사용하지 않는다.
+- 생성과 접근
+    - 생성: `{}` 또는 `set()`
+        - 빈 set을 만들기 위해서는 `set()`을 반드시 활용해야 한다.
+    - 순서가 없어 별도의 값에 접근할 수 없다.
+- 값 추가: `.add()`
+- 값 삭제: `.remove()`
+<br></br>
+
 ### Dictionary (Mutable, Iterable)
 - key-value 쌍으로 이뤄진 [Mapping Type](https://docs.python.org/3/library/stdtypes.html#mapping-types-dict)
     - key: immutable 자료형만 가능(List, Dictionary 등은 불가)
