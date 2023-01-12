@@ -32,3 +32,10 @@
 ## 2023-01-11
 - 객체 지향 프로그래밍에 관해 알게 되었다.
 - class와 instance에 관해 배웠다.
+
+## 2023-01-12
+- class 상속에 관해 배웠다.
+- Conditional Expression에 관해 배웠다.
+- enumerate에 관해 배웠다.
+- Comprehension에 관해 배웠다.
+- lambda 함수에 관해 배웠다.

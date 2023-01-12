@@ -141,6 +141,23 @@ def function_name(argument):
     - iterable이 비어 있으면 False를 반환한다.
 <br></br>
 
+## enumerate(iterable, start = 0)
+```python
+masterPadawan = ['Yoda', 'Dooku', 'Qui-Gon', 'Obi-Wan', 'Anakin', 'Ahsoka']
+
+for index, value in enumerate(masterPadawan):
+    print(index, value)
+
+# 0 Yoda
+# 1 Dooku
+# 2 Qui-Gon
+# 3 Obi-Wan
+# 4 Anakin
+# 5 Ahsoka
+```
+- 인덱스와 객체를 쌍으로 담은 enumerate 객체를 반환한다.
+- `(index, value)` 형태
+
 ## etc
 - `bin(x)`
     - 정수를 `0b` 접두사가 붙은 이진 문자열로 반환한다.

@@ -82,3 +82,101 @@ vader = Sith('Darth Vader', 'Tatooine')
         - `>=`에 의해 호출된다.
     - `__ne__(self, other)`
         - `!=`에 의해 호출된다.
+<br></br>
+
+## class
+```python
+class Mandalorian:
+    planet = 'Mandalore'
+    moon = 'Concordia'
+    capital = 'Keldabe'
+
+    def __init__(self, name, always_helmet):
+        self.name = name
+        self.always_helmet = always_helmet
+    
+    @classmethod
+    def capitalTransfer(cls, city):
+        cls.capital = city
+    
+    @staticmethod
+    def theWay():
+        print('This is the Way')
+    
+din = Mandalorian('Din Djarin', True)
+bokatan = Mandalorian('Bo-Katan Kryze', False)
+
+din.theWay()
+Mandalorian.capitalTransfer('Sundari')
+print(Mandalorian.capital)
+```
+- class attribute
+    - 한 클래스의 모든 인스턴스가 같은 값을 가지고 있는 속성
+    - 클래스 선언 내부에서 정의한다.
+    - `<classname>.<name>`으로 접근 및 할당한다.
+- class method
+    - 클래스가 사용할 메소드
+    - `@classmethod` 데코레이터를 사용하여 정의한다.
+        - 데코레이터: 함수를 어떤 함수로 꾸며서 새로운 기능을 부여한다.
+    - 호출 시, 첫 번째 인자로 클래스(`cls`)가 전달된다.
+- static method
+    - 인스턴스나 클래스를 사용하지 않는 메소드
+    - `@staticmethod` 데코레이터를 사용하여 정의한다.
+    - 호출 시 어떠한 인자도 전달되지 않는다. 
+    - 클래스 및 인스턴스 정보에 접근 또는 수정이 불가하다.
+- 인스턴스와 클래스 간의 이름 공간
+    - 클래스를 정의하면 클래스와 해당하는 이름 공간이 생성된다.
+    - 인스턴스를 만들면 인스턴스 객체가 생성되고 이름 공간이 생성된다.
+    - 인스턴스에서 특정 속성에 접근하면 인스턴스-클래스 순으로 탐색한다.
+<br></br>
+
+# Inheritance
+```python
+class Jedi:
+    name = 'name'
+    rank = 'rank'
+
+class Apprentice:
+    rank = 'Padawan'
+    def __init__(self, name):
+        self.name = name
+
+class Knight(Jedi):
+    rank = 'Knight'
+    def __init__(self, name):
+        self.name = name
+    
+    def greeting(self):
+        print(f"I'm Jedi {Knight.rank} {self.name}.")
+
+class Padawan(Jedi, Apprentice):
+    def greeting(self):
+        print(f"I'm Jedi {Apprentice.rank} {self.name}!")
+
+kenobi = Knight('Obi-Wan Kenobi')
+skywalker = Padawan('Anakin Skywalker')
+
+kenobi.greeting()
+skywalker.greeting()
+```
+## class inheritance
+- 두 클래스 사이 부모-자식 관계를 정립하는 것
+    - 예) 모든 파이썬 클래스는 object를 상속받는다.
+- 부모에 정의된 속성이나 메소드를 활용하거나 오버라이딩(재정의)를 하여 활용한다.
+    - 코드의 재사용성을 높이고 클래스 간의 계층적 관계를 활용한다.
+- 관련 함수와 메소드
+    - `isinstance(object, classinfo)`
+        object가 classinfo의 instance이거나 subclass인 경우 `True`를 반환한다.
+    - `issubclass(class, classinfo)`
+        - class가 classinfo의 subclass이면 `True`를 반환한다.
+        - classinfo는 클래스 객체의 tuple일 수 있으며, classinfo의 모든 항목을 검사한다.
+    - `super()`
+        - 자식 클래스에서 부모 클래스를 사용하고 싶은 경우 활용한다.
+- method overriding
+    - 상속 받은 메소드를 재정의한다.
+        - 상속받은 클래스에서 같은 이름의 메소드로 덮어쓴다.
+        - 부모 클래스의 메소드를 실행시키고 싶은 경우 `super`를 활용한다.
+- 다중 상속
+    - 파이썬은 두 개 이상의 클래스를 상속 받을 수 있다.
+    - 상속 받은 모든 클래스의 요소를 활용할 수 있다.
+    - 중복된 속성이나 메소드가 있는 경우 상속 순서에 의해 결정된다.

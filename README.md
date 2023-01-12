@@ -9,6 +9,7 @@
 - [control statement](/python/control_statement.md)
 - [data type and operator](/python/datatype_operator.md)
 - [error/exception handling](/python/error_exception.md)
+- [expressions](/python/expressions.md)
 - [file I/O](/python/file.md)
 - [fuction and method](/python/function_method.md)
 - [module](/python/module.md)
