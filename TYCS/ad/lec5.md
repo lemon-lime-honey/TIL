@@ -20,7 +20,7 @@ graph TB
     H --> K((9))
 ```
 
-- A binary *search* tree labels each node $\texttt{x}$ in a binary tree such that all nodes in the left subtree of $\texttt{x}$ have keys $\texttt{<x}$ and all nodes in the right subtree of $\texttt{x}$ have keys $\texttt{>x}$.
+- A binary *search* tree labels each node $\texttt{x}$ in a binary tree such that all nodes in the left subtree of $\texttt{x}$ have keys $\texttt{<}\texttt{x}$ and all nodes in the right subtree of $\texttt{x}$ have keys $\texttt{>x}$.
 
 ```mermaid
 %%{init: {'theme':'neutral'}}%%

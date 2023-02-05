@@ -53,7 +53,7 @@ $$M = \sum_{i=1}^{\lg{n}}{i\cdot n/2^i} = n\sum_{i=1}^{\lg{n}}{i/2^i}\le n\sum_{
 ## Pointers and Linked Structures
 - Pointers represent the address of a location in memory.
 - A cell-phone number can be thought of as a pointer to its owner as they move about the planet.
-- In C, $\texttt{*p}$ denotes the item pointed to by $\texttt{p}$, and $\texttt{\&x}$ denotes the address (i.e. pointer) of a particular variable $\texttt{x}$.
+- In C, $\texttt{*p}$ denotes the item pointed to by $\texttt{p}$, and $\texttt{\&}\texttt{x}$ denotes the address (i.e. pointer) of a particular variable $\texttt{x}$.
 - A special $\texttt{NULL}$ pointer value is used to denote structure-terminating or unassigned pointers.
 <br></br>
 
