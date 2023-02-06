@@ -5,3 +5,4 @@
 - [Lecture 3: Program Analysis](/TYCS/ad/lec3.md)
 - [Lecture 4: Elementary Data Structures](/TYCS/ad/lec4.md)
 - [Lecture 5: Dictionaries](/TYCS/ad/lec5.md)
+- [Lecture 6: Hashing](/TYCS//ad/lec6.md)
