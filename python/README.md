@@ -39,3 +39,6 @@
 - enumerate에 관해 배웠다.
 - Comprehension에 관해 배웠다.
 - lambda 함수에 관해 배웠다.
+
+## 2023-02-07
+- Collections 모듈 중 ChainMap 오브젝트에 관해 공부했다.

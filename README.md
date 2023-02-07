@@ -12,7 +12,7 @@
 - [expressions](/python/expressions.md)
 - [file I/O](/python/file.md)
 - [fuction and method](/python/function_method.md)
-- [module](/python/module.md)
+- [module](/python/module/README.md)
 - [object and variable](/python/object_variable.md)
 - [object-oriented programming](/python/oop.md)
 
