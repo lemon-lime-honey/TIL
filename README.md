@@ -1,5 +1,9 @@
 ![header](til_header.png)
 
+# database(mySQL)
+- [workbench guide](/db-mysql/guide.md)
+- [rdbms terms](/db-mysql/terms.md)
+
 # git
 - [about git, github](/git/about.md)
 - [branch](/git/branch.md)
