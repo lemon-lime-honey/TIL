@@ -7,3 +7,4 @@
 - [Lecture 5: Dictionaries](lec5.md)
 - [Lecture 6: Hashing](lec6.md)
 - [Lecture 7: Heapsort/Priority Queue](lec7.md)
+- [Lecture 8: Mergesort/Quicksort](lec8.md)
