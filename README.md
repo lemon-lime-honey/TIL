@@ -1,6 +1,7 @@
 ![header](til_header.png)
 
 # database(mySQL)
+- [sql statements](/db-mysql/sql_statements.md)
 - [workbench guide](/db-mysql/guide.md)
 - [rdbms terms](/db-mysql/terms.md)
 
