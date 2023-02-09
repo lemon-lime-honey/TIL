@@ -90,7 +90,7 @@ $$(m / m)\times ((m - 1)/m)\times \cdots \times ((m - n + 1)/m) = \prod_{i = 0}^
 <br></br>
 
 ## String Matching via Hashing
-- Suppose we compute a given hash function on both the pattern string $\texttt{p}$ and the $m$-character substring starting from the $\texttt{i}$th position of $\texttt{t}$.
+- Suppose we compute a given hash function on both the pattern string $\texttt{p}$ and the $m$-character substring starting from the $\texttt{i}$ th position of $\texttt{t}$.
 - If these two strings are identical, clearly the resulting hash values will be the same.
 - If the two strings are different, the hash values will *almost certainly* be different.
 - These false positives should be so rare that we can easily spend the $O(m)$ time it take to explicitly check the identity of two strings whenever the hash values agree.
@@ -106,5 +106,5 @@ $$(m / m)\times ((m - 1)/m)\times \cdots \times ((m - n + 1)/m) = \prod_{i = 0}^
 $$H(S, j) = \sum_{i = 0}^{m - 1}{\alpha ^{m - (i + 1)}\times char(s_{i + j})}$$
 - A little algebra reveals that
 $$H(S, j + 1) = (H(S, j) - \alpha^{m - 1} char(s_j))\alpha + s_{j + m}$$
-- Thus once we know the hash value from the $\texttt{j}$ position, we can find the hash value from the $\texttt{(j + 1)}$st position for the cost of two multiplications, one addition, and one subtraction.
+- Thus once we know the hash value from the $\texttt{j}$ position, we can find the hash value from the $\texttt{(j + 1)}$ st position for the cost of two multiplications, one addition, and one subtraction.
 - This can be done in constant time.

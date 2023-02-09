@@ -158,7 +158,7 @@ int partition(item_type s[], int l, int h) {
 ## Intuition: The Average Case for Quicksort
 - Suppose we pick the pivot element at random in an array of $n$ keys.
 - Half the time, the pivot element will be from the center half of the sorted array.
-- Whenever the pivot element is from positions $n/4$ to $3n/4$, the larger remaining subarray contains at most $3n/4# elements.
+- Whenever the pivot element is from positions $n/4$ to $3n/4$, the larger remaining subarray contains at most $3n/4$ elements.
 <br></br>
 
 ## How many Good Partitions?
