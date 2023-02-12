@@ -12,3 +12,5 @@
 - [Lecture 10: Graph Data Structures](lec10.md)
 - [Lecture 11: Breadth-First Search](lec11.md)
 - [Lecture 12: Depth-First Search](lec12.md)
+- [Lecture 13: Minimum Spanning Trees](lec13.md)
+- [Lecture 14: Shortest Paths](lec14.md)
