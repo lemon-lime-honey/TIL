@@ -199,3 +199,116 @@ DELETE FROM table_name
 - `DELETE FROM`절 다음에 테이블 이름을 작성한다.
 - `WHERE`절에서 삭제할 레코드를 지정하는 조건 작성
     - `WHERE`절을 작성하지 않으면 모든 레코드가 삭제된다.
+<br></br>
+
+#  Joining tables
+## JOIN
+- 둘 이상의 테이블에서 데이터를 검색할 수 있다.
+
+### INNER JOIN
+```SQL
+SELECT
+    select_list
+FROM
+    table1
+INNER JOIN table 2
+    ON table1.fk = table2.pk;
+```
+- `FROM`절 이후 메인 테이블을 지정한다.
+- `INNER JOIN`절 이후 메인 테이블과 `JOIN`할 테이블을 지정한다.
+- `ON` 키워드 이후 `JOIN` 조건을 작성한다.
+    - `JOIN` 조건은 table1, table2 간의 레코드를 일치시키는 규칙으로 지정한다.
+
+### LEFT JOIN
+```SQL
+SELECT
+    select_list
+FROM
+    table1
+LEFT [OUTER] JOIN table2
+    ON table1.fk = table2.pk;
+```
+- 오른쪽 테이블과 일치하는 레코드와 함께 왼쪽 테이블의 모든 레코드를 반환한다.
+- `FROM`절 이후 왼쪽 테이블을 지정한다.
+- `LEFT JOIN`절 이후 오른쪽 테이블을 지정한다.
+- `ON` 키워드 이후 `JOIN` 조건을 작성한다.
+    - 왼쪽 테이블의 각 레코드를 오른쪽 테이블의 모든 레코드와 일치시킨다.
+- 왼쪽은 무조건 표시하고, 매치되는 레코드가 없으면 `NULL`을 표시한다.
+- 왼쪽 테이블 한 개의 레코드에 여러 개의 오른쪽 테이블 레코드가 일치할 경우, 해당 왼쪽 레코드를 여러 번 표시한다.
+
+### RIGHT JOIN
+```SQL
+SELECT select_list
+FROM
+    table1
+RIGHT [OUTER] JOIN table2
+    ON table1.fk = table2.pk;
+```
+- `FROM`절 이후 왼쪽 테이블을 지정한다.
+- `RIGHT JOIN`절 이후 오른쪽 테이블을 지정한다.
+- `ON` 키워드 이후 조인 조건을 작성한다.
+    - 오른쪽 테이블의 각 레코드를 왼쪽 테이블의 모든 레코드와 일치시킨다.
+- 오른쪽은 무조건 표시하고, 매치되는 레코드가 없으면 `NULL`을 표시한다.
+- 오른족 테이블 한 개의 레코드에 여러 개의 왼쪽 테이블 레코드가 일치할 경우, 해당 오른쪽 레코드를 여러 번 표시한다.
+
+### JOIN 정리
+#### INNER JOIN
+```SQL
+SELECT
+    *
+FROM
+    tableA
+INNER JOIN
+    ON tableA.fk = tableB.id;
+```
+
+#### LEFT JOIN
+```SQL
+SELECT
+    *
+FROM
+    tableA
+LEFT JOIN tableB
+    ON tableA.fk = tableB.id;
+```
+
+#### RIGHT JOIN
+```SQL
+SELECT
+    *
+FROM
+    talbeA
+RIGHT JOIN tableB
+    ON tableA.fk = tableB.id;
+```
+
+#### $A - B$
+```SQL
+SELECT
+    *
+FROM
+    tableA
+LEFT JOIN tableB
+    ON tableA.fk = tableB.id
+WHERE tableB.id IS NULL;
+```
+
+#### $B - A$
+```SQL
+SELECT
+    *
+FROM
+    tableA
+RIGHT JOIN tableB
+    ON tableA.fk = tableB.id
+WHERE tableA.fk IS NULL;
+```
+
+#### $A\cup B$
+```SQL
+SELECT * FROM tableA
+LEFT JOIN tableB ON tableA.fk = tableB.id
+UNION
+SELECT * FROM tableA
+RIGHT JOIN tableB ON tableA.fk = tableB.id;
+```
