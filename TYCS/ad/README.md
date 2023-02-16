@@ -15,3 +15,4 @@
 - [Lecture 13: Minimum Spanning Trees](lec13.md)
 - [Lecture 14: Shortest Paths](lec14.md)
 - [Lecture 15: Backtracking](lec15.md)
+- [Lecture 16: Introduction to Dynamic Programming](lec16.md)
