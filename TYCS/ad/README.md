@@ -16,3 +16,4 @@
 - [Lecture 14: Shortest Paths](lec14.md)
 - [Lecture 15: Backtracking](lec15.md)
 - [Lecture 16: Introduction to Dynamic Programming](lec16.md)
+- [Lecture 17: Edit Distance](lec17.md)
