@@ -17,3 +17,5 @@
 - [Lecture 15: Backtracking](lec15.md)
 - [Lecture 16: Introduction to Dynamic Programming](lec16.md)
 - [Lecture 17: Edit Distance](lec17.md)
+- [Lecture 18: Applications of Dynamic Programming](lec18.md)
+- [Lecture 19: Intoduction to NP-Completeness](lec19.md)
