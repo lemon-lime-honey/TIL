@@ -19,3 +19,6 @@
 - [Lecture 17: Edit Distance](lec17.md)
 - [Lecture 18: Applications of Dynamic Programming](lec18.md)
 - [Lecture 19: Intoduction to NP-Completeness](lec19.md)
+- [Lecture 20: Satisfiability](lec20.md)
+- [Lecture 21: Other Reductions](lec21.md)
+- [Lecture 22: The NP-Completeness Challenge](lec22.md)
