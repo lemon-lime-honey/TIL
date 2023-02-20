@@ -21,7 +21,7 @@ Observe that integer partition is a number problem, as opposed to the graph and 
 The reduction from vertex cover creates $n + m$ numbers from $G$.
 - Each "vertex" number will be a base-4 realization of the incidence matrix row, plus a high order digit:
 $$x_i = 4^{|E|} + \sum_{j = 0}^{|E| - 1}{b[i, j] \times 4^j} $$
-$\quad \ \ $ so $V_2 = 10100$ becomes $4^5 + (4^4 + 4^2)$.
+$\quad$ so $V_2 = 10100$ becomes $4^5 + (4^4 + 4^2)$.
 - Each column/edge will also get a number: $y_i = 4^i$.
 - The target integer will be
 $$t = k\times 4^{|E|} + \sum_{j = 0}^{|E| - 1}{2\times 4^j}$$
@@ -56,7 +56,7 @@ $$t = k\times 4^{|E|} + \sum_{j = 0}^{|E| - 1}{2\times 4^j}$$
 $$v_1 \ge 1, v_2 \ge 0$$
 $$v_1 + v_2 \le 3$$
 $$f(v): 2v_2, B = 3$$
-$\quad \ \ $ A solution to his is $v_1 = 1, v_2 = 2$.
+$\quad$ A solution to his is $v_1 = 1, v_2 = 2$.
 <br></br>
 
 ## Infeasible Example
@@ -75,7 +75,7 @@ Since the maximum value of $f(v)$ given the constraints is $2\times 2 = 4$, ther
     - $1\le V_i + \bar{V_i} \le 1$ $\newline$ Exactly one IP variable associated with a given SAT variable is 1. Thus exactly one of $V_i$ and $\bar{V_i}$ are true.
     - For each clause $C_i = \{v_1, \bar{v_2}, \bar{v_3}\cdots v_n\}$ in the SAT instance, contruct a constraint:
 $$v_1 + \bar{v_2} + \bar{v_3} + \cdots v_n \ge 1$$
-$\qquad\quad$ Thus at least one IP variable $ = 1$ in each clause.<br>
+$\qquad\quad$ Thus at least one IP variable $= 1$ in each clause.<br>
 $\qquad\quad$ Satisfying the constraint equals satisfying the clause.
 
 Our maximixation function and bound are relatively unimportant: $f(v) = V_1 B = 0$.<br>

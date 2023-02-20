@@ -5,7 +5,7 @@
 
 <center><img src="image/lec22_graph.png" height="200"></center>
 
-$\quad \ \ $ For any graph, replacing an edge with makes it bipartite.
+$\quad$ For any graph, replacing an edge with makes it bipartite.
 <br></br>
 
 ## The Art of Proving Hardness

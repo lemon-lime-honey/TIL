@@ -185,7 +185,7 @@ int string_compare(char *s, char *t, cell m[MAXLEN + 1][MAXLEN + 1]) {
 
 # Variant of Edit Distance
 ## Reconstructing the Path
-- Dynamic programming solutions are described by paths through the dynamic programming matrix, starting from the initial configuration (the empty strings $(0, 0)$) down to the final goal state (the full strings $(|s|, |t|)$).
+- Dynamic programming solutions are described by paths through the dynamic programming matrix, starting from the initial configuration (the empty strings $(0, 0)$ ) down to the final goal state (the full strings $(|s|, |t|)$ ).
 - Reconstructing these decisions is done by walking backward from the goal state, following the $\texttt{parent}$ pointer to an earlier cell. The $\texttt{parent}$ field for $\texttt{m[i, j]}$ tells us whether the transform at $(i, j)$ was $\texttt{MATCH}$, $\texttt{INSERT}$, $\texttt{DELETE}$.
 - Walking backward reconstructs the solution in reverse order.
 <br></br>

@@ -2,7 +2,7 @@
 ## What is a Problem?
 A *problem* is a general question, with parameters for the input and conditions on what is a satisfactory answer or solution.
 - Exapmle: The Traveling Salesman
-- Problem: Given a weighted graph $G$, what tour $\{v_1, v_2, \cdots , v_n\}$ minimizes $\sum_{i = 1}^{n -1}{d[v_i, v_{i + 1}] + d[v_n, v_1]}$.
+- Problem: Given a weighted graph $G$, what tour $\{v_1, v_2, \cdots , v_n\}$ minimizes $\sum^{n - 1}_{i = 1}{d[v_i, v_{i + 1}] + d[v_n, v_1]}$.
 <br></br>
 
 ## What is an Instance?

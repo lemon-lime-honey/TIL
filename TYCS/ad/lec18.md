@@ -33,13 +33,13 @@ $$\texttt{100 200 300 | 400 500 600 | 700 800 900}$$
 Input: A given arrangement $S$ of nonnegative numbers $\{s_1, \cdots , s_n\}$ and an integer $k$.<br>
 Problem: Partition $S$ into $k$ ranges, so as to minimize the maximum sum over all the ranges.
 - Does a single fixed partition work for all instances of size $(n, k)$?
-- Does taking the average value of each part $(\sum_{i = 1}^{n}{s_i / k})$ from the left always yield the optimal partition?
+- Does taking the average value of each part $(\sum^{n}_{i = 1}{s_i / k})$ from the left always yield the optimal partition?
 <br></br>
 
 ## Recursive Idea
 - Consider a recursive, exhaustive search approach. Notice that the $k$ th partition starts right after we placed the $(k - 1)$ st divider.
 - Where can we place this last divider? Between the $i$ th and $(i + 1)$ st elements for some $i$, where $1 \le i \le n$.
-- What is the cost of this? The total cost will be the larger of two quantities, (1) the cost of the last partition $\sum_{j = i + 1}^{n}{s_j}$ and (2) the cost of the largest partition cost formed to the left of $i$.
+- What is the cost of this? The total cost will be the larger of two quantities, (1) the cost of the last partition $\sum^{n}_{j = i + 1}{s_j}$ and (2) the cost of the largest partition cost formed to the left of $i$.
 - What is the size of this left partition? To partition the elements $\{s_1, \cdots , s_i\}$ as equally as possible.
 <br></br>
 
@@ -84,4 +84,4 @@ This would not be true if we charged more for a deletion if there were other del
 $$T(i; i_1, j_2, \cdots , j_i) = Min_{1\le m\le k}{C[i, j_m]} + T(j_m; j_1, j_2, \cdots , j_k)$$
 $$T(i, j) = C(i, j) + C(j, 1)$$
 - Here there can be any subset of $j_1, j_2, \cdots , j_k$ instead of any subinterval - hence exponential.
-- But it is $O(n2^n) instead of $n!$.
+- But it is $O(n2^n)$ instead of $n!$.
