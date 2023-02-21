@@ -312,3 +312,69 @@ UNION
 SELECT * FROM tableA
 RIGHT JOIN tableB ON tableA.fk = tableB.id;
 ```
+<br></br>
+
+# Subquery
+- 단일 쿼리문에 여러 테이블의 데이터를 결합하는 방법
+- 조건에 따라 하나 이상의 테이블에서 데이터를 검색하는데 사용한다.
+- `SELECT`, `FROM`, `WHERE`, `HAVING`절 등에서 다양한 맥락으로 사용한다.
+<br></br>
+
+## EXISTS
+```SQL
+SELECT
+    select_list
+FROM
+    table
+WHERE
+    [NOT] EXISTS (subquery);
+```
+- 쿼리 문에서 반환된 레코드의 존재 여부를 확인한다.
+- subquery가 하나 이상의 행을 반환하면 `EXISTS` 연산자는 `true`를 반환하고 그렇지 않으면 `false`를 반환한다.
+- 주로 `WHERE`절에서 subquery의 반환 값 존재 여부를 확인하는데 사용한다.
+<br></br>
+
+# CASE
+```SQL
+CASE case_value
+    WHEN when_value1 THEN statements
+    WHEN when_value2 THEN statements
+    ...
+    [ELSE else-statements]
+END CASE;
+```
+- SQL문에서 조건문을 구성한다.
+- `case_value`가 `when_value`와 동일한 것을 찾을 때까지 순차적으로 비교한다.
+- `when_value`와 동일한 `case_value`를 찾으면 해당 `THEN`절의 코드를 실행한다.
+- 동일한 값을 찾지 못하면 `ELSE`절의 코드를 실행한다.
+    - `ELSE`절이 없을 때 동일한 값을 찾지 못하면 오류가 발생한다.
+<br></br>
+
+# Transaction
+```SQL
+START TRANSACTION;
+statements;
+...
+[ROLLBACK||COMMIT];
+```
+- 무조건 전부 성공하거나 혹은 전부 실패해야 하는 여러 쿼리문을 묶어 하나의 작업처럼 처리하는 방법
+- 쪼개질 수 없는 업무처리의 단위
+- `START TRANSACTION`: 트랜잭션 구문의 시작
+- `COMMIT`: 모든 작업이 정상적으로 완료되면 한꺼번에 DB에 반영한다.
+- `ROLLBACK`: 부분적으로 작업이 실패하면 트랜잭션에서 진행한 모든 연산을 취소하고 트랜잭션 이전으로 되돌린다.
+<br></br>
+
+# Triggers
+```SQL
+CREATE TRIGGER trigger_name
+    {BEFORE | AFTER} {INSERT | UPDATE | DELETE}
+    ON table_name FOR EACH ROW
+    trigger_body;
+```
+- 특정 이벤트에 대한 응답으로 자동으로 실행되는 것
+- DML의 영향을 받는 필드 값에만 적용할 수 있다.
+- `CREATE TRIGGER` 키워드 다음에 생성하려는 트리거의 이름을 지정한다.
+- 각 레코드의 어느 시점에 트리거가 실행될지 지정한다.
+- `ON` 키워드 뒤에 트리거가 속한 테이블의 이름을 지정한다.
+- 트리거가 활성화될 때 실행할 코드를 `trigger_body`에 지정한다.
+    - 여러 명령문을 실행하려면 `BEGIN END` 키워드로 묶어서 사용한다.
