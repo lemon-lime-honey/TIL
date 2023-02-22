@@ -23,6 +23,10 @@
 - [object and variable](/python/object_variable.md)
 - [object-oriented programming](/python/oop.md)
 
+# web
+- [CSS](/web/css.md)
+- [HTML](/web/html.md)
+
 # etc
 - [CLI](/etc/cli.md)
 - [markdown](/etc/markdown.md)
