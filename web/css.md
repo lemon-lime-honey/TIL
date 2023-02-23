@@ -130,3 +130,64 @@ h1 {
 - 상속되지 않는 속성
     - Box model 관련 요소(width, height, margin, padding, border, box-sizing, display)
     - position 관련 요소(position, top/right/bottom/left, z-index) 등
+<br><br>
+
+# CSS Box Model
+- 모든 HTML 요소를 사각형으로 표현한다.
+- 박스에 대한 크기, 여백, 테두리 등의 스타일을 지정하는 디자인 개념
+
+## Box의 구성
+```mermaid
+%%{init:{'theme':'neutral'}}%%
+
+graph TD
+    classDef m fill:#CD853F, color:#FFFFFF
+    classDef b fill:#D2B48C, color:#000000
+    classDef p fill:#8FBC8B, color:#000000
+    classDef c fill:#4682B4, color:#FFFFFF
+
+    subgraph margin
+        subgraph border
+            subgraph padding
+                subgraph content
+                end
+            end
+        end
+    end
+
+    class margin m
+    class border b
+    class padding p
+    class content c
+```
+- Margin: 박스와 다른 요소 사이의 공백. 가장 바깥 영역
+- Border: 콘텐츠와 패딩을 감싸는 테두리 영역
+- Padding: 콘텐츠 주위에 위치하는 공백 영역
+- Content: 콘텐츠가 표시되는 영역
+
+## Width, Height
+- 요소의 너비와 높이를 지정한다.
+- 이때 지정되는 요소의 너비와 높이는 콘텐츠 영역을 대상으로 한다.
+<br><br>
+
+# 박스 타입
+## Normal Flow
+CSS를 적용하지 않았을 경우 Block 및 Inline 요소가 기본적으로 배치되는 방향
+- Block: 위에서 아래
+- Inline: 왼쪽에서 오른쪽
+
+## Block Type 특징
+- 항상 새로운 행으로 나뉜다.
+- width와 height 속성을 사용하여 너비와 높이를 지정할 수 있다.
+- 기본적으로 width 속성을 지정하지 않으면 박스는 inline 방향으로 사용 가능한 공간을 모두 차지한다.
+    - 너비를 사용 가능한 공간의 100%로 채운다.
+- 대표적인 block 타입 태그: `h1~6`, `p`, `div`
+
+## Inline Type 특징
+- 새로운 행으로 나뉘지 않는다.
+- width와 height 속성을 사용할 수 없다.
+- 수직 방향
+    - padding, margin, borders가 적용되지만 다른 요소를 밀어낼 수는 없다.
+- 수평 방향
+    - padding, margin, borders가 적용되고 다른 요소를 밀어낼 수 있다.
+- 대표적인 inline 타입 태그: `a`, `img`, `span`
