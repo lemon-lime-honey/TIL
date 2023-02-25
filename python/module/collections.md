@@ -25,3 +25,20 @@ $\!$ *버전 3.4에서의 변경사항*: 선택 parameter $\texttt{m}$이 추가
 $\!$ *버전 3.10에서의 변경사항*: keyword argument 지원이 추가됨
 - $\texttt{parents}$<br>
 $\!$ 가장 첫 번째를 제외한 현재 상황의 모든 map을 포함하는 새로운 $\texttt{ChainMap}$을 반환하는 property. 첫 번째 map을 건너뛰고 검색하는데 유용하다. Use case는 Nested scope에서 $\texttt{nonlocal}$ 키워드를 사용하는 것과 비슷하다. 또한 빌트인 $\texttt{super()}$ 함수의 그것과 유사하다. $\texttt{d.parents}$의 reference는 $\texttt{ChainMap(*d.maps[1:])}$과 동등하다.
+<br><br>
+
+참고: $\texttt{ChainMap()}$의 iteration 순서는 마지막부터 처음까지 mapping을 스캔하는 것으로 정해진다.
+```python
+>>> baseline = {'music': 'bach', 'art': 'rembrandt'}
+>>> adjustments = {'art': 'van gogh', 'opera': 'carmen'}
+>>> list(ChainMap(adjustments, baseline))
+['music', 'art', 'opera']
+```
+$\texttt{dict.update()}$의 연속이 마지막 mapping부터 시작하는 것과 같은 순서
+```python
+>>> combined = baseline.copy()
+>>> combined.update(adjustments)
+>>> list(combined)
+['music', 'art', 'opera']
+```
+*버전 3.9에서의 변경사항*: `|`와 `|=` 연산자 지원이 추가됨. [PEP584](https://peps.python.org/pep-0584/) 참조
