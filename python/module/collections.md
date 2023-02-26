@@ -42,3 +42,47 @@ $\texttt{dict.update()}$의 연속이 마지막 mapping부터 시작하는 것�
 ['music', 'art', 'opera']
 ```
 *버전 3.9에서의 변경사항*: `|`와 `|=` 연산자 지원이 추가됨. [PEP584](https://peps.python.org/pep-0584/) 참조
+<br><br>
+
+## Counter objects
+$\texttt{Counter}$는 편하고 빠른 계수기를 제공합니다.
+```python
+>>> # Tally occurrences of words in a list
+>>> cnt = Counter()
+>>> for word in ['red', 'blue', 'red', 'green', 'blue', 'blue']:
+...     cnt[word] += 1
+>>> cnt
+Counter({'blue': 3, 'red': 2, 'green': 1})
+
+>>> # Find the ten most common words in Hamlet
+>>> import re
+>>> words = re.findall(r'\w+', open('hamlet.txt').read().lower())
+>>> Counter(words).most_common(10)
+[('the', 1143), ('and', 966), ('to', 762), ('of', 669), ('i', 631), 
+ ('you', 554), ('a', 546), ('my', 514), ('hamlet', 471), ('in', 451)]
+```
+<br><br>
+
+### $\texttt{class collections.Counter([{\it iterable-or-mapping}])}$
+$\texttt{Counter}$는 hashable object를 세기 위한 딕셔너리의 subclass이다. 원소는 딕셔너리의 키로, 그 개수는 딕셔너리의 값으로 저장되는 collection이다. Count는 0이나 음수를 포함하는 어떠한 정수 값도 가능하다. $\texttt{Counter}$ 클래스는 다른 언어의 `bags`나 `multiset`과 유사하다.
+<br><br>
+Iterable에서 원소의 수를 세거나 다른 mapping 혹은 $\texttt{Counter}$에서 원소를 초기화할 수 있다.
+```python
+>>> c = Counter()                       # a new, empty counter
+>>> c = Counter('gallahad')             # a new counter from an iterable
+>>> c = Counter({'red': 4, 'blue': 2})  # a new counter from a mapping
+>>> c = Counter(cats = 4, dogs = 8)     # a new counter from keyword args
+```
+$\texttt{Counter}$ object는 `keyError`를 발생시키는 대신 없는 원소에 0을 반환하는 것을 제외하면 딕셔너리와 유사한 interface를 가진다.
+```python
+>>> c = Counter(['eggs', 'ham'])
+>>> c['bacon']                          # count of a missing element is zero
+0
+```
+Count를 0으로 정하는 것은 $\texttt{Counter}$에서 원소를 제거하지 않는다. 제거하려면 `del`을 사용한다.
+```python
+>>> c['sausage'] = 0                    # counter entry with a zero count
+>>> del c['sausage']                    # del actually removes the entry
+```
+*버전 3.1에서 추가됨*<br>
+*버전 3.7에서의 변경사항*: $\texttt{Counter}$는 딕셔너리의 subclass이므로 입력 순서를 기억하는 기능을 상속한다. $\texttt{Counter}$ object에서의 수학 연산 또한 순서를 보존한다. 결과는 원소가 왼쪽 피연산자에서 처음 발견될 때부터 오른쪽 피연산자에서 발견되는 순서로 정렬된다.

@@ -41,4 +41,7 @@
 - lambda 함수에 관해 배웠다.
 
 ## 2023-02-07
-- Collections 모듈 중 ChainMap 오브젝트에 관해 공부했다.
+- Collections 모듈 중 ChainMap 객체에 관해 공부했다.
+
+## 2023-02-26
+- Collections 모듈 중 Counter 객체에 관해 공부했다.
