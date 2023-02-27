@@ -191,3 +191,43 @@ CSS를 적용하지 않았을 경우 Block 및 Inline 요소가 기본적으로 
 - 수평 방향
     - padding, margin, borders가 적용되고 다른 요소를 밀어낼 수 있다.
 - 대표적인 inline 타입 태그: `a`, `img`, `span`
+<br><br>
+
+# CSS Layout
+각 요소의 위치와 크기를 조정하여 웹 페이지의 디자인을 결정하는 것
+<br><br>
+
+# CSS Position
+Normal Flow에서 요소를 꺼내 다른 위치로 배치하는 것<br>
+다른 요소 위에 놓기, 화면 특정 위치에 고정시키기 등
+
+## Position 유형
+$\texttt{static, relative, absolute, fixed, sticky}$
+
+## Position 유형별 특징
+- $\texttt{static}$
+    - 기본값
+    - 요소를 Normal Flow에 따라 배치한다
+- $\texttt{relative}$
+    - 요소를 Normal Flow에 따라 배치한다
+    - 자기 자신을 기준으로 이동한다
+    - 요소가 차지하는 공간은 $\texttt{static}$일 때와 같음
+- $\texttt{absolute}$
+    - 요소를 Normal Flow에서 제거한다
+    - 가장 가까운 $\texttt{relative}$ 요소를 기준으로 이동한다
+    - 문서에서 요소가 차지하는 공간이 없어진다
+- $\texttt{fixed}$
+    - 요소를 Normal Flow에서 제거한다
+    - 현재 화면영역(viewport)을 기준으로 이동한다
+    - 문서에서 요소가 차지하는 공간이 없어진다
+- $\texttt{sticky}$
+    - 요소를 Normal Flow에 따라 배치한다
+    - 가장 가까운 block 요소를 기준으로 이동한다
+    - 요소가 특정 임계점에 스크롤될 때 그 위치에서 고정된다
+    - 만약 다음 $\texttt{sticky}$ 요소가 나오면 다음 $\texttt{sticky}$ 요소가 이전 $\texttt{sticky}$ 요소의 자리를 대체한다
+        - 이전 $\texttt{sticky}$ 요소가 고정되어 있던 위치와 다음 $\texttt{sticky}$ 요소가 고정되어야 할 위치가 겹치게 되기 때문이다
+
+## z-index
+요소가 겹쳤을 때 어떤 요소 순으로 위에 나타낼지 결정한다
+- 정수 값을 사용해 Z축 순서를 지정한다
+- 더 큰 값을 가진 요소가 작은 값의 요소를 덮는다
