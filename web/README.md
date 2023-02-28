@@ -8,3 +8,6 @@
 
 ## 2023-02-27
 - CSS 레이아웃 positioning에 관해 배웠다.
+
+## 2023-02-28
+- CSS float, flexbox에 관해 배웠다.
