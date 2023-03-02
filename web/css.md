@@ -383,3 +383,29 @@ flex item 목록이 flex container의 하나의 행에 들어가지 않을 경�
 - 정렬
 	- $\texttt{align-items}$
 	- $\texttt{align-self}$
+<br><br>
+
+# Semantics in CSS
+## OOCSS
+Object-Oriented CSS<br>
+객체 지향적 접근법을 적용하여 CSS를 구성하는 방법론
+
+## BEM
+Block Element Modifier<br>
+블록, 요소, 수정자를 사용해 클래스 이름을 구조화하는 방법론
+
+### BEM 구성
+```css
+.block {}
+.block__element {}
+.block--modifier {}
+```
+- Block
+    - 문단 전체에 적용된 요소 또는 요소를 담고 있는 컨테이너
+    - 재사용 가능한 독립적 블록, 가장 바깥족 상위요소
+    - 재사용을 위해 `margin` 또는 `padding`을 적용하지 않는다.
+- Element
+    - `block`이 포함하고 있는 한 조각
+    - 블록을 구성한느 종속적인 하위요소
+- Modifier
+    - `block` 또는 `element`의 속성

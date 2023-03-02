@@ -58,3 +58,10 @@
 - Heading, Parahraphs: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `p`
 - Lists: `ol`, `ul`, `li`
 - Emphasis, Importance: `em`, `strong`
+
+## HTML Semantic Element
+기본적인 모양과 기능 이외의 의미를 가지는 HTML 요소<br>
+검색엔진 및 개발자가 웹 페이지의 콘텐츠를 이해하기 쉽게 만들어준다.
+
+### 페이지 구조화를 위한 대표적인 semantic element
+$\texttt{header}$, $\texttt{nav}$, $\texttt{main}$, $\texttt{article}$, $\texttt{section}$, $\texttt{aside}$, $\texttt{footer}$

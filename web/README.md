@@ -11,3 +11,6 @@
 
 ## 2023-02-28
 - CSS float, flexbox에 관해 배웠다.
+
+## 2023-03-02
+- Semantic Web에 관해 배웠다.
