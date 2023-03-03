@@ -49,7 +49,8 @@ os.path.isfile(fileName) # 파일 fileName이 존재하면 True, 아니면 False
 | 'b' | 바이너리 모드 |
 | 't' | 텍스트 모드(기본값) |
 | '+' | 갱신용(읽기와 쓰기) |
-<br></br>
+
+<br>
 
 # JSON
 - 자바스크립트 객체 표기법
