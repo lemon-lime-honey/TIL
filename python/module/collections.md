@@ -125,3 +125,49 @@ $\texttt{Counter}$ object는 딕셔너리에 유효한 것 뿐만이 아니라 �
     이 메서드는 $\texttt{Counter}$ object를 위해 구현되지 않았다.
 - $\texttt{update([iterable-or-mapping])}$
     iterable이나 다른 mapping(또는 $\texttt{Counter}$)로부터 원수의 개수를 구한다. $\texttt{dict.update()}$와 유사하나 개수를 대체하는 대신 더한다. 또한, iterable은 `(key, value)`쌍의 나열이 아닌 원소의 나열이어야 한다.
+
+$\texttt{Counter}$는 `==`, `!=`, `<`, `<=`, `>`, `>=`와 같은 equality, subset, superset 관계에 관한 다양한 관계 연산자를 지원한다. 이러한 종류의 모든 test는 없는 원소를 0을 가지고 있는 것으로 취급해 `Counter(a = 1) = Counter(a = 1, b = 0)`이 `True`를 반환하도록 한다.
+
+*버전 3.10에서 추가됨*: 다양한 관계 연산자 추가<br>
+*버전 3.10에서 변경됨*: Equality text에서 없는 원소는 count가 0인 것으로 취급된다. 이전에는 `Counter(a = 3)`과 `Counter(a = 3, b = 0)`이 다른 것으로 취급되었다.
+
+$\texttt{Counter}$ object를 사용하는 보편적인 방법
+```python
+c.total()                     # total of all counts
+c.clear()                     # reset all counts
+list(c)                       # list unique elements
+set(c)                        # convert to a set
+dict(c)                       # convert to a regular dictionary
+c.items()                     # convert to a list of (elem, cnt) pairs
+Counter(dict(list_of_pairs))  # convert from a list of (elem, cnt) pairs
+c.most_common()[:-n-1:-1]     # n least common elements
++c                            # remove zero and negative counts
+```
+
+$\texttt{Counter}$ object를 결합해 multiset(0을 초과하는 count를 가지는 $\texttt{Counter}$)을 만들 수 있도록 여러 수학 연산자가 제공된다. 덧셈과 뺄셈은 $\texttt{Counter}$의 상응하는 원소들의 count를 더하거나 빼는 방법으로 결합한다. 차집합과 교집합은 상응하는 count의 최소와 최대를 반환한다. Equality와 inclusion은 상응하는 count를 비교한다. 부호가 있는 count의 입력 또한 각각의 연산에서 유효하나 0보다 작거나 같은 count를 제외한 결과값이 출력된다.
+```python
+>>> c = Counter(a = 3, b = 1)
+>>> d = Counter(a = 1, b = 2)
+>>> c + d                      # add two counters together: c[x] + d[x]
+Counter({'a': 4, 'b': 3})
+>>> c - d                      # subtract (keeping only positive counts)
+Counter({'a': 2})
+>>> c & d                      # intersection: min(c[x], d[x])
+Counter({'a': 1, 'b': 1})
+>>> c | d                      # union: max(c[x], d[x])
+Counter({'a': 3, 'b': 2})
+>>> c == d                     # equality: c[x] == d[x]
+False
+>>> c <= d                     # inclusion: c[x] <= d[x]
+False
+```
+
+Unary addition과 subtraction은 빈 $\texttt{Counter}$에서 더하거나 빼기 위한 shortcut이다.
+```python
+>>> c = Counter(a = 2, b = -4)
+>>> +c
+Counter({'a': 2})
+>>> -c
+Counter({'b': 4})
+```
+*버전 3.3에서 추가됨*: Unary plus, unary minus, 그리고 in-place multiset 연산 지원 추가
