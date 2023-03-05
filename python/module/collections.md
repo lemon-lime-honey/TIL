@@ -170,4 +170,129 @@ Counter({'a': 2})
 >>> -c
 Counter({'b': 4})
 ```
-*버전 3.3에서 추가됨*: Unary plus, unary minus, 그리고 in-place multiset 연산 지원 추가
+*버전 3.3에서 추가됨*: Unary plus, unary minus, 그리고 in-place multiset 연산 지원 
+<br><br>
+
+## Deque objects
+### $\texttt{class collections.deque([{\it iterable}, [, {\it maxlen}]])}$
+Iteralbe로부터 데이터를 ($\texttt{append()}$를 사용하여) left-to-right으로 초기화된 새로운 $\texttt{deque}$ object를 반환한다. 만약 iterable이 특정되지 않는다면 새로운 $\texttt{deque}$는 비어있다.
+
+"deck"으로 발음이 되고, "double-ended queue"의 약어인 $\texttt{deque}$는 `stack`과 `queue`의 일반화된 형태이다. $\texttt{deque}$는 $\texttt{deque}$ 양 끝에서의 `append`와 `pop`을 지원하는데, 이는 thread-safe하고 메모리를 효율적으로 사용하며, 어느 방향에서든 같은 `O(1)`의 성능을 보인다.
+
+$\texttt{list}$ object가 유사한 연산을 지원하지만, 이는 빠른 고정된 길이의 연산에 최적화되어 있으며 underlying data representation에 있어 크기와 위치를 모두 바꾸는 `pop(0)`과 `insert(0, v)` 연산 에서는 `O(n)`의 메모리 이동 비용이 발생한다.
+
+만약 *maxlen*이 특정되지 않았거나 `None`이라면, $\texttt{deque}$는 임의의 길이로 늘어날 수 있다. 그게 아니라면, $\texttt{deque}$는 특정된 최대 길이로 한정된다. 한정된 크기의 $\texttt{deque}$가 다 차면 새로운 원소가 추가되었을 때 해당하는 수 만큼의 원소가 반대쪽에서 버려진다. 고정 길이 $\texttt{deque}$는 Unix의 `tail` 필터와 유사한 기능을 제공한다. Transaction를 추적하거나 가장 최근의 활동만 관심의 대상인 데이터 풀에 유용하다.
+
+$\texttt{deque}$ object는 다음 메서드를 지원한다.
+
+- $\texttt{append(x)}$<br>
+    $\texttt{deque}$의 오른쪽에 $\texttt{x}$를 추가한다.
+
+- $\texttt{appendleft(x)}$<br>
+    $\texttt{deque}$의 왼쪽에 $\texttt{x}$를 추가한다.
+
+- $\texttt{clear()}$<br>
+    $\texttt{deque}$의 모든 원소를 제거해 길이를 0으로 만든다.
+
+- $\texttt{copy}$<br>
+    $\texttt{deque}$의 얕은 복사를 만든다.<br>
+    *버전 3.5에서 추가됨*
+
+- $\texttt{count}$<br>
+    값이 $\texttt{x}$인 $\texttt{deque}$의 원소의 개수를 센다.<br>
+    *버전 3.2에서 추가됨*
+
+- $\texttt{extend(iterable)}$<br>
+    Iterable의 원소를 추가해 $\texttt{deque}$ 오른편을 늘인다.
+
+- $\texttt{extendleft(iterable)}$<br>
+    Iterable의 원소를 추가해 $\texttt{deque}$ 왼편을 늘인다. Left append의 연속은 iterable의 원소의 순서를 뒤집는다는 점에 유의한다.
+
+- $\texttt{index(x[, start[, stop]])}$<br>
+    (인덱스 *start*부터 혹은 그 이후 그리고 인덱스 *stop* 전까지의) $\texttt{deque}$에서의 $\texttt{x}$의 위치를 반환한다. 가장 처음으로 발견한 위치를 반환하거나 찾지 못한 경우 `ValueError`를 발생시킨다.<br>
+    *버전 3.5에서 추가됨*
+
+- $\texttt{insert(i, x)}$<br>
+    $\texttt{deque}$의 위치 $\texttt{i}$에 $\texttt{x}$를 넣는다. 만약 데이터를 넣는 것이 고정 $\texttt{deque}$의 길이가 *maxlen*을 초과하게 한다면 `IndexError`가 발생한다.<br>
+    *버전 3.5에서 추가됨*
+
+- $\texttt{pop()}$<br>
+    $\texttt{deque}$ 오른쪽에서 원소 하나를 제거하고 반환한다. 만약 원소가 없다면 `IndexError`를 발생시킨다.
+
+- $\texttt{popleft()}$<br>
+    $\texttt{deque}$ 왼쪽에서 원소 하나를 제거하고 반환한다. 만약 원소가 없다면 `IndexError`를 발생시킨다.
+
+- $\texttt{remove(value)}$<br>
+    처음 찾은 $\texttt{value}$를 제거한다. 발견하지 못하면 `ValueError`를 발생시킨다.
+
+- $\texttt{reverse}$<br>
+    $\texttt{deque}$의 원소 순서를 제자리에서 뒤집고 `None`을 반환한다.<br>
+    *버전 3.2에서 추가됨*
+
+- $\texttt{rotate(n = 1)}$<br>
+    $\texttt{deque}$를 *n*씩 오른쪽으로 회전한다. 만약 *n*이 음수이면 왼쪽으로 회전한다.<br>
+    $\texttt{deque}$가 비어있지 않을 때, 오른쪽으로 1 회전하는 것은 `d.appendleft(d.pop())`와 동일하며, 왼쪽으로 1 회전하는 것은 `d.append(d.popleft())`와 동일하다.
+
+$\texttt{deque}$ object는 하나의 읽기 전용 속성을 제공한다.
+
+- $\texttt{maxlen}$<br>
+    $\texttt{deque}$의 최대 크기 혹은 크기가 고정되지 않은 경우 `None`<br>
+    *버전 3.1에서 추가됨*
+
+위에 더해, $\texttt{deque}$는 iteration, pickling, `len(d)`, `reversed(d)`, `copy.copy(d)`, `copy.deepcopy(d)`, `in` 연산자를 활용한 membership 테스트, 그리고 첫번째 원소에 접근하기 위한 `d[0]`과 같은 인덱스 접근을 제공한다.
+
+버전 3.5부터 $\texttt{deque}$는 `__add__()`, `__mul__()` 그리고 `__imul__()`을 지원한다.
+
+예시:
+```python
+>>> from collections import deque
+>>> d = deque('ghi')        # make a new deque with three items
+>> for elem in d:           # iterate over the deque's elements
+...    print(elem.upper())
+G
+H
+I
+
+>>> d.append('j')           # add a new entry to the right side
+>>> d.appendleft('f')       # add a new entry to the left side
+>>> d                       # show the representation of the deque
+deque(['f', 'g', 'h', 'i', 'j'])
+
+>>> d.pop()                 # return and remove the rightmost item
+'j'
+>>> d.popleft()             # return and remove the leftmost item
+'f'
+>>> list(d)                 # list the contents of the deque
+['g', 'h', 'i']
+>>> d[0]                    # peek at leftmost item
+'g'
+>>> d[-1]                   # peek at rightmost item
+'i'
+
+>>> list(reversed(d))       # list the contents of a deque in reverse
+['i', 'h', 'g']
+>>> 'h' in d                # search the deque
+True
+>>> d.extend('jkl')         # add multiple elements at once
+>>> d
+deque(['g', 'h', 'i', 'j', 'k', 'l'])
+>>> d.rotate(1)             # right rotation
+>>> d
+deque(['l', 'g', 'h', 'i', 'j', 'k'])
+deque.rotate(-1)            # left rotation
+>>> d
+deque(['g', 'h', 'i', 'j', 'k', 'l'])
+
+>>> deque(reversed(d))      # make a new deque in reverse order
+deque(['l', 'k', 'j', 'i', 'h', 'g'])
+>>> d.clear()               # empty the deque
+>>> d.pop()                 # cannot pop from an empty deque
+Traceback (most recent call last):
+    File "<pyshell#6>", line 1, in -toplevel-
+        d.pop()
+IndexError: pop from an empty deque
+
+>>> d.extendleft('abc')     # extendleft() reverses the input order
+>>> d
+deque(['c', 'b', 'a'])
+```
