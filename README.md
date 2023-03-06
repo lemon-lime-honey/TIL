@@ -24,6 +24,7 @@
 - [object-oriented programming](/python/oop.md)
 
 # web
+- [bootstrap](/web/bootstrap.md)
 - [CSS](/web/css.md)
 - [HTML](/web/html.md)
 
