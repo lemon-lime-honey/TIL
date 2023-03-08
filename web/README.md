@@ -20,3 +20,6 @@
 
 ## 2023-03-07
 - Grid system에 관해 배웠다.
+
+## 2023-03-08
+- Grid system의 breakpoint에 관해 배웠다.

@@ -112,3 +112,8 @@ Bootstrap에서 제공하는 UI 관련 요소
 
 ### Gutters
 Grid system에서 column과 column 사이에 있는 padding 영역
+<br><br>
+
+# Grid system breakpoints
+웹페이지를 다양한 화면 크기에서 적절하게 배치하기 위한 분기점<br>
+각 분기점마다 설정된 최대 너비 값 *이상으로* 화면이 커지면 grid system 동작이 변경된다.
