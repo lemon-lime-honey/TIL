@@ -296,3 +296,30 @@ IndexError: pop from an empty deque
 >>> d
 deque(['c', 'b', 'a'])
 ```
+<br><br>
+
+## Defaultdict objects
+### $\texttt{class collections.defaultdict({\it default}}$ _ $\texttt{{\it factory=None}, /[, ...])}$
+딕셔너리와 유사한 새 객체를 반환한다. $\texttt{defaultdict}$는 built-in `dict` 클래스의 subclass이다. 하나의 메서드를 덮어씌우고, 하나의 쓰기 가능한 instance 변수를 추가한다. 남은 기능은 `dict` 클래스의 그것과 같으므로 여기서는 기술하지 않는다.
+
+첫 번째 인수는 `default_factory` 속성을 위한 초기값을 제공한다. 기본값은 `None`이다. 모든 남은 인수는 키워드 인수를 포함한 `dict` 생성자로 전달되는 것처럼 취급된다.
+
+$\texttt{defaultdict}$ 객체는 표준 `dict` 연산에 더해 다음의 메서드를 지원한다.
+
+- __ $\texttt{missing}$ __ $\texttt{(key)}$<br>
+    만약 $\texttt{default}$ _ $\texttt{factory}$ 속성이 `None`이라면, 이 메서드는 *key*를 인수로 `KeyError` 예외를 발생시킨다.
+
+    만약 $\texttt{default}$ _ $\texttt{factory}$가 `None`이 아니라면, 주어진 *key*를 위한 기본값을 제공하지 않고 호출된 후 딕셔너리에 이 값을 *key*를 위한 값으로 넣고 반환한다.
+
+    $\texttt{default}$ _ $\texttt{factory}$를 호출하는 것이 예외를 발생시킨다면 이 예외는 바뀌지 않은 채 전파된다.
+
+    이 메서드는 요청받은 키를 찾을 수 없을 때 `dict` 클래스의 `__getitem___()` 메서드에 의해 호출된다. 무엇을 반환하거나 발생시키거나, 그 다음에는 `__getitem__()`에 의해 반환되거나 발생한다.
+
+    `__missing__()`은 `__getitem__()`뿐만 아니라 어느 연산을 위해서도 호출되지 *않는다*. 이는 다른 평범한 딕셔너리처럼 $\texttt{default}$ _ $\texttt{factory}$를 사용하는 대신 `get()`이 기본값으로 `None`을 반환한다는 의미이다.
+
+$\texttt{defaultdict}$ 객체는 다음의 instance 변수를 지원한다.
+
+- $\texttt{default}$ _ $\texttt{factory}$
+    이 속성은 `__missing__()` 메서드에 의해 사용된다. 이것은 생성자의 첫 인수가 있다면 그것으로, 없다면 `None`으로 초기화된다.
+
+*버전 3.9에서 변경됨*: `merge(|)`와 `update(|=)` 연산자 추가. [PEP 584](https://peps.python.org/pep-0584/) 참조.
