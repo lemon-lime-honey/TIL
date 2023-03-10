@@ -323,3 +323,45 @@ $\texttt{defaultdict}$ 객체는 다음의 instance 변수를 지원한다.
     이 속성은 `__missing__()` 메서드에 의해 사용된다. 이것은 생성자의 첫 인수가 있다면 그것으로, 없다면 `None`으로 초기화된다.
 
 *버전 3.9에서 변경됨*: `merge(|)`와 `update(|=)` 연산자 추가. [PEP 584](https://peps.python.org/pep-0584/) 참조.
+<br><br>
+
+## $\texttt{namedtuple()}$: Factory Function with Named Fields
+Named tuple은 튜플의 각 위치에 의미를 할당해 더 가독성이 좋은 self-documenting 코드가 될 수 있게 한다. 일반적인 튜플이 사용되는 곳이라면 어디든지 사용될 수 있고, 인덱스 대신 이름으로 field에 접근할 수 있게 된다.
+
+- $\texttt{collections.namedtuple({\it typename, field}}$ _ $\texttt{{\it names, *, rename=False, defaults=None, module=None})}$<br>
+    *typename*으로 명명된 새로운 튜플 서브클래스를 반환한다. 새로운 서브클래스는 인덱싱과 순회가 가능할 뿐만 아니라 속성 색인으로 접근 가능한 field를 가진 튜플과 유사한 객체를 만드는데 사용된다. 서브클래스의 인스턴스는 또한 (`typename`과 `field_names`를 포함하는) 유용한 주석과 `name=value` 형식으로 튜플의 내용을 나열하는 `__repr__()` 메서드를 가진다.
+
+    `field_names`는 `['x', 'y']`와 같이 문자열의 시퀀스이다. 또는, `'x y'`나 `'x, y'`와 같이 각 field명을 공백 또는 공백과 콤마로 구분한 하나의 하나의 문자가 될 수도 있다.
+
+    유효한 파이썬 식별자라면 언더스코어로 시작하는 이름을 제외한 이름을 fieldname으로 사용할 수 있다. 유효한 식별자는 문자, 숫자, 그리고 언더스코어로 구성되나 숫자나 언더스코어로는 시작하지 않으며, *class*, *for*, *return*, *global*, *pass* 또는 *raise*와 같은 `keyword`는 사용할 수 없다.
+
+    만약 *rename*이 `True`라면, 유효하지 않은 fieldname은 자동적으로 위치에 관한 이름들로 교체된다. 예를 들어 `['abc', 'def', 'ghi', 'abc']`는 키워드 `def`와 중복되는 fieldname `abc`를 제거해 `['abc', '_1', 'ghi', '_3']`으로 변환된다.
+
+    *defaults*는 `None` 또는 기본값의 iterable이 될 수 있다. 기본값을 가진 field는 반드시 기본값이 없는 field 이후에 있어야 하기 때문에 `defaults`는 우측에 있는 파라미터에 적용되어야 한다. 예를 들어, 만약 fieldname이 `['x', 'y', 'z']`이고 기본값이 `(1, 2)`라면, `x`는 required argument가 되고, `y`의 기본값은 `1`, `z`의 기본값은 `2`가 된다.
+
+    만약 *module*이 정의되었다면, named tuple의 `__module__` 속성은 그 값으로 설정된다.
+
+    Named tuple 인스턴스는 per-instance 딕셔너리를 가지지 않기 때문에 가벼우며 일반적인 튜플보다 적은 메모리를 필요로 한다.
+
+    pickling을 지원하기 위하여, named tuple 클래스는 *typename*과 매치되는 변수에 할당되어야 한다.
+
+    *버전 3.1에서 변경됨*: `rename` 지원이 추가됨<br>
+    *버전 3.6에서 변경됨*: `verbose`와 `rename` 파라미터가 keyword-only 인수가 됨<br>
+    *버전 3.6에서 변경됨*: `module` 파라미터가 추가됨<br>
+    *버전 3.7에서 변경됨*: `verbose` 파라미터와 `_source` 속성이 제거됨<br>
+    *버전 3.7에서 변경됨*: `defaults` 파라미터와 `_field_defaults` 속성이 추가됨
+
+```python
+>>> # Basic example
+>>> Point = namedtuple('Point', ['x', 'y'])
+>>> p = Point(11, y=22)  # instantiate with positional or keyword arguments
+>>> p[0] + p[1]          # indexable like the plain tuple (11, 22)
+33
+>>> x, y = p             # unpack like a regular tuple
+>>> x, y
+(11, 22)
+>>> p.x + p.y            # fields also accessible by name
+33
+>>> p                    # readable __repr__ with a name=value style
+Point(x=11, y=22)
+```

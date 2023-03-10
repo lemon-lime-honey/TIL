@@ -51,3 +51,6 @@
 
 ## 2023-03-09
 - Collections 모듈 중 defaultdict 객체에 관해 공부했다.
+
+## 2023-03-10
+- Collections 모듈 중 namedtuple() factory function에 관해 공부했다.
