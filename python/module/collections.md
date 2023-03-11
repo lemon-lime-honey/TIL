@@ -365,3 +365,116 @@ Named tuple은 튜플의 각 위치에 의미를 할당해 더 가독성이 좋�
 >>> p                    # readable __repr__ with a name=value style
 Point(x=11, y=22)
 ```
+Named tuple은 `csv`나 `sqlite3` 모듈에 의해 반환되는 결과 튜플의 field name을 할당하는 데에 특히 유용하다.
+```python
+EmployeeRecord = namedtuple('EmployeeRecord', 'name, age, title, department, paygrade')
+
+import csv
+for emp in map(EmployeeRecord._make, csv.reader(open("employees.csv", "rb"))):
+    print(emp.name, emp.title)
+
+import sqlite3
+conn = sqlite3.connect('/companydata')
+cursor = conn.cursor()
+cursor.execute('SELECT name, age, title, department, paygrade FROM employees')
+for emp in map(EmployeeRecord._make, cursor.fetchall()):
+    print(emp.name, emp.title)
+```
+
+튜플로부터 상속받은 메서드에 추가해, named tuple은 세 개의 추가적인 메서드와 두 개의 속성을 지원한다. field name 충돌을 방지하기 위해, 메서드와 속성 이름은 언더스코어로 시작한다.
+
+- $\texttt{classmethod somenamedtuple.}$ _ $\texttt{make(iterable)}$<br>
+    존재하는 시퀀스나 iterable로부터 새 인스턴스를 만드는 클래스 메서드
+    ```python
+    >>> t = [11, 22]
+    >>> Point._make(t)
+    Point(x=11, y=22)
+    ```
+
+- $\texttt{somenamedtuple.}$ _ $\texttt{asdict()}$<br>
+    field name을 해당하는 값에 매핑하는 새로운 딕셔너리를 반환한다.
+    ```python
+    >>> p = Point(x=11, y=22)
+    >>> p._asdict()
+    {'x': 11, 'y': 22}
+    ```
+    *버전 3.1에서 변경됨*: 일반적인 `dict` 대신 `OrdedredDict`를 반환함<br>
+    *버전 3.8에서 변경됨*: `OrderedDict` 대신 일반적인 `dic`를 반환함. 파이썬 3.7에서 일반적인 딕셔너리는 정렬됨이 보장됨. 만약 `OrderedDict`의 다른 특징이 요구된다면, 형변환을 추천함: `OrderedDict(nt._asdict())`
+
+- $\texttt{somenamedtuple.}$ _ $\texttt{replace(**kwargs)}$<br>
+    특정된 field를 새로운 값으로 대체하는 새 named tuple 인스턴스를 반환한다.
+    ```python
+    >>> p = Point(x=11, y=22)
+    >>> p._replace(x=33)
+    Point(x=33, y=22)
+
+    >>> for partnum, record in inventory.items():
+    ...     inventory[partnum] = record._replace(price=newprices[partnum], timestamp=time.now())
+    ```
+
+- $\texttt{somenamedtuple.}$ _ $\texttt{fields}$<br>
+    Field name을 나열하는 문자열의 튜플. Introspection과 이미 존재하는 named tuple로부터 새 named tuple을 만드는데 유용하다.
+    ```python
+    >>> p._fields    # view the field names
+    ('x', 'y')
+
+    >>> Color = namedtuple('Color', 'red green blue')
+    >>> Pixel = namedtuple('Pixel', Point._fields + Color._fields)
+    >>> Pixel(11, 22, 128, 255, 0)
+    Pixel(x=11, y=22, red=128, green=255, blue=0)
+    ```
+
+- $\texttt{somenamedtuple.}$ _ $\texttt{field}$ _ $\texttt{defaults}$<br>
+    기본값에 field name을 매핑하는 딕셔너리.
+    ```python
+    >>> Account = namedtuple('Account', ['type', 'balance'], defaults=[0])
+    >>> Account._field_defaults
+    {'balance': 0}
+    >>> Account('premium')
+    Account(type='preminum', balance=0)
+    ```
+
+문자열에 저장된 field name을 찾으려면 `getattr()` 함수를 사용한다.
+```python
+>>> getattr(p, 'x')
+11
+```
+
+딕셔너리를 named tuple로 변환하려면 [unpacking argument lists](https://docs.python.org/3/tutorial/controlflow.html#tut-unpacking-arguments)에서 서술하는 것처럼 double-star 연산자를 사용한다.
+```python
+>>> d = {'x': 11, 'y': 22}
+>>> Point(**d)
+Point(x=11, y=22)
+```
+
+Named tuple은 정식 파이썬 클래스이기 때문에 서브클래스로 기능을 추가하거나 바꾸기 쉽다. 다음은 계산된 field와 고정폭 출력 포멧을 추가하는 예시이다.
+```python
+>>> class Point(namedtuple('Point', ['x', 'y'])):
+...    __slots__ = ()
+...    @property
+...    def hypot(self):
+...        return (self.x ** 2 + self.y ** 2) ** 0.5
+...    def __str__(self):
+...        return 'Point: x=%6.3f y=6.3f hypot=%6.3f' % (self.x, self.y, self.hypot)
+
+>>> for p in Point(3, 4), Point(14, 5/7):
+...    print(p)
+Point: x= 3.000 y= 4.000 hypot= 5.000
+Point: x=14.000 y= 0.714 hypot=14.018
+```
+위의 서브클래스는 `__slots__`를 빈 튜플로 설정한다. 이는 인스턴스 딕셔너리의 생성을 방지해 메모리 요구사항을 낮게 유지하는데 도움이 된다.
+
+서브클래스를 만드는 것은 새로운, 저장된 field를 추가하는 데에는 유용하지 않다. 대신 `_fields` 속성으로 새로운 named tuple 타입을 만든다.
+```python
+>>> Point3D = namedtuple('Point3D', Point._fields + ('z',))
+```
+
+주석은 `__doc__` field에 직접 할당을 하는 것으로 customize 할 수 있다.
+```python
+>>> Book = namedtuple('Book', ['id', 'title', 'authors'])
+>>> Book.__doc__ += ': Hardcover book in active collection'
+>>> Book.id.__doc__ = '13-digit ISBN'
+>>> Book.title.__doc__ = 'Title of first printing'
+>>> Book.authors.__doc__ = 'List of authors sorted by last name'
+```
+*버전 3.5에서 변경됨*: Property 주석이 쓰기 가능해짐
