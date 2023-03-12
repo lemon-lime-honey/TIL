@@ -478,3 +478,130 @@ Point: x=14.000 y= 0.714 hypot=14.018
 >>> Book.authors.__doc__ = 'List of authors sorted by last name'
 ```
 *버전 3.5에서 변경됨*: Property 주석이 쓰기 가능해짐
+<br>
+
+## $\texttt{OrderedDict}$ Objects
+Ordered dictionary는 일반적인 딕셔너리와 같지만 정렬 연산에 관한 몇 가지 추가적인 기능을 가진다. 빌트인 딕셔너리 클래스가 입력 순서를 기억할 수 있게 되며 덜 중요해졌다. (파이썬 3.7)
+
+딕셔너리와의 차이점 몇 가지는 여전히 남아있다.
+- 일반적인 딕셔너리는 우수하게 mapping 연산을 하도록 설계되었다. 입력 순서를 추적하는 것은 후순위이다.
+
+- $\texttt{OrderedDict}$는 우수하게 재배열 연산을 하도록 설계되었다. 공간 효율, 순회 속도, 그리고 업데이트 연산의 성능은 후순위이다.
+
+- $\texttt{OrderedDict}$ 알고리즘은 빈도가 높은 재배열 연산을 `dict`보다 잘 다룬다. 아래의 예시들에서 보듯이, 다양한 종류의 LRU 캐시를 구현하는데 적합하다.
+
+- $\texttt{OrderedDict}$에서의 equality 연산은 matching 순서를 확인한다.<br>
+`dict`는 순서까지 고려하는 equality 테스트를 `p == q and all(k1 == k2 for k1, k2 in zip[p, q])`로 구현할 수 있다.<br>
+
+- $\texttt{OrderedDict}$의 `popitem()` 메서드는 다른 형태를 가진다. 어느 아이템이 나올지 특정하는 추가 인수를 받을 수 있다.<br>
+`dict`는 $\texttt{OrderedDict}$의 가장 우측에 위치한(마지막) 원소를 pop하는 `od.popitem(last=True)`를 `d.popitem()`으로 구현할 수 있다.<br>
+`dict`는 $\texttt{OrederedDict}$의 만약 존재한다면 가장 좌측에 위치한(첫번째) 원소를 반환하고 제거하는 `od.popitem(last=False)`를 `(k := next(iter(d)), d.pop(k))`로 구현할 수 있다.
+
+- $\texttt{OrderedDict}$는 원소를 마지막 지점으로 효율적으로 재위치시키는 `move_to_end()` 메서드를 가진다.<br>
+`dict`는 $\texttt{OrderedDict}$에서 키와 값을 가장 우측으로 이동시키는 `od.move_to_end(k, last=True)`를 `d[k] = d.pop(k)`으로 구현할 수 있다.<br>
+`dict`는 $\texttt{OrderedDict}$에서 키와 값을 가장 좌측으로 이동시키는 `od.move_to_end(k, last=False)`와 동등한 효율적인 방법을 가지지 못한다.
+
+- 파이썬 3.8전까지, `dict`에는 `__reversed__()` 메서드가 없었다.
+<br><br><br>
+- $\texttt{class collections.OrderedDict([{\it items}])}$<br>
+    딕셔너리 순서를 재배열하는데 특화된 메서드를 가진 `dict` 서브클래서의 인스턴스를 반환한다.
+
+    *버전 3.1에서 추가됨*
+
+    - $\texttt{popitem(last=True)}$<br>
+        Ordered dictionary의 `popitem()` 메서드는 (키, 값) 쌍을 반환하고 제거한다. 각각의 쌍은 *last*가 `True`이면 LIFO, `False`이면 FIFO 순서로 반환된다.
+
+    - $\texttt{move}$ _ $\texttt{to}$ _ $\texttt{end(key, last=True)}$
+        존재하는 키를 ordered dictionary의 어느 쪽 끝으로 이동시킨다. *last*가 `True`(기본값)일 때에는 오른쪽 끝, *last*가 `False`일 때에는 왼쪽 끝으로 옮긴다. 키가 존재하지 않으면 `KeyError`를 발생시킨다.
+
+        ```python
+        >>> d = OrderedDict.fromkeys('abcde')
+        >>> d.move_to_end('b')
+        >>> ''.join(d)
+        'acdeb'
+        >>> d.move_to_end('b', last=False)
+        >>> ''.join(d)
+        'bacde'
+        ```
+
+        *버전 3.2에서 추가됨*
+
+일반적인 mapping 메서드에 더해, ordered dictionary는 `reversed()`를 사용한 반전 순회 또한 지원한다.
+
+$\texttt{OrderedDict}$ 객체 사이의 equality 테스트는 순서를 고려하며, `list(od1.items())==list(od2.items())`로 구현된다. $\texttt{OrderedDict}$ 객체와 다른 `Mapping` 객체 사이의 equality 테스트는 일반적인 딕셔너리처럼 순서를 고려하지 않는다. 이 경우 일반적인 딕셔너리가 사용되는 곳이라면 어디든 $\texttt{OrderedDict}$로 대체될 수 있다.
+
+*버전 3.5에서 변경됨*: $\texttt{OrderedDict}$의 아이템, 키, 값 view는 이제 `reversed()`를 사용한 반전순회를 지원함<br>
+*버전 3.6에서 변경됨*: [PEP468](https://peps.python.org/pep-0468/)에서 보듯이, $\texttt{OrderedDict}$ 생성자와 `update()`메서드로 전달되는 키워드 인수의 순서가 유지됨<br>
+*버전 3.9에서 변경됨*: [PEP584](https://peps.python.org/pep-0584/)에서 기술되었듯이, merge(`|`)와 update(`|=`) 연산자가 추가됨
+
+## $\texttt{OrderedDict}$ 사용예시
+키가 최종적으로 삽입된 순서를 기억하는 ordered dictionary를 만드는 것은 어렵지 않다. 만약 새로운 entry가 이미 존재하는 entry를 덮어쓴다면, 기존 삽입 위치는 변경되며 끝으로 이동한다.
+```python
+class LastUpdatedOrderedDict(OrderedDict):
+    'Store items in the order the keys were last added'
+
+    def __setitem__(self.key, value):
+        super().__setitem__(key, value)
+        self.move_to_end(key)
+```
+
+$\texttt{OrderedDict}$는 또한 `functools.lru_cache()`를 다르게 구현하는데에도 유용하다.
+```python
+from time import time
+
+class TimeBoundedLRU:
+    "LRU Cache that invalidates and refreshed old entries."
+
+    def __init__(self, func, maxsize=128, maxage=30):
+        self.cache = OrderedDict()     # {args : (timestamp, result)}
+        self.func = func
+        self.maxsize = maxsize
+        self.maxage = maxage
+    
+    def __call__(self, *args):
+        if args in self.cache:
+            self.cache.move_to_end(args)
+            timestamp, result = self.cache[args]
+            if time() - timestamp <= self.maxage:
+                return result
+        result = self.func(*args)
+        self.cache[args] = time(), result
+        if len(self.cache) > self.maxsize:
+            self.cache.popitem(0)
+        return result
+```
+
+```python
+class MultiHitLRUCache:
+    """ LRU cache that defers caching a result until
+        it has been requested multiple times.
+
+        To avoid flushing the LRU cache with one-time requests,
+        we don't cache until a request has been made more than once.
+    """
+
+    def __init__(self, func, maxsize=128, maxrequests=4096, cache_after=1):
+        self.requests = OrderedDict()  # { uncached_key : request_count }
+        self.cache = OrderedDict()     # { cached_key : function_result }
+        self.func = func
+        self.maxrequests = maxrequests # max number of uncached requests
+        self.maxsize = maxsize         # max number of stored return values
+        self.cache_after = cache_after
+    
+    def __call__(self, *args):
+        if args in self.cache:
+            self.cache.move_to_end(args)
+            return self.cache[args]
+        result = self.func(*args)
+        self.requests[args] = self.requests.get(args, 0) + 1
+        if self.requests[args] <= self.cache_after:
+            self.requests.move_to_end(args)
+            if len(self.requests.) > self.maxrequests:
+                self.requests.popitem(0)
+        else:
+            self.requests.pop(args, None)
+            self.cache[args] = result
+            if len(self.cache) > self.maxsize:
+                self.cache.popitem(0)
+        return result
+```
