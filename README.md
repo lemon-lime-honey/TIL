@@ -27,6 +27,7 @@
 - [bootstrap](/web/bootstrap.md)
 - [CSS](/web/css.md)
 - [HTML](/web/html.md)
+- [JavaScript](/web/js.md)
 
 # etc
 - [CLI](/etc/cli.md)
