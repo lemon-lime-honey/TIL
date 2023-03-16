@@ -54,3 +54,9 @@
 
 ## 2023-03-10
 - Collections 모듈 중 namedtuple() factory function에 관해 공부했다.
+
+## 2023-03-12
+- Collections 모듈 중 OrderedDict 객체에 관해 공부했다.
+
+## 2023-03-16
+- Collections 모듈 중 UserDict 객체에 관해 공부했다.

@@ -605,3 +605,15 @@ class MultiHitLRUCache:
                 self.cache.popitem(0)
         return result
 ```
+<br><br>
+
+## $\texttt{UserDict}$ objects
+$\texttt{UserDict}$는 딕셔너리 객체를 감싸는 wrapper처럼 동작한다. 이 클래스의 필요성은 `dict`로부터 직접 서브클래스를 만드는 기능으로 부분적으로 대체되었으나, 이 클래스는 underlying 딕셔너리에 속성으로 접근할 수 있기 때문에 좀 더 다루기 쉽다.
+
+- $\texttt{class collections.UserDict([{\it initialdata}])}$<br>
+    딕셔너리를 구현하는 클래스. 인스턴스의 내용은 $\texttt{UserDict}$ 인스턴스의 `data` 속성을 통해 접근할 수 있는 일반적인 딕셔너리에 저장된다. 만약 *initialdata*가 주어졌다면, `data`는 그 내용으로 초기화된다. *initialdata*의 레퍼런스는 저장되지 않아 다른 목적을 위해 사용될 수 있게 된다는 점을 참고하라.
+
+    Mapping의 메서드와 연산을 지원하기 위해 $\texttt{UserDict}$ 인스턴스는 다음과 같은 속성을 제공한다.
+
+    - $\texttt{data}$<br>
+        $\texttt{UserDict}$ 클래스의 내용을 저장하기 위해 사용되는 일반적인 딕셔너리.
