@@ -559,3 +559,142 @@ const result = array.map(function (item, index, array)) {
 }
 ```
 기본적으로 `forEach`구조와 같으나 `forEach`와는 달리 새로운 배열을 반환한다.
+<br><br>
+
+# 이벤트
+DOM 요소는 event를 받고, 받은 event를 처리할 수 있다.
+
+## Event Handler
+이벤트가 발생했을 때 실행되는 함수
+
+### $\texttt{.addEventListener()}$
+```javascript
+EventTarget.addEventListener(type, handler)
+```
+- 대표적인 이벤트 핸들러 중 하나
+- 특정 이벤트를 DOM 요소가 수신할 때마다 콜백 함수를 호출한다.
+- `type`: 이벤트 이름
+- `handler`
+    - 발생한 이벤트 객체를 수신하는 콜백 함수
+    - 콜백 함수는 발생한 Event object를 유일한 매개변수로 받는다.
+
+#### 예시
+```html
+<body>
+  <button id="btn">버튼</button>
+
+  <script>
+    // id가 btn인 요소 선택
+    const btn = document.querySelector('#btn')
+    console.log(btn)
+
+    // 선택한 버튼에 이벤트 핸들러 부착
+    // 버튼에서 click 이벤트가 발생할 때마다 함수가 실행된다
+    btn.addEventListener('click', function (event)) {
+      // 이벤트 객체
+      console.log(event)
+
+      // 이벤트가 발생한 대상
+      console.log(event.target)
+      console.log(this)
+    }
+  </script>
+</body>
+```
+
+### click 이벤트
+예시: 버튼을 누르면 숫자가 1씩 증가
+```html
+<button id="btn">버튼</button>
+<p id="counter">0</p>
+
+<script>
+  // 초기값
+  let countNumber = 0
+
+  // id가 btn인 요소 선택
+  const btn = document.querySelector('#btn')
+  console.log(btn)
+
+  // 선택한 버튼에 이벤트 핸들러 부착
+  // 버튼에서 click 이벤트가 발생할 때마다 함수가 실행된다.
+  btn.addEventListener('click', function () {
+    console.log('click!')
+
+    // countNumber를 증가시키고
+    countNumber += 1
+
+    // id가 counter 안의 요소의 컨텐츠를 변경한다.
+    const counter = document.querySelector('#counter')
+    counter.textcontent = countNumber
+  })
+</script>
+```
+
+### input 이벤트
+예시: 입력 값을 실시간으로 출력하기
+```html
+<body>
+  <input type="text" id="text-input">
+  <p></p>
+
+  <script>
+    // 1. input 요소 선택
+    const textInput = document.querySelector('#text-input')
+
+    // 2. 이벤트 핸들러 부착
+    textInput.addEventListener('input', function (event) {
+      console.log(evnet.target.value)
+
+      // 3. input에 작성한 value를 p 태그의 컨텐츠로 출력하기
+      const pTag = document.querySelector('p')
+      pTag.textContent = event.target.value
+    })
+  </script>
+</body>
+```
+
+### click & input 이벤트
+예시: 입력 값을 실시간으로 출력하기 + 버튼을 클릭하면 출력 값의 스타일을 변경하기
+```html
+<h1></h1>
+<button id="btn">클릭</button>
+<input type="text" id="text-input">
+
+<script>
+  // 인풋
+  const input = document.querySelector('#text-input')
+
+  input.addEventListener('input', function (event) {
+    const h1Tag = document.querySelector('h1')
+    h1Tag.textContent = event.target.value
+  })
+
+  // 버튼
+  const btn = document.querySelector('#btn')
+
+  btn.addEventListener('click', function () {
+    const h1 = document.querySelector('h1')
+    // 클래스 blue를 토글한다.
+    h1.classList.toggle('blue')
+  })
+</script>
+```
+
+### 이벤트 취소하기
+예시: 텍스트를 복사하려고 하면 알림 창을 띄우며 복사를 중단시키기
+```html
+<body>
+  <h1>Copy?</h1>
+
+  <script>
+    const h1 = document.querySelector('h1')
+
+    h1.addEventListener('copy', function (event) {
+      // copy event 취소
+      event.preventDefault()
+      alert('Canceled.')
+    })
+  </script>
+</body>
+```
