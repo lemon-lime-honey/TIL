@@ -58,5 +58,8 @@
 ## 2023-03-12
 - Collections 모듈 중 OrderedDict 객체에 관해 공부했다.
 
-## 2023-03-16
+## 2023-03-17
 - Collections 모듈 중 UserDict 객체에 관해 공부했다.
+
+## 2023-03-18
+- Collections 모듈 중 UserList 객체에 관해 공부했다.
