@@ -629,9 +629,23 @@ $\texttt{UserList}$는 리스트 객체를 감싸는 wrapper처럼 동작한다.
 
     메서드와 mutable sequence의 연산을 지원하기 위해, $\texttt{UserList}$ 인스턴스는 다음의 속성을 제공한다.
 
-    - $\texttt{data}$
+    - $\texttt{data}$<br>
     $\texttt{UserList}$ 클래스의 내용을 저장하기 위해 사용되는 일반적인 리스트.
 
 **서브클래스 생성 시 요구사항**: $\texttt{UserList}$의 서브클래스는 인수가 한 개 이하인 생성자를 통해 만들 수 있다. 새로운 sequence를 반환하는 리스트 연산은 실제로 구현된 클래스의 인스턴스를 생성하는 시도를 한다. 그렇게 하기 위해 데이터 소스로 사용되는 sequence 객체를 하나의 파라미터로 생성자와 함께 호출한다.
 
 만약 유도된 클래스가 이 요구사항에 응하지 않는다면, 이 클래스가 지원하는 모든 특별한 메서드는 덮어 씌워져야 하기 때문에 이런 경우에 제공되어야 하는 메서드에 관한 정보의 출처에게 자문한다.
+<br><br>
+
+## $\texttt{UserString}$ objects
+$\texttt{UserString}$는 문자열 객체를 감싸는 wrapper처럼 동작한다. 이 클래스의 필요성은 `str`에서 직접 서브클래스를 만드는 기능에 의해 대체되었으나, 속성으로 underlying 문자열에 접근할 수 있기 때문에 좀 더 다루기 쉽다.
+
+- $\texttt{class collections.UserString({\it seq})}$<br>
+    문자열 객체를 구현하는 클래스. 인스턴스의 내용은 $\texttt{UserString}$ 인스턴스의 `data` 속성을 통해 접근할 수 있는 일반적인 문자열 객체에 저장된다. 인스턴스의 내용은 초기에는 `seq`의 사본으로 정해진다. `seq` 인수는 빌트인 `str()` 함수를 통해 문자열로 변환될 수 있는 객체라면 모두 가능하다.
+
+    문자열의 메서드와 연산을 지원하는 것에 더해, $\texttt{UserString}$ 인스턴스는 다음의 속성을 제공한다.
+
+    - $\texttt{data}$<br>
+    $\texttt{UserString}$ 클래스의 내용을 저장하기 위해 사용되는 일반 `str` 객체.
+
+    *버전 3.5에서 변경됨*: 새로운 메서드 `__getnewargs__`, `__rmod__`, `casefold`, `format_map`, `isprintable` 그리고 `maketrans`.

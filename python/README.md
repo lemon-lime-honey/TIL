@@ -63,3 +63,6 @@
 
 ## 2023-03-18
 - Collections 모듈 중 UserList 객체에 관해 공부했다.
+
+## 2023-03-19
+- Collections 모듈 중 UserString 객체에 관해 공부했다.
