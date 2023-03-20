@@ -7,6 +7,9 @@
 - [workbench guide](/db-mysql/guide.md)
 - [rdbms terms](/db-mysql/terms.md)
 
+# django
+- [initial setup guide](/django/guide.md)
+
 # git
 - [about git, github](/git/about.md)
 - [branch](/git/branch.md)
