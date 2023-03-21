@@ -14,9 +14,15 @@ $ django-admin startproject PROJECT_NAME .
 
 # 5. Django 서버 실행
 $ python manage.py runserver
+
+# 6. 앱 생성
+$ python manage.py startapp APP_NAME
+
+# 7. 앱 등록
+# settings.py의 'INSTALLED_APPS'에 'APP_NAME'을 추가한다.
 ```
 
-Django 서버를 실행한 후 브라우저에서 `http://127.0.0.1:8000/`로 접속하면 다음과 같은 화면이 나타난다.<br>
+Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`로 접속하면 다음과 같은 화면이 나타난다.<br>
 ![Django_initial_rocket](image/initial_rocket.png)
 
 번외. git 사용 시 설정

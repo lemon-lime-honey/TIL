@@ -1,14 +1,15 @@
 ![header](til_header.png)
 
 # database(mySQL)
+- [workbench guide](/db-mysql/guide.md)
 - [data modeling](/db-mysql/modeling.md)
 - [normalization](/db-mysql/normalization.md)
 - [sql statements](/db-mysql/sql_statements.md)
-- [workbench guide](/db-mysql/guide.md)
 - [rdbms terms](/db-mysql/terms.md)
 
 # django
 - [initial setup guide](/django/guide.md)
+- [design pattern](/django/design_pattern.md)
 
 # git
 - [about git, github](/git/about.md)
