@@ -10,6 +10,7 @@
 # django
 - [initial setup guide](/django/guide.md)
 - [design pattern](/django/design_pattern.md)
+- [template](/django/template.md)
 
 # git
 - [about git, github](/git/about.md)
