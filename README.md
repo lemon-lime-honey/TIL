@@ -11,6 +11,7 @@
 - [initial setup guide](/django/guide.md)
 - [design pattern](/django/design_pattern.md)
 - [template](/django/template.md)
+- [url](/django/url.md)
 
 # git
 - [about git, github](/git/about.md)
