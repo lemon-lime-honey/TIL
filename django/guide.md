@@ -82,8 +82,8 @@ Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`
 
 ## 데이터베이스 파일 접근
 1. `Visual Studio Code`에서 `SQLite Viewr` 확장 프로그램을 설치한 후 `db.sqlite3` 파일을 연다.
-2. 왼쪽 메뉴에서 해당하는 모델을 선택한다.
+2. 왼쪽 메뉴에서 해당하는 모델을 선택한다.<br>
 <img src="image/db_sqlite3_menu.png" width="500"><br>
 
-3. 열었을 때의 상태
+3. 열었을 때의 상태<br>
 <img src="image/db_table.png" width="500"><br>
