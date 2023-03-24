@@ -8,7 +8,7 @@
 - [rdbms terms](/db-mysql/terms.md)
 
 # django
-- [initial setup guide](/django/guide.md)
+- [user guide](/django/guide.md)
 - [design pattern](/django/design_pattern.md)
 - [model](/django/model.md)
 - [template](/django/template.md)
