@@ -19,6 +19,9 @@
 - [branch](/git/branch.md)
 - [git_flow](/git/git_flow.md)
 
+# problem solving
+- [about](/problem-solving/README.md)
+
 # python
 - [control statement](/python/control_statement.md)
 - [data type and operator](/python/datatype_operator.md)
