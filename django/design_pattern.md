@@ -94,7 +94,7 @@ urlpatterns = [
     path('articles/', views.index),
 ]
 ```
-$\texttt{http://128.0.0.1:8000/articles/}$로 요청이 들어왔을 때 `views` 모듈의 `index` 뷰 함수를 호출하는 예시
+$\texttt{http:// 128.0.0.1:8000 / articles /}$로 요청이 들어왔을 때 `views` 모듈의 `index` 뷰 함수를 호출하는 예시
 
 ## View
 ```python
@@ -124,7 +124,7 @@ def index(request):
 ```
 1. `articles` 앱 폴더 안에 `templates` 폴더를 생성한다.
     - 반드시 이름이 `templates`여야 하며 직접 생성해야 한다.
-2. `template` 폴더 안에 템플릿 페이지를 작성한다.
+2. `templates` 폴더 안에 템플릿 페이지를 작성한다.
 
 ### Django에서 template를 인식하는 경로 규칙
 $\texttt{app dir / templates / articles / index.html}$<br>

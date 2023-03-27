@@ -36,7 +36,7 @@ Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`
 # model
 ## model migration
 ### app의 `model.py`에서 model class을 작성한다.
-<img src="image/model_py_first.png" width="500"><br>
+<img src="image/model_py_first.png" width="400"><br>
 
 ### $\texttt{makemigrations}$ 명령어를 이용해 migration 파일을 생성한다.
 <img src="image/first_makemigrations.png" width="500"><br>
@@ -46,7 +46,7 @@ Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`
 
 ## add field
 ### app의 `model.py`를 수정한다.
-<img src="image/model_py_add.png" width="500"><br>
+<img src="image/model_py_add.png" width="450"><br>
 
 ### $\texttt{makemigrations}$ 명령어를 이용해 migration 파일을 생성한다.
 #### `default`를 지정하지 않았을 때
@@ -55,7 +55,7 @@ Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`
 2. 나간 후 `model.py`에서 기본값 지정하기
 
 ##### 1을 선택했을 때
-<img src="image/makemigrations_again_wo_default_2.png" width="550"><br>
+<img src="image/makemigrations_again_wo_default_2.png"><br>
 
 #### `default`를 지정했을 때
 <img src="image/makemigrations_again_w_default.png" width="500"><br>
@@ -70,7 +70,7 @@ Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`
 - password: 보안상 터미널에 출력되지 않는다.
 
 ### 모델 클래스 등록
-<img src="image/admin_py.png" width="500"><br>
+<img src="image/admin_py.png" width="300"><br>
 `admin.py`에 등록하지 않으면 해당 모델을 admin site에서 확인할 수 없다.
 
 ## admin page
@@ -83,7 +83,7 @@ Django 서버를 실행한 후(5번) 브라우저에서 `http://127.0.0.1:8000/`
 ## 데이터베이스 파일 접근
 1. `Visual Studio Code`에서 `SQLite Viewr` 확장 프로그램을 설치한 후 `db.sqlite3` 파일을 연다.
 2. 왼쪽 메뉴에서 해당하는 모델을 선택한다.<br>
-<img src="image/db_sqlite3_menu.png" width="500"><br>
+<img src="image/db_sqlite3_menu.png" width="400"><br>
 
 3. 열었을 때의 상태<br>
-<img src="image/db_table.png" width="500"><br>
+<img src="image/db_table.png"><br>
