@@ -11,6 +11,7 @@
 - [user guide](/django/guide.md)
 - [design pattern](/django/design_pattern.md)
 - [model](/django/model.md)
+- [orm](/django/orm.md)
 - [template](/django/template.md)
 - [url](/django/url.md)
 
