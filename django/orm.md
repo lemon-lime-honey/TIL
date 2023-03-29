@@ -173,3 +173,214 @@ DoesNotExist: Article matching query does not exist.
 # content 컬럼에 'Pal'이 포함된 모든 데이터 조회
 Article.objects.filter(content__contains='Pal')
 ```
+<br><br>
+
+# ORM Update
+```python
+# 데이터 수정
+# 수정할 인스턴스 조회
+>>> article = Article.objects.get(pk=1)
+
+# 인스턴스 변수를 변경
+>>> article.content = 'Kenobi'
+
+# 저장
+>>> article.save()
+>>> article.title
+'Kenobi'
+```
+<br><br>
+
+# ORM Delete
+```python
+# 데이터 삭제
+# 삭제할 인스턴스 조회
+>>> article = Article.objects.get(pk=1)
+
+# delete 메서드 호출(삭제된 객체 반환)
+>>> article.delete()
+(1, {'articles.Article': 1})
+
+# 삭제했기 때문에 조회 불가
+>>> Article.objects.get(pk=1)
+DoesNotExist: Article matching query does not exist.
+```
+<br><br>
+
+# ORM w/ View
+## 사전 준비
+```python
+# articles/urls.py
+
+from django.urls import path
+from . import views
+
+app_name = 'articles'
+urlpatterns = [
+    path('', views.index, name='index'),
+]
+
+
+# crud/urls.py
+
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('articles/', include('articles.urls')),
+]
+
+
+# articles/views.py
+
+def index(request):
+    return render(request, 'articles/index.html')
+```
+
+## READ
+### 전체 게시글 조회
+```python
+# articles/views.py
+
+from .models import Article
+
+def index(request):
+    articles = Article.objects.all()
+    context = {
+        'articles': articles,
+    }
+    return render(request, 'articles/index.html', context)
+```
+```html
+<!-- articles/index.html -->
+
+<h1>Articles</h1>
+<hr>
+{% for article in articles %}
+  <p>글 번호: {{ article.pk }}</p>
+  <p>글 제목: {{ article.title }}</p>
+  <p>글 내용: {{ article.content }}</p>
+  <hr>
+{% endfor %}
+```
+
+### 단일 게시글 조회
+```python
+# articles/urls.py
+
+urlpatterns = [
+    ...
+    path('<int:pk>/', views.detail, name='detail'),
+]
+
+
+# articles/views.py
+
+def detail(request, pk):
+    article = Article.objects.get(pk=pk)
+    context = {
+        'article': article,
+    }
+    return render(request, 'articles/detail.html', context)
+```
+```html
+<!-- templates/articles/detail.html -->
+
+<h2>DETAIL</h2>
+<h3>{{ article.pk }} 번째 글</h3>
+<hr>
+<p>제목: {{ article.title }}</p>
+<p>내용: {{ article.content }}</p>
+<p>작성 시각: {{ article.created_at }}</p>
+<p>수정 시각: {{ article.updated_at }}</p>
+<hr>
+<a href="{% url 'articles:index' %}">[back]</a>
+```
+
+#### 제목을 눌러 상세 페이지로 이동
+```html
+<!-- templates/articles/detail.html -->
+
+<h1>Articles</h1>
+<hr>
+{% for article in articles %}
+  <p>글 번호: {{ article.pk }}</p>
+  <a href="{% url 'articles:detail' article.pk %}">
+    <p>글 제목: {{ article.title }}</p>
+  </a>
+  <p>글 내용: {{ article.content }}</p>
+  <hr>
+{% endfor %}
+```
+
+## CREATE
+### new
+```python
+# articles/url.py
+
+urlpatterns = [
+    ...
+    path('new/', views.new, name='new'),
+]
+
+
+# articles/views.py
+
+def new(request):
+    return render(request, 'articles/new.html')
+```
+```html
+<!-- templates/articles/new.html -->
+
+<h1>NEW</h1>
+<form action="#" method="GET">
+  <div>
+    <label for="title">Title: </label>
+    <input type="text" name="title" id="title">
+  </div>
+  <div>
+    <label for="content">Content: </label>
+    <textarea name="content" id="content"></textarea>
+  </div>
+  <input type="submit" class="btn btn-outline-primary">
+</form>
+<hr>
+<a href="{% url 'articles:index' %}">[back]</a>
+```
+
+#### New 페이지로 이동할 수 있는 하이퍼링크 작성
+```html
+<!-- templates/articles/index.html -->
+
+<h1>Articles</h1>
+<a href="{% url 'articles:new' %}">NEW</a>
+<hr>
+...
+```
+
+### create
+```python
+# articles/urls.py
+
+urlpatterns = [
+    ...
+    path('create/', views.create, name='create'),
+]
+
+
+# articles/views.py
+
+def create(request):
+    title = request.GET.get('title')
+    content = request.GET.get('content')
+    Article.objects.create(title=title, content=content)
+    return render(request, 'articles/create.html')
+```
+```html
+<!-- templates/articles/new.html -->
+
+...
+<form action="{% url 'articles:create' %}" method="GET">
+...
+```
