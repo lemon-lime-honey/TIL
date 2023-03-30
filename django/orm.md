@@ -384,3 +384,135 @@ def create(request):
 <form action="{% url 'articles:create' %}" method="GET">
 ...
 ```
+
+## HTTP request methods
+### $\texttt{GET}$
+- 특정 리소스를 조회하는 요청
+- $\texttt{GET}$으로 데이터를 전달하면 Query String 형식으로 전달된다.
+- 데이터를 가져올 때에만 사용해야 한다.
+
+### $\texttt{POST}$
+- 특정 리소스에 변경사항을 만드는 요청
+- $\texttt{POST}$로 데이터를 전달하면 HTTP Body에 담겨 전달된다.
+- `{% csrf_token %}` 태그를 사용하지 않으면 `403`에러가 발생한다.
+
+#### CSRF
+- 사이트간 요청 위조(Cross-Site-Request-Forgery)
+- 사용자가 본인 의지와는 무관하게 공격자가 의도한 행동을 하여 특정 웹 페이지를 보안에 취약하게 하거나 수정, 삭제 등의 작업을 하게 만드는 공격 방법
+
+#### Security Token (CSRF Token)
+- 대표적인 CSRF 방어 방법
+1. 서버는 사용자 입력 데이터에 임의의 난수 값(token)을 부여한다.
+2. 매 요청마다 해당 token을 포함시켜 전송한다.
+3. 이후 서버에서 요청을 받을 때마다 전달된 token이 유효한지 검증한다.
+
+## DELETE
+```python
+# articles/urls.py
+
+urlpatterns = [
+    ...
+    path('<int:pk>/delete/', views.delete, name='delete'),
+]
+
+
+# articles/views.py
+
+def delete(request, pk):
+    article = Article.objects.get(pk=pk)
+    article.delete()
+    return redirect('article:index')
+```
+```html
+<!-- articles/detail.html -->
+
+<body>
+  <h2>DETAIL</h2>
+  ...
+  <hr>
+  <form action="{% url 'articles:delete' article.pk %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="DELETE">
+  </form>
+  <a href="{% url 'articles:index' %}">[back]</a>
+</body>
+```
+
+## UPDATE
+### EDIT
+```python
+# articles/urls.py
+
+urlpatterns = [
+    ...
+    path('<int:pk>/edit/', views.edit, name='edit'),
+]
+
+
+# articles/views.py
+
+def edit(request, pk):
+    article = Article.objects.get(pk=pk)
+    context = {
+        'article': article,
+    }
+    return render(request, 'articles/edit.html', context)
+```
+```html
+<!-- articles/edit.html -->
+
+<h1>EDIT<h1>
+<form action="#" method="POST">
+  {% csrf_token %}
+  <div>
+    <label for="title">Title: </label>
+    <input type="text" name="title" id="title" value="{{ article.title }}">
+  </div>
+  <div>
+    <label for="content">Content: </label>
+    <textarea name="content" id="content">{{ article.content }}</textarea>
+  </div>
+  <input type="submit">
+</form>
+<hr>
+<a href="{% url 'articles:index' %}">[back]</a>
+```
+
+### UPDATE
+```python
+# articles/urls.py
+
+urlpatterns = [
+    ...
+    path('<int:pk>/update/', views.update, name='update'),
+]
+
+
+# articles/views.py
+
+def update(request, pk):
+    article = Article.objects.get(pk=pk)
+    article.title = request.POST.get('title')
+    article.content = request.POST.get('content')
+    article.save()
+    return redirect('articles:detail', article.pk)
+```
+```html
+<!-- articles/edit.html -->
+
+<h1>EDIT<h1>
+<form action="{% url 'articles:update' article.pk %}" method="POST">
+  {% csrf_token %}
+  <div>
+    <label for="title">Title: </label>
+    <input type="text" name="title" id="title" value="{{ article.title }}">
+  </div>
+  <div>
+    <label for="content">Content: </label>
+    <textarea name="content" id="content">{{ article.content }}</textarea>
+  </div>
+  <input type="submit">
+</form>
+<hr>
+<a href="{% url 'articles:index' %}">[back]</a>
+```

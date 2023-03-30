@@ -13,3 +13,12 @@
 
 ## 2023-03-24
 - Django Model을 배우기 시작했다.
+
+## 2023-03-28
+- Django ORM을 배우기 시작했다.
+
+## 2023-03-29
+- READ, CREATE
+
+## 2023-03-30
+- DELETE, UPDATE
