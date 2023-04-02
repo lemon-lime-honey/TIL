@@ -25,7 +25,7 @@
 - $\texttt{heapq.heapifty({\it x})}$<br>
   리스트 `x`를 제자리에서 선형시간에 힙으로 변환한다.
 
-- $\texttt{heapq.heapreplave({\it heap, item})}$<br>
+- $\texttt{heapq.heapreplace({\it heap, item})}$<br>
   힙에서 가장 작은 요소를 pop하고 반환하고, 새 `item`을 넣는다. 힙의 크기가 변하지 않는다. 만약 힙이 비었다면, `IndexError`가 발생한다.
 
   이 동작은 `heappop()` 다음에 `heappush()`를 호출하는 것보다 더 효율적이며, 고정 크기 힙을 사용하는 경우에는 더 적절할 수 있다. 이 pop/push 조합은 언제나 힙에서 요소 하나를 반환하며 그것을 `item`으로 대체한다.
@@ -84,3 +84,60 @@
 (1, 'write spec')
 ```
 <br><br>
+
+# Priority Queue Implementation Notes
+
+우선순위 큐는 힙의 일반적인 사용법이며 여러 구현 상의 난제를 가진다.
+
+- 정렬의 안정성: 동일한 우선순위를 가지는 두 개의 일을 어떻게 추가된 순서로 반환하게 할 수 있는가?
+- (우선순위, 일)과 같은 튜플은 우선순위가 같고 일에 관한 기본적인 비교 순서가 없다면 정렬이 성립하지 않는다.
+- 만약 우선순위나 일이 변경된다면 힙에서 어떻게 새로운 위치로 옮길 것인가?
+- 또는 대기 중인 일이 삭제되어야 한다면 큐에서 어떻게 찾아서 삭제할 것인가?
+
+처음 두 문제의 해결 방안은 엔트리를 우선순위, 엔트리 카운트, 일로 구성된 세 개의 요소를 가진 리스트로 저장하는 것이다. 엔트리 카운트는 같은 우선순위를 가진 두 일을 추가된 순서대로 반환하는 타이 브레이커 역할을 한다. 그리고 중복된 값을 갖는 엔트리 카운트가 없기 때문에 튜플 비교는 두 일을 직접적으로 비교하는 일이 없다.
+
+비교 불가한 일 문제의 또다른 해결법은 일 아이템을 무시하고 오직 우선순위 필드만 비교하는 wrapper 클래스를 만드는 것이다.
+
+```python
+from dataclasses import dataclass, field
+from typing impor Any
+
+@dataclass(order=True)
+class PrioritizedItem:
+    priority: int
+    item: Any=field(compare False)
+```
+
+남은 문제는 대기 중인 일을 찾고 그것의 우선순위를 변경하거나 완전히 삭제하는 것이다. 일을 찾는 것은 큐의 엔트리를 가리키는 딕셔너리로 해결할 수 있다.
+
+엔트리를 제거하거나 그것의 우선순위를 변경하는 것은 힙 구조의 불변성을 깰 수 있기 때문에 더 어렵다. 그러므로 엔트리를 제거된 것으로 마크하고 개정된 우선순위를 가진 새 엔트리를 추가하는 것이 가능한 해결 방법이다.
+
+```python
+pq = []                      # list of entries arranged in  a heap
+entry_finder = {}            # mapping of tasks to entries
+REMOVED = '<removed-task>'   # placeholder for a removed task
+coutner = itertools.count()  # unique sequence count
+
+def add_task(task, priority=0):
+    # Add a new task or update the priority of an existing task
+    if task in entry_finder:
+        remove_task(task)
+    count = next(counter)
+    entry = [priority, count, task]
+    entry_finder[task] = entry
+    heappush(pq, entry)
+
+def remove_task(task):
+    # Mark an existing task as REMOVED. Raise KeyError if not found
+    entry = entry_finder.pop(task)
+    entry[-1] = REMOVED
+
+def pop_task():
+    # Remove and return the lowest priority task. Raise KeyError if empty
+    while pq:
+      priority, count, task = heappop(pq)
+      if task is not REMOVED:
+          del entry_finder[task]
+          return task
+    raise KeyError('pop from an empty priority queue')
+```
