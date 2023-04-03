@@ -22,3 +22,7 @@
 
 ## 2023-03-30
 - DELETE, UPDATE
+
+## 2023-04-03
+- Django Form을 배웠다.
+- Django에서 HTTP request를 다루는 방법을 배웠다.
