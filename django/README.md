@@ -26,3 +26,7 @@
 ## 2023-04-03
 - Django Form을 배웠다.
 - Django에서 HTTP request를 다루는 방법을 배웠다.
+
+## 2023-04-04
+- Cookie와 Session에 관해 배웠다.
+- Django에서 custom user model로 user model을 대체하는 방법을 배웠다.

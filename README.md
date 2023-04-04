@@ -9,7 +9,11 @@
 
 # django
 - [user guide](/django/guide.md)
+- [authentication system](/django/auth_sys.md)
+- [cookie and session](/django/cookie_session.md)
 - [design pattern](/django/design_pattern.md)
+- [form](/django/form.md)
+- [handling http requests](/django/http_requests.md)
 - [model](/django/model.md)
 - [orm](/django/orm.md)
 - [template](/django/template.md)
