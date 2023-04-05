@@ -90,7 +90,7 @@ admin.site.register(User, UserAdmin)
 
 app_name = 'accounts'
 urlpatterns = [
-    path('login/', views.login, name='login'),s
+    path('login/', views.login, name='login'),
 ]
 
 
@@ -226,4 +226,323 @@ TEMPLATES = [
         },
     },
 ]
+```
+<br><br>
+
+# 회원가입
+`User` 객체 생성
+
+## 커스텀 Form 작성
+```python
+# accounts/forms.py
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+
+
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()
+
+
+class CustomUerChangeForm(UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        model = get_user_model()
+        fields = ('email', 'first_name', 'last_name')
+```
+- $\texttt{get}$ _ $\texttt{user}$ _ $\texttt{model()}$<br>
+  현재 프로젝트에서 활성화된 사용자 모델(active user model)을 반환한다.
+
+### User 모델을 직접 참조하지 않는 이유
+- User 모델을 $\texttt{get}$ _ $\texttt{user}$ _ $\texttt{model()}$을 사용해 참조하면 커스텀 User 모델을 자동으로 반환한다.
+- Django에서는 User 클래스를 직접 참조하는 대신 $\texttt{get}$ _ $\texttt{user}$ _ $\texttt{model()}$을 사용해 참조하는 것을 강조한다.
+
+## 회원 가입 페이지 작성
+```python
+# accounts.urls.py
+
+app_name = 'accounts'
+urlpatterns = [
+    ...,
+    path('signup/', views.signup, name='signup'),
+]
+
+
+# accounts/views.py
+
+from .forms import CustomUserCreationForm
+
+def signup(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('articles:index')
+    else:
+        form = CustomUserCreationForm()
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/signup.html', context)
+```
+```html
+<!-- accounts/signup.html -->
+
+<h1>회원가입</h1>
+<form action="{% url 'accounts:signup' %}" method="POST">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit">
+</form>
+```
+- 회원가입 후 로그인까지 진행하려면 `views.py`의 `signup`을 다음과 같이 변경한다.
+```python
+def signup(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            return redirect('articles:index')
+    else:
+        form = CustomUserCreationForm()
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/signup.html', context)
+```
+<br><br>
+
+# 회원탈퇴
+`User` 객체 삭제
+
+## 회원 탈퇴 로직 생성
+```python
+# accounts.urls.py
+
+app_name = 'accounts'
+urlpatterns = [
+    ...,
+    path('delete/', views.delete, name='delete'),
+]
+
+
+# accounts/views.py
+
+def delete(request):
+    request.user.delete()
+    return redirect('articles:index')
+```
+```html
+<!-- accounts/index.html -->
+
+<form action="{% url 'accounts:delete' %}" method="POST">
+  {% csrf_token %}
+  <input type="submit" value="회원탈퇴">
+</form>
+```
+- 탈퇴하면서 유저의 세션 정보도 함께 지우고 싶을 경우 `views.py`의 `delete`를 다음과 같이 변경한다.
+```python
+def delete(request):
+    request.user.delete()
+    auth_logout(request)
+    return redirect('articles:index')
+```
+- 반드시 탈퇴 후 로그아웃 순서로 행해야 한다.
+- 먼저 로그아웃을 하게 되면 해당 요청 객체 정보가 없어지기 때문에 탈퇴에 필요한 유저 정보 또한 없어진다.
+<br><br>
+
+# 회원정보 수정
+`User` 객체 갱신
+
+## 빌트인 모델폼 $\texttt{UserChangeForm()}$ 사용 시 문제점
+- admin 인터페이스에서 사용되는 ModelForm이므로 일반 사용자가 접근해서는 안 될 정보들(fields)까지 모두 수정이 가능하다.
+- CustomUserchangeForm에서 접근 가능한 필드를 조정해야 한다.
+
+## 회원정보 수정 페이지 작성
+```python
+# accounts.urls.py
+
+app_name = 'accounts'
+urlpatterns = [
+    ...,
+    path('update/', views.update, name='update'),
+]
+
+
+# accounts/views.py
+
+from .forms import CustomUserChangeForm
+
+def update(request):
+    if request.method == 'POST':
+        form = CustomUserChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('articles:index')
+    else:
+        form = CustomUserChangeForm(instance=request.user)
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/update.html', context)
+```
+```html
+<!-- accounts/update.html -->
+
+<h1>회원정보 수정</h1>
+<form action="{% url 'accounts:update' %}" method="POST">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit">
+</form>
+```
+<br><br>
+
+# 비밀번호 변경
+## 비밀번호 변경 페이지
+- Django는 비밀번호 변경 페이지를 회원정보 수정 form에서 별도 주소로 안내한다.
+- `/accounts/password/`
+
+## 비밀번호 변경 페이지 작성
+```python
+# accounts.urls.py
+
+app_name = 'accounts'
+urlpatterns = [
+    ...,
+    path('password/', views.change_password, name='change_password'),
+]
+
+
+# accounts/views.py
+
+from django.contrib.auth import update_session_auth_hash
+from .forms import PasswordChangeForm
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return redirect('articles:index')
+    else:
+        form = PasswordChangeForm(request.user)
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/change_password.html', context)
+```
+```html
+<!-- accounts/change_password.html -->
+
+<h1>비밀번호 변경</h1>
+<form action="{% url 'accounts:change_password' %}" method="POST">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <input type="submit">
+</form>
+```
+- $\texttt{update}$ _ $\texttt{session}$ _ $\texttt{auth}$ _ $\texttt{hash(request, user)}$
+  - 암호 변경 시 세션 무효화 방지
+  - 암호가 변경되어도 로그아웃 되지 않도록 새로운 비밀번호의 세션 데이터로 기존 세션을 업데이트 한다.
+  - 암호 변경 시 세션 무효화
+    - 비밀번호가 변경되면 기존 세션과의 회원 인증 정보가 일치하지 않게 되어 로그인 상태가 유지되지 않는 상황
+<br><br>
+
+# 로그인 여부에 따른 접근 제한
+## $\texttt{is}$ _ $\texttt{authenticated}$
+- 사용자가 인증되었는지 여부를 알 수 있는 User Model의 속성
+- 모든 User 인스턴스에 대해서는 항상 `True`, AnonymousUser에 대해서는 항상 `False`인 읽기 전용 속성
+- 권한(permission)과는 관련이 없으며, 사용자가 활성화 상태(active)이거나 유효한 세션(valid session)을 가지고 있는지는 확인하지 않는다.
+
+### 사용 예시
+1. 로그인/비로그인 상태에서 출력되는 링크를 다르게 설정하기
+```html
+<!-- articles/index.html -->
+
+{% if request.user.is_authenticated %}
+  <h3>Hello, {{ user }}</h3>
+  <form action="{% url 'accounts:logout' %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="Logout">
+  </form>
+  <form action="{% url 'accounts:delete' %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="회원탈퇴">
+  </form>
+  <a href="{% url 'accounts:update' %}">회원정보수정</a>
+{% else %}
+  <a href="{% url 'accounts:login' %}">Login</a>
+  <a href="{% url 'accounts:signup' %}">Signup</a>
+{% endif %}
+```
+2. 인증된 사용자라면 로그인/회원가입 로직을 수행할 수 없도록 처리하기
+```python
+# accounts/views.py
+
+def login(request):
+    if request.user.is_authenticated:
+        return redirect('articles:index')
+    ...
+
+
+def signup(request):
+    if request.user.is_authenticated:
+        return redirect('articles:index')
+    ...
+```
+
+## $\texttt{login}$ _ $\texttt{required}$
+- 인증된 사용자에 대해서만 view 함수를 실행시키는 데코레이터
+- 로그인하지 않은 사용자의 경우 `/accounts/login/`으로 redirect 시킨다.
+
+### 사용 예시
+1. 인증된 사용자만 게시글을 작성, 수정, 삭제할 수 있도록 수정
+```python
+# articles/views.py
+
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def create(request):
+    pass
+
+
+@login_required
+def delete(request, article_pk):
+    pass
+
+
+@login_required
+def update(request, article_pk):
+    pass
+```
+2. 인증된 사용자만 로그아웃, 탈퇴, 회원정보 수정, 비밀번호 변경 할 수 있도록 수정
+```python
+# accounts/views.py
+
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def logout(request):
+    pass
+
+
+@login_required
+def delete(request):
+    pass
+
+
+@login_required
+def update(request):
+    pass
+
+
+@login_required
+def change_password(request):
+    pass
 ```

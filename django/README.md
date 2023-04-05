@@ -30,3 +30,6 @@
 ## 2023-04-04
 - Cookie와 Session에 관해 배웠다.
 - Django에서 custom user model로 user model을 대체하는 방법을 배웠다.
+
+## 2023-04-05
+- 회원가입, 회원탈퇴, 회원정보 수정, 비밀번호 변경
