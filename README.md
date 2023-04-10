@@ -16,6 +16,7 @@
 - [handling http requests](/django/http_requests.md)
 - [model](/django/model.md)
 - [orm](/django/orm.md)
+- [static files](/django/static.md)
 - [template](/django/template.md)
 - [url](/django/url.md)
 
