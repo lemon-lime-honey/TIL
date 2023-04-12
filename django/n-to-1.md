@@ -262,3 +262,198 @@ def comments_delete(request, article_pk, comment_pk):
   {% endfor %}
 </ul>
 ```
+<br><br>
+
+# Article and User
+## 모델 관계 설정
+### User 외래 키 정의
+```python
+# articles/models.py
+
+from django.conf import settings
+
+
+class Article(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=10)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+```
+
+#### User 모델 참조 방법
+1. $\texttt{get}$ _ $\texttt{user}$ _ $\texttt{model()}$
+- 반환 값: `User Object`(객체)
+- `models.py`가 아닌 다른 모든 곳에서 참조할 때 사용한다.
+2. $\texttt{settings.AUTH}$ _ $\texttt{USER}$ _ $\texttt{MODEL}$
+- 반환 값: `accounts.User`(문자열)
+- `models.py`의 모델 필드에서 참조할 때 사용한다.
+
+## CRUD 구현
+### Article CREATE
+1. ArticleForm 출력 필드 수정
+  ```python
+  # articles/forms.py
+
+  class ArticleForm(forms.ModelForm):
+      class Meta:
+        model = Article
+        fields = ('title', 'content')
+  ```
+2. 게시글 작성 시 작성자 정보가 함께 저장될 수 있도록 `save`의 `commit` 옵션을 활용한다.
+  ```python
+  # articles/views.py
+
+  @login_required
+  def create(request):
+      if request.method == 'POST':
+          form = ArticleForm(request.POST)
+          if form.is_valid():
+              article = form.save(commit=False)
+              article.user = request.user
+              article.save()
+              return redirect('articles:detail', article.pk)
+      else:
+          ...
+  ```
+
+### Article READ
+```html
+<!-- articles/index.html -->
+
+{% for article in articles %}
+  <p>작성자: {{ article.user }}</p>
+  <p>글 번호: {{ article.pk }}</p>
+  <a href="{% url 'articles:detail' article.pk %}">
+    <p>글 제목: {{ article.title }}</p>
+  </a>
+  <p>글 내용: {{ article.content }}</p>
+  <hr>
+{% endfor %}
+
+
+<!-- articles/detail.html -->
+<h2>DETAIL</h2>
+<h3>{{ article.pk }} 번째 글</h3>
+<hr>
+<p>작성자: {{ article.user }}</p>
+<p>제목: {{ article.title }}</p>
+<p>내용: {{ article.content }}</p>
+<p>작성 시각: {{ article.created_at }}</p>
+<p>수정 시각: {{ article.updated_at }}</p>
+```
+
+### Article UPDATE
+본인 게시글만 수정할 수 있게 한다.
+```python
+# articles/views.py
+
+@login_required
+def update(request, pk):
+    article = Article.objects.get(pk=pk)
+    if request.user == article.user:
+        if request.method == 'POST':
+            form = ArticleForm(request.POST, instance=article)
+            if form.is_valid():
+                form.save()
+                return redirect('articles:detail', article.pk)
+        else:
+            form = ArticleForm(instance=article)
+    else:
+        return redirect('articles:index')
+    ...
+```
+```html
+<!-- articles/detail.html -->
+
+{% if request.user == article.user %}
+  <a href="{% url 'articles:update' article.pk %}">UPDATE</a><br>
+  <form action="{% url 'articles:delete' article.pk %}" method="POST">
+    {% csrf_token %}
+    <input type="submit" value="DELETE">
+  </form>
+{% endif %}
+```
+
+### Article DELETE
+본인 게시글만 삭제할 수 있게 한다.
+```python
+# articles/views.py
+
+@login_required
+def delete(request, pk):
+    article = Article.objects.get(pk=pk)
+    if request.user == article.user:
+        article.delete()
+    return redirect('articles:index')
+```
+<br><br>
+
+# Comment and User
+## 모델 관계 설정
+### User 외래키 정의
+```python
+# articles/models.py
+
+class Comment(models.Model):
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+```
+
+## CRD 구현
+### Comment CREATE
+```python
+# articles/views.py
+
+def comments_create(request, pk):
+    article = Article.objects.get(pk=pk)
+    comment_form = CommentForm(request.POST)
+    if comment_form.is_valid():
+        comment = comment_form.save(commit=False)
+        comment.article = article
+        comment.user = request.user
+        comment_form.save()
+        return redirect('articles:detail', article.pk)
+```
+
+### Comment READ
+```html
+<!-- articles/detail.html -->
+
+{% for comment in comments %}
+  <li>
+    {{ comment.user }} - {{ comment.content }}
+    ...
+  </li>
+{% endfor %}
+```
+
+### Comment DELETE
+본인 댓글만 삭제할 수 있게 한다.
+```python
+# articles/views.py
+
+def comments_delete(request, article_pk, comment_pk):
+    comment = Comment.objects.get(pk=comment_pk)
+    if request.user == comment.user:
+        comment.delete()
+    return redirect('articles:detail', article_pk)
+```
+```html
+<!-- articles/detail.html -->
+
+<ul>
+  <li>
+    {{ comment.user }} - {{ comment.content }}
+    {% if request.user == comment.user %}
+      <form action="{% url 'articles:comments_delete' article.pk comment.pk %}" method="POST">
+        {% csrf_token %}
+        <input type="submit" value="DELETE">
+      </form>
+    {% endif %}
+  </li>
+</ul>
+```
