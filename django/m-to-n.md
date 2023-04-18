@@ -64,17 +64,17 @@
   - user가 작성한 글(`user.article_set`)과 user가 좋아요를 누른 글(`user.article_set`)을 구분할 수 없게 된다.
   - user와 관계된 ForeignKey 혹은 ManyToManyField 중 하나에 related_name을 작성해야 한다.
 4. `related_name` 작성 후 Migration
-```python
-# articles/models.py
+  ```python
+  # articles/models.py
 
-class Article(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='like_articles')
-    title = models.CharField(max_length=10)
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-```
+  class Article(models.Model):
+      user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+      like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='like_articles')
+      title = models.CharField(max_length=10)
+      content = models.TextField()
+      created_at = models.DateTimeField(auto_now_add=True)
+      updated_at = models.DateTimeField(auto_now=True)
+  ```
 
 ## User - Article 간 사용 가능한 related manager 정리
 - $\texttt{article.user}$<br>
@@ -88,43 +88,149 @@ class Article(models.Model):
 
 ## 좋아요 구현
 1. url 및 view 함수 작성
-```python
-# articles/urls.py
+  ```python
+  # articles/urls.py
 
-urlpatterns = [
-    ...,
-    path('<int:article_pk>/likes/', views.likes, name='likes'),
-]
+  urlpatterns = [
+      ...,
+      path('<int:article_pk>/likes/', views.likes, name='likes'),
+  ]
 
-# articles/views.py
+  # articles/views.py
 
-@login_required
-def likes(request, article.pk):
-    article = Article.objects.get(pk=article.pk)
-    if request.user in article.like_users.all():
-        article.like_users.remove(request.user)
-    else:
-        article.like_users.add(request.user)
-    return redirect('articles:index')
-```
+  @login_required
+  def likes(request, article.pk):
+      article = Article.objects.get(pk=article.pk)
+      if request.user in article.like_users.all():
+          article.like_users.remove(request.user)
+      else:
+          article.like_users.add(request.user)
+      return redirect('articles:index')
+  ```
 2. index 템플릿에서 각 게시글에 좋아요 버튼 출력
-```html
-<!-- articles/index.html -->
+  ```html
+  <!-- articles/index.html -->
 
-{% for article in articles %}
-  ...
-  <form action="{% url 'articles:likes' article.pk %}" method="POST">
-    {% csrf_token %}
-    {% if request.user in article.like_users.all %}
-      <input type="submit" value="좋아요 취소">
-    {% else %}
-      <input type="submit" value="좋아요">
-    {% endif %}
-  </form>
-  <hr>
-{% endfor %}
-```
+  {% for article in articles %}
+    ...
+    <form action="{% url 'articles:likes' article.pk %}" method="POST">
+      {% csrf_token %}
+      {% if request.user in article.like_users.all %}
+        <input type="submit" value="좋아요 취소">
+      {% else %}
+        <input type="submit" value="좋아요">
+      {% endif %}
+    </form>
+    <hr>
+  {% endfor %}
+  ```
 
 ## $\texttt{.exists()}$
 - QuerySet에 결과가 포함되어 있으면 `True`를 반환하고 그렇지 않으면 `False`를 반환한다.
 - 특히 큰 QuerySet에 있는 특정 개체의 존재와 관련된 검색에 유용하다.
+<br><br>
+
+# Profile 구현
+1. 자연스러운 follow 흐름을 위한 프로필 페이지 작성
+  ```python
+  # accounts.py
+
+  urlpatterns = [
+      ...,
+      path('profile/<username>/', views.profile, name='profile'),
+  ]
+
+  # accounts/views.py
+
+  from django.contrib.auth import get_user_model
+
+  def profile(request, username):
+      User = get_user_model()
+      person = User.objects.get(username=username)
+      context = {
+          'person': person,
+      }
+      return render(request, 'accounts/profile.html', context)
+  ```
+2. 템플릿 작성
+  ```html
+  <!-- accounts/profile.html -->
+
+  <h1>{{ person.username }}님의 프로필</h1>
+  <hr>
+  <h2>{{ person.username }}'s 게시글</h2>
+  {% for article in person.article_set.all %}
+    <div>{{ comment.content }}</div>
+  {% endfor %}
+  <hr>
+  <h2>{{ person.username }}'s 댓글</h2>
+  {% for comment in person.comment_set.all %}
+    <div>{{ comment.content }}</div>
+  {% endfor %}
+  <hr>
+  <h2>{{ person.username }}'s 좋아요한 게시글</h2>
+  {% for article in person.like_articles.all %}
+    <div>{{ article.title }}</div>
+  {% endfor %}
+  ```
+3. 프로필 템플릿으로 이동할 수 있는 하이퍼 링크 작성
+  ```html
+  <!-- articles/index.html -->
+
+  <a href="{% url 'accounts:profile' article.user.username %}">{{ article.user }}</a></p>
+  ```
+<br><br>
+
+# User & User
+## Follow 구현
+1. ManyToManyField 작성 및 Migration 진행
+  ```python
+  # accounts/models.py
+
+  class User(AbstractUser):
+      followings = models.ManyToManyField('self', symmetrical= False, related_name='followers')
+  ```
+2. url 및 view 함수 작성
+  ```python
+  # accounts/urls.py
+
+  urlpatterns = [
+      ...,
+      path('<int:user_pk>/follow/', views.follow, name='follow'),
+  ]
+
+  # accounts/views.py
+
+  @login_required
+  def follow(request, user_pk):
+      User = get_user_model()
+      person = User.objects.get(pk=user_pk)
+      if person != request.user:
+          if person.followers.filter(pk=request.user.pk).exists():
+              person.followers.remove(request.user)
+          else:
+              person.followers.add(request.user)
+      return redirect('accounts:profile', person.username)
+  ```
+4. 프로필 유저의 팔로잉, 팔로워 수, 팔로우, 언팔로우 버튼 작성
+  ```html
+  <!-- accounts/profile.html -->
+
+  <div>
+    <div>
+      팔로잉: {{ person.followings.all|length }} / 팔로워: {{ person.followers.all|length }}
+    </div>
+    {% if request.user != person %}
+      <div>
+        <form action="{% url 'accounts:follow' person.pk %}" method="POST">
+          {% csrf_token %}
+          {% if request.user in person.followers.all %}
+            <input type="submit" value="Unfollow">
+          {% else %}
+            <input type="submit" value="Follow">
+          {% endif %}
+        </form>
+      </div>
+    {% endif %}
+  </div>
+  ```
