@@ -45,3 +45,7 @@
 
 ## 2023-04-18
 - Django fixtures 작성
+
+## 2023-04-20
+- Improve Query
+- Ajax
