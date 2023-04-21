@@ -9,6 +9,7 @@
 
 # django
 - [user guide](/django/guide.md)
+- [ajax](/django/ajax.md)
 - [authentication system](/django/auth_sys.md)
 - [cookie and session](/django/cookie_session.md)
 - [design pattern](/django/design_pattern.md)
