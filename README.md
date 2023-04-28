@@ -11,6 +11,7 @@
 - [user guide](/django/guide.md)
 - [ajax](/django/ajax.md)
 - [authentication system](/django/auth_sys.md)
+- [class-based views](/django/cbv.md)
 - [cookie and session](/django/cookie_session.md)
 - [design pattern](/django/design_pattern.md)
 - [fixtures](/django/fixtures.md)

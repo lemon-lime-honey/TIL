@@ -52,3 +52,6 @@
 
 ## 2023-04-25
 - Django REST Framework
+
+## 2023-04-28
+- Class-based views
