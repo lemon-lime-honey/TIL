@@ -1,4 +1,4 @@
-# Introduction to class-based views
+# [Introduction to class-based views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/intro/)
 ## Class-based view 사용하기
 - 클래스 기반 뷰는 하나의 뷰 함수 안에서 코드를 조건에 따라 분기하는 것 대신 다른 HTTP 응답 메서드를 다른 클래스 인스턴스 메서드로 응답할 수 있게 한다.
   ```python
@@ -65,3 +65,114 @@
 - Mixin은 여러 클래스에 걸쳐 코드를 재사용하는 훌륭한 방법이지만 대가가 있다. Mixin을 통해 코드가 분산될 수록 자식 클래스를 읽고 그것이 정확히 무엇을 하는지 알기 어려워지며 만약 상속 트리가 깊은 것을 subclassing할 때 어느 mixin의 어느 메서드를 override해야할지도 알기 어렵다.
 - 또한 하나의 일반 뷰만 상속할 수 있다는 것에 유의한다. 즉, `View`로부터 상속받을 수 있는 클래스는 단 하나이며 (만약 있다면) 다른 것은 mixin이어야 한다. 두 개 이상의 클래스를 `View`에서 상속받으려고 하는 것(가령, 리스트 가장 위의 폼을 사용하고 *ProcessFormView*와 *ListView*를 결합하는 것)은 예상대로 동작하지 않을 것이다.
 <br><br>
+
+## 클래스 기반 뷰로 폼 다루기
+폼을 다루는 기본적인 함수 기반 뷰는 대략 다음과 같다.
+```python
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+
+from .forms import MyForm
+
+def myview(request):
+    if request.method == 'POST':
+        form = MyForm(request.POST)
+        if form.is_valid():
+            # <process form cleaned data>
+            return HttpResponseRedirect('/success/')
+    else:
+        form = MyForm(initial={'key': 'value'})
+
+    return render(request, 'form_template.html', {'form': form})
+```
+같은 역할을 하는 클래스 기반 뷰는 다음과 같을 것이다.
+```python
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.views import View
+
+from .forms import MyForm
+
+class MyFormView(View):
+    form_class = MyForm
+    initial = {'key': 'value'}
+    template_name = 'form_template.html'
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(initial=self.initial)
+        return render(request, self.template_name, {'form': form})
+    
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            # <process form cleaned data>
+            return HttpResponseRedirect('/success/')
+        
+        return render(request, self.template_name, {'form': form})
+```
+<br><br>
+
+## 클래스 기반 뷰에 데코레이터 사용하기
+클래스 기반 뷰의 확장은 mixin 사용에 한정되지 않는다. 데코레이터 또한 사용할 수 있다. 클래스 기반 뷰가 함수가 아니므로, `as_view()`를 사용하거나 서브 클래스를 생성하는가에 따라 데코레이터를 사용하는 것이 다르게 동작한다.
+
+### URLconf에 데코레이터 사용하기
+`as_view()` 메서드의 결과에 데코레이터를 사용하는 것으로 클래스 기반 뷰를 조정할 수 있다. 이를 가장 쉽게 할 수 있는 곳은 뷰 함수를 전개하는 URLconf이다.
+```python
+from django.contrib.auth.decorators import login_required, permission_required
+from django.views.generic import TemplateView
+
+from .views import VoteView
+
+urlpatterns = [
+    path('about/', login_required(TemplateView.as_view(template_name='secret.html'))),
+    path('vote/', permission_required('polls.can_vote')(VoteView.as_view())),
+]
+```
+이러한 접근은 인스턴스 단위로 데코레이터를 적용한다. 만약 뷰의 모든 인스턴스에 데코레이터를 사용하려면 다른 방식으로 접근해야 한다.
+
+### 클래스에 데코레이터 사용하기
+클래스 기반 뷰의 모든 인스턴스에 데코레이터를 사용하려면 클래스 정의 자체에 데코레이터를 사용해야 한다. 이렇게 하면 클래스의 `dispatch()` 메서드에 데코레이터를 적용하게 된다.
+
+클래스의 메서드는 단독 함수와 크게 같은 편은 아니므로 메서드에 그냥 데코레이터를 적용할 수는 없다. 메서드 데코레이터에 먼저 옮겨야 한다. 데코레이터 `method_decorator`는 함수 데코레이터를 메서드 데코레이터로 변환시켜 인스턴스 메서드에서 사용할 수 있게 한다.
+
+```python
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+
+class ProtectedView(TemplatedView):
+    template_name = 'secret.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+```
+
+또는 좀 더 간결하게 대신 클래스에 데코레이터를 사용하고 키워드 인수 이름으로 데코레이터를 사용할 메서드의 이름을 전달할 수 있다.
+
+```python
+@method_decorator(login_required, name='dispatch')
+class ProtectedView(TemplateView):
+    template_name = 'secret.html'
+```
+
+여러 곳에서 사용되는 공통의 데코레이터 집합이 있는 경우 데코레이터 리스트 또는 튜플을 정의하고 `method_decorator()`를 여러 번 호출하는 대신 그것을 사용할 수 있다. 다음의 두 클래스는 동일하다.
+
+```python
+decorators = [never_cache, login_required]
+
+@method_decorator(decorators, name='dispatch')
+class ProtectedView(TemplateView):
+    template_name = 'secret.html'
+
+@method_decorator(never_cache, name='dispatch')
+@method_decorator(login_required, name='dispatch')
+class ProtectedView(TemplateView):
+    template_name = 'secret.html'
+```
+
+데코레이터 집합은 데코레이터로 전달된 순서대로 요청을 처리할 것이다. 위의 예시에서 `never_cache()` 먼저 요청을 처리하고 `login_required()`가 그 다음에 요청을 처리한다.
+
+위의 예시에서 `ProtectedView`의 모든 인스턴스는 로그인을 필요로 한다. 여기서는 `login_required`를 사용했지만 `LoginRequiredMixin`을 사용해도 같은 결과를 얻을 수 있다.
+
+`method_decorator`는 클래스 안의 대상이 되는 메서드에 인수로 `*args`와 `**kwargs`를 전달한다. 만약 메서드가 호환되는 인수 집합을 받아들이지 못한다면 `TypeError` 예외가 발생할 것이다.
