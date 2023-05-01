@@ -23,6 +23,7 @@
 - [n-to-one relationship](/django/n-to-1.md)
 - [orm](/django/orm.md)
 - [rest framework](/django/rest_framework.md)
+- [rest framework documents](/django/drf/README.md)
 - [static files](/django/static.md)
 - [template](/django/template.md)
 - [url](/django/url.md)
