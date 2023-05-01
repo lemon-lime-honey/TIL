@@ -482,3 +482,200 @@ class AuthorDetailView(DetailView):
 여기 있는 URLconf는 `pk`라는 이름의 그룹을 사용한다. 이 이름은 `DetailView`가 queryset을 필터링할 때 사용하는 기본 키의 값을 찾는데 사용하는 기본 이름이다.
 
 만약 그룹을 다르게 호출하고 싶다면 뷰에서 [`pk_url_kwarg`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-single-object/#django.views.generic.detail.SingleObjectMixin.pk_url_kwarg)를 설정할 수 있다.
+<br><br>
+
+# [Form handling with class-based views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/generic-editing/)
+폼 처리에는 보통 세 가지 갈래가 있다.
+- 초기 GET (비어있거나 작성 전인 폼)
+- 유효하지 않은 데이터를 가진 POST (보통 에러를 표기해 폼을 다시 보여준다)
+- 유효한 데이터를 가진 POST(데이터를 처리하고 보통 리다이렉트한다)
+이를 직접 구현하는 것은 때로 수 많은 반복된 형식적인 코드([Using a form in a view](https://docs.djangoproject.com/en/3.2/topics/forms/#using-a-form-in-a-view) 참조)를 작성하게 한다. 이런 상황을 피하기 위해 Django는 폼 처리를 위한 generic 클래스 기반 뷰의 모음을 제공한다.
+<br><br>
+
+## Basic forms
+주어진 연락 폼
+
+```python
+# forms.py
+from django import forms
+
+class ContactForm(forms.Form):
+    name = forms.CharField()
+    message = forms.CharField(widget=forms.Textarea)
+
+    def send_email(self):
+        # send email using the self.cleaned_data dictionary
+        pass
+```
+
+뷰는 `FormView`를 사용해 작성할 수 있다.
+
+```python
+# views.py
+from myapp.forms import ContactForm
+from django.views.generic.edit import FormView
+
+class ContactFormView(FormView):
+    template_name = 'contact.html'
+    form_class = ContactForm
+    success_url = '/thanks/'
+
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        form.send_email()
+        return super().form_valid(form)
+```
+
+- `FormView`는 `TemplateResponseMixin`을 상속하므로 `template_name`을 사용할 수 있다.
+- `form_valid()`의 기본 구현은 단순히 `success_url`로 리다이렉트하는 것이다.
+<br><br>
+
+## Model forms
+Generic View는 모델과 함께 사용할 때 빛을 본다. Generic view는 어떤 모델 클래스를 사용할지 확인할 수 있는 동안에는 자동으로 `ModelForm`을 생성한다.
+
+- 만약 `model` 속성이 주어졌다면 그 모델을 사용한다.
+- 만약 `get_object`가 객체를 반환한다면 그 객체의 클래스를 사용한다.
+- 만약 `queryset`이 주어졌다면 그 queryset의 모델을 사용한다.
+
+모델 폼 뷰는 모델을 자동으로 저장하는 `form_valid()` 구현을 제공한다. 만약 다른 요구사항이 있다면 override할 수 있다. 아래에 예시가 있다.
+
+`CreateView`나 `UpdateView`를 위해 `success_url`을 제공할 필요도 없다. 만약 사용가능하다면 모델 객체의 `get_absolute_url()`을 사용할 것이다.
+
+만약 사용자 정의 `ModelForm`(예를 들어 추가적인 유효성을 더하고 싶을 때)을 사용하고 싶다면 뷰에 `form_class`를 설정한다.
+
+사용자 정의 폼 클래스를 명시할 때 `form_class`가 `ModelForm`일지라도 모델을 명시해야 한다.
+
+먼저 `Author` 클래스에 `get_absolute_url()`을 추가해야 한다.
+```python
+# models.py
+from django.db import models
+from django.urls import reverse
+
+class Author(models.Model):
+    name = models.CharField(max_length=200)
+
+    def get_absolute_url(self):
+        return reverse('author-detail', kwargs={'pk': self.pk})
+```
+
+그 다음 `CreateView`와 친구들을 실제 작업에 사용할 수 있다. 여기서는 그저 generic 클래스 기반 뷰를 설정할 뿐이다. 논리를 직접 작성할 필요가 없다.
+
+```python
+# views.py
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from myapp.models import Author
+
+class AuthorCreateView(CreateView):
+    model = Author
+    fields = ['name']
+
+class AuthorUpdateView(UpdateView):
+    model = Author
+    fields = ['name']
+
+class AuthorDeleteView(DeleteView):
+    model = Author
+    success_url = reverse_lazy('author-list')
+```
+
+파일을 가져올 때 url이 로드되지 않기 때문에 `reverse()` 대신 `reverse_lazy()`를 사용한다.
+
+`fields` 속성은 `ModelForm`의 내부 `Meta` 클래스의 `fields` 속성과 같은 방식으로 작동한다. 폼 클래스를 다른 방식으로 정의하는 것이 아니라면 이 속성이 요구되며 없을 때에는 뷰가 `ImproperlyConfigured` 예외를 발생시킬 것이다.
+
+만약 `fields`와 `form_class` 둘 다 명시한다면 `ImproperlyConfigured` 예외가 발생할 것이다.
+
+마지막으로 URLconf에 새로운 뷰를 연결한다.
+
+```python
+# urls.py
+from django.urls import path
+from myapp.views import AuthorCreateView, AuthorDeleteView, AuthorUpdateView
+
+urlpatterns = [
+    # ...
+    path('author/add/', AuthorCreateView.as_view(), name='author-add'),
+    path('author/<int:pk>/', AuthorUpdateView.as_view(), name='author-update'),
+    path('author/<int:pk>/delete/', AuthorDeleteView.as_view(), name='author-delete'),
+]
+```
+
+이러한 뷰는 `template_name`을 모델 기반으로 생성하기 위해 `template_name_suffix`를 사용하는 `SingleObjectTemplateResponseMixin`을 상속한다.
+
+이 예시에서는
+
+- `CreateView`와 `UpdateView`는 `myapp/author_form.html`을 사용한다.
+- `DeleteView`는 `myapp/author_confirm_delete.html`을 사용한다.
+
+만약 `CreateView`와 `UpdateView`의 템플릿을 분리하고 싶다면 뷰 클래스에 `template_name`이나 `template_name_suffix`를 설정하면 된다.
+<br><br>
+
+## Models and request.user
+`CreateView`를 사용해 객체를 생성한 사용자를 추적하기 위해 사용자 정의 `ModelForm`을 사용할 수 있다. 먼저 모델에 외래 키를 추가한다.
+
+```python
+# models.py
+from django.contrib.auth.models import User
+from django.db import models
+
+class Author(models.Model):
+    name = models.CharField(max_length=200)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # ...
+```
+
+뷰에서 수정할 필드 목록에 `created_by`를 추가하지 않았는지 확인하고 사용자를 추가하기 위해 `form_valid()`를 override한다.
+
+```python
+# views.py
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import CreateView
+from myapp.models import Author
+
+class AuthorCreateView(LoginRequiredMixin, CreateView):
+    model = Author
+    fields = ['name']
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+```
+
+`LoginRequiredMixin`은 로그인하지 않은 사용자가 폼에 접근하는 것을 방지한다. 이를 제외한다면 `form_valid()`에서 권한이 없는 사용자를 다루어야 한다.
+<br><br>
+
+## Content negotiation example
+*일반* 양식 POST 뿐만 아니라 API 기반 워크플로우에서도 작동하는 폼을 구현하는 방법을 보여주는 예시이다.
+```python
+from django.http import JsonResponse
+from django.views.generic.edit import CreateView
+from myapp.models import Author
+
+class JsonableResponseMixin:
+    # Mixin to add JSON support to a form.
+    # Must be used with an object-based FormView (e.g. CreateView)
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if self.request.accepts('text/html'):
+            return response
+        else:
+            return JsonResponse(form.errors, status=400)
+    
+    def form_valid(self, form):
+        # We make sure to call the parent's form_valid() method because
+        # it might do some processing
+        # (in the case of CreateView, it will call form.save())
+        response = super().form_valid(form)
+        if self.request.accepts('text/html'):
+            return response
+        else:
+            data = {
+                'pk': self.object.pk,
+            }
+            return JsonResponse(data)
+
+class AuthorCreateView(JsonableResponseMixin, CreateView):
+    model = Author
+    fields = ['name']
