@@ -679,3 +679,44 @@ class JsonableResponseMixin:
 class AuthorCreateView(JsonableResponseMixin, CreateView):
     model = Author
     fields = ['name']
+```
+<br><br>
+
+# [Using mixins with class-based views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/mixins/)
+Django의 클래스 기반 뷰는 많은 기능을 제공하지만 부분적으로만 사용하고 싶을 수 있다. 예를 들어, HTTP 응답을 생성하기 위해 템플릿을 렌더링하는 뷰를 써야 하는데 [`TemplateView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/base/#django.views.generic.base.TemplateView)를 사용할 수 없는 상황이다. `GET`이 나머지 동작을 하고, `POST`에서만 템플릿을 렌더링 해야할 수도 있다. [`TemplateResponse`](https://docs.djangoproject.com/en/3.2/ref/template-response/#django.template.response.TemplateResponse)를 직접적으로 사용할 수 있지만 코드가 중복된다.
+
+이러한 이유로 Django는 좀 더 분리된 기능을 제공하는 몇 개의 mixin을 제공한다. 예를 들어 템플릿 렌더링은 [`TemplateResponseMixin`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin)으로 압축된다. Django 참고문서는 [모든 mixin에 관한 문서](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins/)를 포함한다.
+
+## 컨텍스트와 템플릿 응답
+클래스 기반 뷰에서 템플릿을 다루기 위한 일관된 인터페이스를 제공하는데 도움이 되는 두 개의 중심 mixin이 제공된다.
+
+### [`TemplateResponseMixin`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.TemplateResponseMixin)
+`TemplateResponse`를 반환하는 모든 빌트인 뷰는 `TemplateResponseMixin`이 제공하는 `render_to_response()` 메서드를 호출한다. 대개 사용자를 위해 호출될 것이다. (예를 들어 `TemplateView`와 `DetailView` 둘 모두에 의해 구현되는 `get()` 메서드에 의해 호출된다.) 비슷하게, 응답이 Django 템플릿을 통해 렌더링되지 않는 것을 반환하게 하고 싶어 override하고 싶더라도 그럴 필요가 없다. 이 예시를 보려면 [JSONResponseMixin example](https://docs.djangoproject.com/en/3.2/topics/class-based-views/mixins/#jsonresponsemixin-example)을 확인한다.
+
+`render_to_response()`는 기본적으로 클래스 기반 뷰에서 `template_name`을 조회하는 `get_template_names()`를 호출한다. 두 개의 다른 mixin([`SingleObjectTemplateResponseMixin`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-single-object/#django.views.generic.detail.SingleObjectTemplateResponseMixin)과 [`MultipleObjectTemplateResponseMixin`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-multiple-object/#django.views.generic.list.MultipleObjectTemplateResponseMixin))은 실제 객체를 다룰 때 좀 더 유연한 기본값을 제공하기 위해 이를 override한다.
+
+### [`ContextMixin`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.ContextMixin)
+템플릿을 렌더링(위의 `TemplateResponseMixin`을 포함하여)할 때와 같이 컨텍스트를 필요로 하는 모든 빌트인 뷰는 확인하고 싶은 모든 키워드 인자를 통과하게 하는 `get_context_data()`를 호출해야 한다. `get_context_data()`는 딕셔너리를 반환한다. `ContextMixin`은 자신의 키워드 인자를 반환하지만 딕셔너리의 원소를 더 추가하기 위해 이를 override하는 것이 일반적이다. [`extra_context`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-simple/#django.views.generic.base.ContextMixin.extra_context) 속성을 사용할 수도 있다.
+
+## Building up Django's generic class-based views
+Django의 두 가지 generic 클래스 기반 뷰가 어떻게 분리된 기능을 제공하는 mixin을 조합하는지 알아본다. 객체의 *디테일* 뷰를 렌더링하는 [`DetailView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/generic-display/#django.views.generic.detail.DetailView)와 보통 queryset으로부터 객체의 리스트를 렌더링하고 paginate할 수도 있는 [`ListView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/generic-display/#django.views.generic.list.ListView)를 본다. 하나 혹은 여러 개의 Django 객체를 다룰 때 유용한 기능을 제공하는 네 개의 mixin에 대해 알게 될 것이다.
+
+Generic edit 뷰([`FormView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/generic-editing/#django.views.generic.edit.FormView), 그리고 모델별 뷰인 [`CreateView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/generic-editing/#django.views.generic.edit.CreateView), [`UpdateView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/generic-editing/#django.views.generic.edit.UpdateView), [`DeleteView`](https://docs.djangoproject.com/en/3.2/ref/class-based-views/generic-editing/#django.views.generic.edit.DeleteView))나 날짜 기반 generic 뷰에 관한 mixin도 있다. 이들은 [mixin reference documentaion](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins/)에서 다룬다.
+
+### `DetailView`: working with a single Django object
+객체의 디테일을 보여주려면 기본적으로 두 가지 일을 해야한다. 객체를 조회해야하고, 이를 컨텍스트로 갖는 적절한 템플릿으로 `TemplateResponse`를 생성해야 한다.
+
+객체를 찾기 위해 `DetailView`는 요청의 URL에 기반해 객체를 찾는 `get_object()` 메서드(URLConf에서 선언된 `pk`와 `slug` 키워드 인자를 토대로 찾고, 뷰의 `model` 속성이나 `queryset` 속성이 있다면 이에 관해서도 조회한다)를 제공하는 `SingleObjectMixin`에 의존한다.
+
+또한 `SingleObjectMixin`은 템플릿 렌더링을 위한 컨텍스트 데이터를 제공하기 위해 Django의 모든 빌트인 클래스 기반 뷰에서 사용되는 `get_context_data()`를 override한다.
+
+그 다음에 `TemplateResponse`를 생성하기 위해 `DetailView`는 위에서 언급된 `get_template_names()`를 override하기 위해 `TemplateResponseMixin`을 확장한 `SingleObjectTemplateResponseMixin`을 사용한다. 꽤 정교한 선택사항 모음이지만 가장 많이 사용되는 것은 `<app_label>/<model_name>_detail.html`이다. 서브클래스에서 `template_name_suffix`를 설정하면 `_detail` 부분을 변경할 수 있다. (예를 들어, [generic edit views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/generic-editing/)는 create, update 뷰에서는 `_form`을, delete 뷰에서는 `_confirm_delete'를 사용한다.)
+
+### `ListView`: working with many Django objects
+객체 리스트 또한 비슷한 패턴을 따라간다. 보통 `QuerySet`인 (아마도 paginate된) 객체 리스트가 필요하고, 그 객체 리스트를 사용하는 적절한 템플릿으로 `TemplateResponse`를 생성해야 한다.
+
+객체를 찾기 위해 `ListView`는 `get_queryset()`과 `paginate_queryset()`을 제공하는 `MultipleObjectMixin`을 사용한다. `SingleObjectMixin`과는 다르게 목적하는 queryset을 찾기 위해 URL의 일부를 확인할 필요가 없으므로 기본적으로 뷰 클래스의 `queryset`이나 `model` 속성을 사용한다. 여기서 `get_queryset()`을 override`하는 일반적인 이유는 객체를 동적으로 변경하기 위함이다.
+
+`MultipleObjectMixin`은 pagination을 위한 적절한 컨텍스트 변수를 포함하기 위해(pagination이 비활성화 된 경우 더미 제공) `get_context_data`를 override한다. 이는 `ListView`가 정렬하고 키워드 인자로 전달되는 `object_list`에 의존한다.
+
+`TemplateResponse`를 생성하기 위해 `ListView`는 그 다음에 `MultipleObjectTemplateResponseMixin`을 사용한다. 위의 `SingleObjectTemplateResponseMixin`처럼 이 mixin 또한 가장 흔하게 쓰이는 `template_name_suffix` 속성으로 `_list`를 제거할 수 있는 `<app_label>/<model_name>_list.html`을 포함하는 [선택 조건의 범위](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-multiple-object/#django.views.generic.list.MultipleObjectTemplateResponseMixin)을 제공하기 위해 `get_template_names()`을 override한다. (날짜 기반 generic 뷰는 다양하게 특화된 날짜 기반 리스트 뷰를 위한 다른 템플릿을 사용하기 위해 `_archive`, `_archive_year`와 같은 접미사를 사용한다.)
