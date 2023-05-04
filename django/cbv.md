@@ -720,3 +720,61 @@ Generic edit 뷰([`FormView`](https://docs.djangoproject.com/en/3.2/ref/class-ba
 `MultipleObjectMixin`은 pagination을 위한 적절한 컨텍스트 변수를 포함하기 위해(pagination이 비활성화 된 경우 더미 제공) `get_context_data`를 override한다. 이는 `ListView`가 정렬하고 키워드 인자로 전달되는 `object_list`에 의존한다.
 
 `TemplateResponse`를 생성하기 위해 `ListView`는 그 다음에 `MultipleObjectTemplateResponseMixin`을 사용한다. 위의 `SingleObjectTemplateResponseMixin`처럼 이 mixin 또한 가장 흔하게 쓰이는 `template_name_suffix` 속성으로 `_list`를 제거할 수 있는 `<app_label>/<model_name>_list.html`을 포함하는 [선택 조건의 범위](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins-multiple-object/#django.views.generic.list.MultipleObjectTemplateResponseMixin)을 제공하기 위해 `get_template_names()`을 override한다. (날짜 기반 generic 뷰는 다양하게 특화된 날짜 기반 리스트 뷰를 위한 다른 템플릿을 사용하기 위해 `_archive`, `_archive_year`와 같은 접미사를 사용한다.)
+
+## Using Django's class-based view mixins
+주어진 mixind을 Django의 generic 클래스 기반 뷰가 어떻게 사용하는지 보았으니 이제 그것들을 조합하는 다른 방법을 알아보자. 빌트인 클래스 기반 뷰 혹은 다른 generic 클래스 기반 뷰와 조합할 것이지만 Django가 제공하는 것 이외의 해결할 수 있는 더 드문 문제가 있다.
+
+
+### 경고
+모든 mixin이 같이 사용될 수 있는 것은 아니며, 모든 generic 클래스 기반 뷰가 모든 다른 mixin과 사용될 수 있는 것도 아니다. 여기에서는 작동하는 몇 가지 예시만을 다룬다. 만약 다른 조합으로 다른 기능을 얻고 싶다면 사용하는 다른 클래스 간에 겹치는 속성과 메서드의 상호작용을 고려해야 하며 [메서드 결정 순서](https://www.python.org/download/releases/2.3/mro/) 어떤 버전의 메서드를 어떤 순서로 호출하는가에 어떻게 영향을 미치는지도 고려해야 한다.
+
+Django의 [클래스 기반 뷰](https://docs.djangoproject.com/en/3.2/ref/class-based-views/)와 [클래스 기반 뷰 mixin](https://docs.djangoproject.com/en/3.2/ref/class-based-views/mixins/) 공식문서가 서로 다른 클래스와 mixin 사이에서 어느 속성과 메서드가 충돌을 일으킬 가능성이 있는지 이해할 수 있게 할 것이다.
+
+의심스럽다면 그만 두고 작업을 `View`나 `TemplateView` 또는 `SingleObjectMixin`과 `MultipleObjectMixin`을 기반으로 수행한다. 코드를 더 작성하게 되겠지만 이후에 작업하는 사람이 더 명확하게 이해할 수 있으며 걱정할 상호작용은 더 적어 생각할 거리를 줄일 수 있다. (물론 문제 해결의 영감을 위해 언제든지 Django의 generic 클래스 기반 뷰 구현에 발을 들여도 된다.)
+
+## Using `SingleObjectMixin` with View
+`POST`에만 응답하는 클래스 기반 뷰를 작성하고 싶다면 `View`의 서브클래스를 만들고 그 안에서 `post()` 메서드를 작성하면 된다. 만약 URL로부터 식별된 특정 객체에 관한 작업을 진행하고 싶다면 `SingleObjectMixin`이 제공하는 기능을 사용한다.
+
+[Generic class-based views introduction](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#built-in-class-based-generic-views)에서 사용했던 `Author` 모델을 사용한다.
+
+```python
+# views.py
+
+from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.urls import reverse
+from django.views import View
+from django.views.generic.detail import SingleObjectMixin
+from books.models import Author
+
+class RecordInterestView(SingleObjectMixin, View):
+    """Records the current user's interest in an author."""
+    model = Author
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+        
+        # Look up the author we're interested in.
+        self.object = self.get_object()
+        # Actually record interest somehow here!
+
+        return HttpResponseRedirect(reverse('author-detail', kwargs={'pk': self.object.pk}))
+```
+
+실제로는 관계형 데이터베이스 대신 키-값 쌍에 저장하고 싶을 것이니 해당 부분은 생략한다. `SingleObjectMixin`을 사용할 때 뷰에 관해 걱정할 부분은 `self.get_object()`를 호출해 실행하는 관심 있는 작가를 조회하는 부분이다. 나머지는 mixin이 알아서 한다.
+
+이를 URL에서 간단하게 연결할 수 있다.
+
+```python
+# urls.py
+
+from django.urls import path
+from books.views import RecordInterestView
+
+urlpatterns = [
+    ...
+    path('author/<int:pk>/interest/', RecordInterestView.as_view(), name='author-interest'),
+]
+```
+
+`get_object`가 `Author` 인스턴스를 조회하기 위해 사용하는 `pk`에 주의한다. `slug`나 `SingleObjectMixin`의 다른 특성을 사용할 수도 있다.
