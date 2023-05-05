@@ -732,7 +732,7 @@ Django의 [클래스 기반 뷰](https://docs.djangoproject.com/en/3.2/ref/class
 
 의심스럽다면 그만 두고 작업을 `View`나 `TemplateView` 또는 `SingleObjectMixin`과 `MultipleObjectMixin`을 기반으로 수행한다. 코드를 더 작성하게 되겠지만 이후에 작업하는 사람이 더 명확하게 이해할 수 있으며 걱정할 상호작용은 더 적어 생각할 거리를 줄일 수 있다. (물론 문제 해결의 영감을 위해 언제든지 Django의 generic 클래스 기반 뷰 구현에 발을 들여도 된다.)
 
-## Using `SingleObjectMixin` with View
+## Using `SingleObjectMixin` with `View`
 `POST`에만 응답하는 클래스 기반 뷰를 작성하고 싶다면 `View`의 서브클래스를 만들고 그 안에서 `post()` 메서드를 작성하면 된다. 만약 URL로부터 식별된 특정 객체에 관한 작업을 진행하고 싶다면 `SingleObjectMixin`이 제공하는 기능을 사용한다.
 
 [Generic class-based views introduction](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#built-in-class-based-generic-views)에서 사용했던 `Author` 모델을 사용한다.
@@ -778,3 +778,76 @@ urlpatterns = [
 ```
 
 `get_object`가 `Author` 인스턴스를 조회하기 위해 사용하는 `pk`에 주의한다. `slug`나 `SingleObjectMixin`의 다른 특성을 사용할 수도 있다.
+
+## Using `SingleObjectMixin` with `ListView`
+`ListView`는 빌트인 pagination을 지원하지만 다른 객체에 (외래키로) 연결된 객체의 리스트를 paginate할 수도 있다. 출판 예시에서, 특정 출판사에서 출간된 책을 paginate해보자.
+
+이를 구현하는 방법 중 하나는 `ListView'와 `SingleObjectMixin`을 조합하여 책의 paginate된 리스트의 queryset이 단일 객체로 발견된 출반사에 연결하는 것이다. 이렇게 하려면 두 개의 다른 queryset이 필요하다.
+
+- `ListView`에서 사용하는 `Book` queryset<br>
+  리스트로 만들고 싶은 책들의 `Publisher`에 접근해야 하므로, `get_queryset()`을 override하고 `Publisher`의 [역참조 매니저](https://docs.djangoproject.com/en/3.2/topics/db/queries/#backwards-related-objects)를 사용한다.
+- `get_object()`에서 사용하는 `Publisher` queryset<br>
+  알맞는 `Publisher` 객체를 가져오기 위해 `get_object()`의 기본 구현에 의존한다. 그러나 `queryset` 인자를 명시적으로 `pass`해야 하는데, 그렇게 하지 않으면 `get_object()`의 기본 구현이 `Publisher`가 아닌 `Book`개체를 반환하게 override한 `get_queryset()`을 호출하기 때문이다.
+<br><br>
+
+- note
+`get_context_data()`에 관해서는 주의해야 한다. `SingleObjectMixin`과 `ListView` 둘 모두 `context_object_name`이 설정되었을 때 그 값 아래의 컨텍스트 데이터에 데이터를 넣을 것이기 때문에 대신 컨텍스트 데이터에 `Publisher`가 들어간다는 것을 명시한다. `ListView`는 사용자가 `super()`를 호출하는 것을 떠올린다면 알맞는 `page_obj`와 `paginator`를 추가할 것이다.
+<br><br>
+
+이제 새로운 `PublisherDetailView`를 작성할 수 있다.
+
+```python
+from django.views.generic import ListView
+from django.views.generic.detail import SingleObjectMixin
+from books.models import Publisher
+
+class PublisherDetailView(SingleObjectMixin, ListView):
+    paginate_by = 2
+    template_name = "books/publisher_detail.html"
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object(queryset=Publisher.objects.all())
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['publisher'] = self.object
+        return context
+
+    def get_queryset(self):
+        return self.object.book_set.all()
+```
+
+`get()`에서 `self.object`를 설정해 `get_context_data()`와 `get_queryset()`에서 다시 사용한 것에 주목한다. 만약 `template_name`을 정하지 않았다면 템플릿은 일반적인 `ListView` 선택에 의해 기본값이 정해질 것이다. 이 경우에는 책의 리스트이므로 `"books/book_list.html"`이 된다. `ListView`는 `SingleObjectMixin`에 관해서는 아무것도 모르기 때문에 이 뷰가 `Publisher`를 가지고 무얼 하는지 모른다.
+
+pagination이 동작하는지 확인하기 위해 많은 책을 생성하지 않도록 이 예시에서 `paginate_by`는 의도적으로 작은 값을 가진다. 템플릿은 다음과 같다.
+
+```html
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Publisher {{ publisher.name }}</h2>
+
+  <ol>
+    {% for book in page_obj %}
+      <li>{{ book.title }}</li>
+    {% endfor %}
+  </ol>
+
+  <div class="pagination">
+    <span class="step-links">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+      {% endif %}
+
+      <span class="current">
+        Page {{ page_obj.number }} of {{ paginator.num_pages }}.
+      </span>
+
+      {% if page_obj.has_next%}
+        <a href="?page={{ page_obj.next_page_number }}">next</a>
+      {% endif %}
+    </span>
+  </div>
+{% endblock %}
+```
