@@ -851,3 +851,71 @@ pagination이 동작하는지 확인하기 위해 많은 책을 생성하지 않
   </div>
 {% endblock %}
 ```
+
+## Avoid anything more complex
+일반적으로 `TemplateResponseMixin`과 `SingleObjectMixin`의 기능이 필요하면 이를 사용할 수 있다. 위에서 보듯이, 약간의 주의를 기울이면 `SingleObjectMixin`과 `ListView`를 조합해 사용할 수도 있다. 그러나 그렇게 할 수록 더 복잡해지기 때문에 다음을 염두에 두는게 좋다.
+
+- Hint<br>
+  각각의 뷰는 오직 detail, list, editing, date처럼 한 종류의 generic 클래스 기반 뷰의 종류에 속한 mixin이나 view를 사용해야 한다. 예를 들어 `TemplateView`(빌트인 뷰)와 `MultipleObjectMixin`(generic list)를 조합하는 것은 괜찮지만 `SingleObjectMixin`(generic detail)과 `MultipleObjectMixin`(generic list)를 조합하면 문제가 발생할 수 있다.
+
+더 복잡해질 때 무슨 일이 일어나는지 보기 위해 더 단순한 해결책에는 존재했던 가독성과 유지가능성을 희생한 예시를 살펴본다. 처음에는 `DetailView`와 `FormMixin`을 조합해 `DetailView`를 사용해 객체를 보여주는 URL을 통해 Django `Form`을 `POST`하려는 시도를 본다.
+
+### Using `FormMixin` with `DetailView`
+`View`와 `SingleObjectMixin`을 사용했던 이전의 예시를 돌이켜보자. 특정 작가에 대한 사용자의 관심을 기록하고 있었다. 왜 사용자들이 작가들을 좋아하는지 메시지를 남기기를 원한다고 하자. 또다시, 관계형 데이터베이스가 아닌 여기서 걱정하지 않을 더 난해한 것에 저장한다고 가정한다.
+
+이 지점에서, 사용자의 브라우저가 Django로 보낸 정보를 압축하기 위한 폼에 도달하는 것은 자연스러운 일이다. 또한 REST에 많이 신경썼기 때문에 작가를 보여줄 때와 사용자의 메시지를 포착할 때 같은 URL을 사용하려고 한다. 그렇게 하기 위해 `AuthorDetailView`를 다시 작성한다.
+
+템플릿에서 렌더링 할 수 있도록 컨텍스트 데이터를 폼에 추가하게 되겠지만 `DetailView`의 `GET` 처리는 남겨둘 것이다. 또한 `FormMixin`이 폼 처리를 하게 하고 약간의 코드를 작성해 `POST`에서 폼이 적절하게 호출되게 한다.
+
+- Note<br>
+  (이미 적당한 `post()`를 제공하는 )`DetailView`와 `FormView`를 조합하는 대신 `FormMixin`를 사용해 `post()`를 구현하는데, 이는 둘 다 `get()`을 구현하므로 그렇게 하면 더 혼란스럽기 때문이다.
+
+새로운 `AuthorDetailView`는 다음과 같다.
+
+```python
+# CAUTION: you almost certainly do not want to do this.
+# It is provided as part of a discussion of problems you can
+# run into when combining different generic class-based view
+# functionality that is not designed to be used together.
+
+from django import forms
+from django.http import HttpResponseForbidden
+from django.urls import reverse
+from django.views.generic import DetailView
+from django.views.generic.edit import FormMixin
+from books.models import Author
+
+class AuthorInterestForm(forms.Form):
+    message = forms.CharField()
+
+class AuthorDetailView(FormMixin, DetailView):
+    model = Author
+    form_class = AuthorInterestForm
+
+    def get_success_url(self):
+        return reverse('author-detail', kwargs={'pk': self.object.pk})
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        # Here, we would record the user's interest using the message
+        # passed in form.cleaned_data['message']
+        return super().form_valid(form)
+```
+
+`get_success_url()`은 리다이렉트 되는 위치를 제공하며, 이는 `form_valid()`의 기본 구현에 사용된다. 앞서 말한 `post()`를 직접 구현해 제공해야 한다.
+
+### A better solution
+`FormMixin`과 `DetailView`의 미묘한 상호작용은 이들을 다루는 능력을 시험한다. 이런 종류의 클래스를 작성하고 싶어하는 경우는 드물 것이다.
+
+이 경우, `Form`을 다루는 코드를 작성하는 것이 많은 중복을 일으킬지라도 `DetailView`를 유일한 generic 기능으로 남겨두고 직접 `post()` 메서드를 작성할 수 있다.
+
+또는, 별다른 문제 없이 `DetailView`와 구분되는 `FormView`를 사용할 수 있게 폼을 처리하는 분리된 뷰를 작성하는 것이 위의 접근방식보다 작업량이 적다.
