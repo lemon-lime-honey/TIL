@@ -919,3 +919,132 @@ class AuthorDetailView(FormMixin, DetailView):
 이 경우, `Form`을 다루는 코드를 작성하는 것이 많은 중복을 일으킬지라도 `DetailView`를 유일한 generic 기능으로 남겨두고 직접 `post()` 메서드를 작성할 수 있다.
 
 또는, 별다른 문제 없이 `DetailView`와 구분되는 `FormView`를 사용할 수 있게 폼을 처리하는 분리된 뷰를 작성하는 것이 위의 접근방식보다 작업량이 적다.
+
+### An alternative better solution
+여기서는 같은 URL에 연결된 두 개의 다른 클래스 기반 뷰를 사용할 것이다. 그렇게 해보자. 여기에는 아주 명확한 구분이 있다. `GET` 요청은 컨텍스트 데이터에 `Form`을 추가하는 `DetailView`를, `POST` 요청은 `FormView`를 가져와야 한다. 이 뷰 먼저 작성한다.
+
+`AuthorDetailView`는 [처음으로 AuthorDetailView](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#%EC%B6%94%EA%B0%80-%EC%9E%91%EC%97%85-%EC%88%98%ED%96%89%ED%95%98%EA%B8%B0)를 도입했을 때와 거의 같다. 템플릿에 사용 가능한 `AuthorInterestForm`을 만들기 위해 `get_context_data()`를 직접 써야 한다. 명확함을 위해 `get_object()`를 override하는 것은 생략한다.
+
+```python
+from django import forms
+from django.views.generic import DetailView
+from books.models import Author
+
+class AuthorInterestForm(forms.Form):
+    message = forms.CharField()
+
+class AuthorDetailView(DetailView):
+    model = Author
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = AuthorInterestForm()
+        return context
+```
+
+이제 `AuthorInterestForm`은 `FormView`이지만 찾는 작가를 조회하기 위해 `SingleObjectMixin`을 가져와야 하고 `template_name`을 설정해 폼 에러가 `AuthorDetailView`가 `GET`에서 사용하는 것과 같은 템플릿을 렌더링하게 한다.
+
+```python
+from django.http import HttpResponseForbidden
+from django.urls import reverse
+from django.views.generic import FormView
+from django.views.generic.detail import SingleObjectMixin
+
+class AuthorInterestFormView(SingleObjectMixin, FormView):
+    template_name = 'books/author_detail.html'
+    form_class = AuthorInterestForm
+    model = Author
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+        self.object = self.get_object()
+        return super().post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse('author-detail', kwargs={'pk': self.object.pk})
+```
+
+마지막으로, 새로운 `AuthorView`에 이를 가져온다. 클래스 기반 뷰를 `as_view()`로 호출하는 것이 함수 기반 뷰처럼 동작하게 한다는 것을 알기 때문에 두 개의 서브 뷰 사이에서 선택할 때 그렇게 할 수 있다.
+
+다른 URL에서도 `AuthorInterestFormView`의 동작이 나타나지만 다른 템플릿을 사용하기를 원할 때와 같이 URLconf에서 하는 것과 같은 방식으로 `as_view()`에 키워드 인자를 넣어 전달할 수 있다.
+
+```python
+from django.views import View
+
+class AuthorView(View):
+
+    def get(self, request, *args, **kwargs):
+        view = AuthorDetailView.as_view()
+        return view(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        view = AuthorInterestFormView.as_view()
+        return view(request, *args, **kwargs)
+```
+
+이 접근 방식은 다른 뷰를 가능한 분리해서 유지하기 때문에 다른 generic 클래스 기반 뷰나 `View` 또는 `TemplateView`를 직접 상속받는 사용자 정의 클래스 기반 뷰에서도 사용할 수 있다.
+
+## More than just HTML
+클래스 기반 뷰는 같은 것을 여러 번 반복하기를 원할 때 빛을 본다. API를 쓰는 중이며, 모든 뷰가 렌더링된 HTML이 아니라 JSON을 반환해야 한다고 하자.
+
+모든 뷰에서 사용할 수 있는, 한 번에 JSON으로의 변환을 다루는 mixin 클래스를 만들 수 있다.
+
+예를 들어, JSON mixin은 다음과 같다.
+
+```python
+from django.http import JsonResponse
+
+class JSONResponseMixin:
+    """
+    A mixin that can be used to render a JSON response.
+    """
+    def render_to_json_response(self, context, **response_kwargs):
+        """
+        Returns a JSON response, transforming 'context' to make the payload.
+        """
+        return JsonResponse(
+            self.get_data(context),
+            **responsive_kwargs
+        )
+
+    def get_data(self, context):
+        """
+        Returns an object that will be serialized as JSON by json.dumps().
+        """
+        # Note: This is *EXTREMELY* naive; in reality, you'll need
+        # to do much more complex handling to ensure that arbitrary
+        # objects -- such as Django model instances or querysets
+        # -- can be serailized as JSON.
+        return context
+```
+
+- Note<br>
+Django 모델과 queryset을 JSON으로 변환하는 올바른 방법에 관한 정보를 얻으려면 [Serializing Django objects](https://docs.djangoproject.com/en/3.2/topics/serialization/)를 확인한다.
+
+이 mixin은 `render_to_response()`와 같은 특징을 가진 `render_to_json_response()` 메서드를 제공한다. 이를 사용하려면 예를 들어 `TemplateView`와 조합을 하고 `render_to_json_response()`를 대신 호출하기 위해 `render_to_response()`를 override한다.
+
+```python
+from django.views.generic import TemplateView
+
+class JSONView(JSONResponseMixin, TemplateView):
+    def render_to_response(self, context, **response_kwargs):
+        return self.render_to_json_response(context, **response_kwargs)
+```
+
+그 다음 이 뷰는 응답의 양식을 제외한 다른 `DetailView`의 특징을 가지고 그와 같은 방식으로 확장할 수 있다.
+
+도전적이라면, `DetailView`의 서브 클래스를 조합해 쿼리 인자나 HTTP 헤더처럼 HTTP 요청의 어떤 속성에 따라 HTML과 JSON 둘 다 반환하게 할 수도 있다. `JSONResponseMixin`과 `SingleObjectTemplateResponseMixin`을 조합하고 `render_to_response()`의 구현을 override해 사용자가 요청한 응답 유형에 따라 적절한 렌더링 방식으로 연기한다.
+
+```python
+from django.views.generic.detail import SingleObjectTemplateResponseMixin
+
+class HybridDetailView(JSONResponseMixin, SingleObjectTemplateResponseMixin, BaseDetailView):
+    def render_to_response(self, context):
+        # Look for a 'format=json' GET argument
+        if self.request.GET.get('format') == 'json':
+            return self.render_to_json_response(context)
+        else:
+            return super().render_to_response(context)
+```
+Python이 메서드 오버로드를 해결하는 방식 때문에 `super().render_to_response(context)` 호출은 `TemplateResponseMixin`의 `render_to_response()` 구현을 호출한다.
