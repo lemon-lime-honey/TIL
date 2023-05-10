@@ -1,3 +1,91 @@
+# [Class-based views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/)
+뷰는 요청을 받고 응답을 반환하는 호출가능한 것이다. 이는 단순한 함수 이상의 것이 될 수 있으며, Django는 뷰로 사용할 수 있는 몇 가지 클래스 예시를 제공한다. 이를 통해 상속과 mixin을 활용하여 뷰를 구조화하고 코드를 재사용할 수 있게 된다. 이후 설명할 작업에 관한 generic 뷰도 있지만, 사용 목적에 맞는 재사용 가능한 뷰의 구조를 직접 구상할 수도 있다. 자세한 것은 [클래스 기반 뷰 참고문서](https://docs.djangoproject.com/en/3.2/ref/class-based-views/)에서 확인할 수 있다.
+
+- [Introduction to class-based views](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#introduction-to-class-based-views)
+- [Built-in class-based generic views](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#built-in-class-based-generic-views)
+- [Form handling with class-based views](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#form-handling-with-class-based-views)
+- [Using mixins with class-based views](https://github.com/lemon-lime-honey/TIL/blob/main/django/cbv.md#using-mixins-with-class-based-views)
+
+## Basic Examples
+Django는 넓은 범위의 기능에 적합한 기본 뷰 클래스를 제공한다. 모든 뷰는 URL과 뷰 연결, HTTP 메서드 디스패치와 다른 일반적인 기능을 다루는 `View` 클래스를 상속한다. `RedirectView`는 HTTP 리디렉션을 다루며, `TemplateView`는 기본 클래스를 확장해 템플릿을 렌더링할 수 있게 한다.
+
+## Usage in your URLconf
+Generic 뷰를 사용하는 가장 직접적인 방법은 URLconf에 그것을 직접 생성하는 것이다. 만약 클래스 기반 뷰의 일부 속성만을 변경하는 것이라면, `as_view()` 메서드를 통해 호출하게 할 수 있다.
+
+```python
+from django.urls import path
+from django.views.generic import TemplateView
+
+urlpatterns = [
+    path('about/', TemplateView.as_view(template_name='about.html')),
+]
+```
+
+`as_view()`를 통해 전달되는 모든 인자는 클래스에서 설정된 속성을 override할 것이다. 이 예시에서는 `TemplateView`에서 `template_name`을 설정했다. 비슷한 override 패턴을 `RedirectView`에서 `url` 속성에 사용할 수 있다.
+
+## Subclassing generic views
+Generic 뷰를 사용하는 가장 강력한 방법은 존재하는 뷰로부터 상속받고 새로운 값이나 메서드를 제공하기 위해 서브클래스에서 (`template_name`과 같은)속성이나 (`get_context_data`와 같은) 메서드를 override하는 것이다. 예를 들어 하나의 템플릿, `about.html`를 보여주는 뷰가 있다고 하자. Django는 `TemplateView`라는 이를 위한 generic 뷰를 가지고 있으므로, 서브클래스를 만들고 템플릿의 이름을 override할 수 있다.
+
+```python
+# some_app/views.py
+
+from django.views.generic import TemplateView
+
+class AboutView(TemplateView):
+    template_name = 'about.html'
+```
+
+그 다음 새로운 뷰를 URLconf에 추가해야 한다. `TemplateView`는 함수가 아닌 클래스이므로 그대신 URL이 클래스 기반 뷰에 함수같은 엔트리를 제공해주는 `as_view()`클래스 메서드에 연결되도록 한다.
+
+```python
+# urls.py
+
+from django.urls import path
+from some_app.views import AboutView
+
+urlpatterns = [
+    path('about/', AboutView.as_view()),
+]
+```
+
+빌트인 generic 뷰를 사용하는 방법에 관한 더 많은 정보를 보려면, [generic class-based views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/generic-display/)를 확인한다.
+
+### Supporting other HTTP methods
+누군가가 뷰를 API로 사용해 HTTP를 통해 도서관에 접속하려 한다고 해보자. API 클라이언트는 가끔 연결해 마지막 방문 이후로 출판된 책의 정보를 다운로드한다. 하지만 그 이후로 책이 출간되지 않았다면, 데이터베이스로부터 책을 가져와 전체 응답을 렌더링하고 클라이언트에게 보내는데 CPU 시간과 대역폭이 낭비된다. `API`에게 가장 최근에 출간된 책이 언제 나왔는지 묻는 것이 더 나을 수 있다.
+
+URLconf에서 책의 리스트 뷰를 url과 연결한다.
+
+```python
+from django.urls import path
+from books.views import BookListView
+
+urlpatterns = [
+    path('books/', BookListView.as_view()),
+]
+```
+
+뷰는 다음과 같다.
+
+```python
+from django.http import HttpResponse
+from django.views.generic import ListView
+from books.models import Book
+
+class BookListView(ListView):
+    model = Book
+
+    def head(self, *args, **kwargs):
+        last_book = self.get_queryset().latest('publication_date')
+        response = HttpResponse(
+            # RFC 1123 date format.
+            headers = {'Last-Modified': last_book.publication_date.strftime('%a, %d %b %Y %H:%M:%S GMT')}
+        )
+        return response
+```
+
+만약 `GET` 요청이 뷰로 접근한다면, (`book_list.html` 템플릿을 사용하여) 객체 리스트가 응답으로 반환된다. 그러나 만약 클라이언트가 `HEAD` 요청을 보낸다면, 응답은 빈 body를 가지지만 `Last-Modified` 헤더가 가장 최근에 출판된 책이 언제 나왔는지를 가리킨다. 이 정보에 기반하여, 클라이언트는 전체 객체 리스트를 다운로드 할 수도, 하지 않을 수도 있다.
+<br><br>
+
 # [Introduction to class-based views](https://docs.djangoproject.com/en/3.2/topics/class-based-views/intro/)
 ## Class-based view 사용하기
 - 클래스 기반 뷰는 하나의 뷰 함수 안에서 코드를 조건에 따라 분기하는 것 대신 다른 HTTP 응답 메서드를 다른 클래스 인스턴스 메서드로 응답할 수 있게 한다.
