@@ -3,6 +3,7 @@
 
 ## API Guide
 - [Requests](requests.md)
+- [Responses](responses.md)
 - [Routers](routers.md)
 
 ## Topics
