@@ -4,6 +4,7 @@
 ## API Guide
 - [Requests](requests.md)
 - [Responses](responses.md)
+- [Views](views.md)
 - [Routers](routers.md)
 
 ## Topics
