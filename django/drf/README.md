@@ -5,6 +5,7 @@
 - [Requests](requests.md)
 - [Responses](responses.md)
 - [Views](views.md)
+- [Generic Views](generic_views.md)
 - [Routers](routers.md)
 
 ## Topics
