@@ -235,3 +235,133 @@ Queryset이 채워졌다면 queryset의 직렬화된 표현을 응답 바디로 
 ### `DestroyModelMixin`
 존재하는 모델 인스턴스 삭제를 구현하는 `.destroy(request, *args, **kwargs)` 메서드를 제공한다. 만약 객체가 삭제된다면 `204 No Content` 응답을 반환하며, 그렇지 않을 경우 `404 Not Found`를 반환한다.
 
+## Concrete View Classes
+다음의 클래스는 개별 제네릭 뷰이다. 만약 제네릭 뷰를 사용하는 경우 사용자 지정 동작이 많이 필요하지 않다면 일반적으로 이 수준에서 작업한다.
+
+뷰 클래스는 `rest_framework.generics`에서 불러올 수 있다.
+
+### `CreateAPIView`
+**생성** 엔드포인트에 사용된다.
+
+`post` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [CreateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#createmodelmixin)
+
+### `ListAPIView`
+**모델 인스턴스의 모음**을 나타내기 위해 **읽기** 엔드포인트에 사용된다.
+
+`get` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [ListModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#listmodelmixin)
+
+### `RetrieveAPIView`
+**개별 모델 인스턴스**를 나타내기 위해 **읽기** 엔드포인트에 사용된다.
+
+`get` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin)
+
+### `DestroyAPIView`
+**개별 모델 인스턴스**를 위한 **삭제** 엔드포인트에 사용된다.
+
+`delete` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [DestroyModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#destroymodelmixin)
+
+### `UpdateAPIView`
+**개별 모델 인스턴스**를 위한 **갱신** 엔드포인트에 사용된다.
+
+`put`과 `patch` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [UpdateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#updatemodelmixin)
+
+### `ListCreateAPIView`
+**모델 인스턴스의 모음**을 나타내기 위한 **읽기 및 쓰기** 엔드포인트에 사용된다.
+
+`get`과 `post` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [ListModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#listmodelmixin), [CreateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#createmodelmixin)
+
+### `RetrieveUpdateAPIView`
+**개별 모델 인스턴스**를 위한 **읽기 또는 갱신*** 엔드포인트에 사용된다.
+
+`get`, `put`, `patch` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin), [UpdateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#updatemodelmixin)
+
+### `RetrieveDestroyAPIView`
+**개별 모델 인스턴스**를 나타내기 위한 **읽기 또는 삭제** 엔드포인트에 사용된다.
+
+`get`과 `delete` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin), [DestroyModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#destroymodelmixin)
+
+### `RetrieveUpdateDestroyAPIView`
+**개별 모델 인스턴스**를 나타내기 위한 **읽기, 쓰기, 삭제** 엔드포인트에 사용한다.
+
+`get`, `put`, `patch`, `delete` 메서드 핸들러를 제공한다.
+
+확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin), [DestroyModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#destroymodelmixin)
+
+## Customizing the generic views
+때로 존재하는 제네릭 뷰를 사용하고 싶지만 약간의 사용자 정의 동작을 사용하고 싶을 수 있다. 만약 여러 위치에서 사용자 정의 동작을 재사용한다면 필요에 따라 뷰 또는 뷰셋에 적용할 수 있도록 동작을 공통 클래스로 리팩토링할 수 있다.
+
+### Creating custom mixins
+예를 들어, 만약 URL conf에서 여러 개의 필드를 기반으로 해 객체를 조회해야 한다면 다음과 같이 mixin 클래스를 작성할 수 있다.
+
+```python
+class MultipleFieldLookupMixin:
+    """
+    Apply this mixin to any view or viewset to get multiple field filtering
+    based on a `lookup_fields` attribute, instead of the default single field filtering.
+    """
+    def get_object(self):
+        queryset = self.get_queryset()             # Get the base queryset
+        queryset = self.filter_queryset(queryset)  # Apply any filter backends
+        filter = {}
+        for field in self.lookup_fields:
+            if self.kwargs.get(fields):  # Ignore empty fields.
+                filter[field] = self.kwargs[field]
+        obj = get_object_or_404(queryset, **filter)  # Lookup the object
+        self.check_object_permissions(self.request, obj)
+        return obj
+```
+
+그 다음 이 mixin을 사용자 정의 동작을 적용해야 하면 언제든지 뷰나 뷰셋에 추가하면 된다.
+
+```python
+class RetrieveUserView(MultipleFieldLookupMixin, generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_fields = ['account', 'username']
+```
+
+사용해야 할 사용자 정의 동작이 있다면 사용자 정의 mixin을 사용하는 것은 좋은 선택이다.
+
+### Creating custom base classes
+만약 여러 개의 뷰에서 하나의 mixin을 사용한다면, 더 나아가 프로젝트 전반에 걸쳐 사용할 수 있는 베이스 뷰를 작성할 수 있다. 예를 들어:
+
+```python
+class BaseRetrieveView(MultipleFieldLookupMixin, generics.RetrieveAPIView):
+    pass
+
+class BaseRetrieveUpdateDestroyView(MultipleFieldLookupMixin, generics.RetrieveUpdateDestroyAPIView):
+    pass
+```
+
+프로젝트 전반에 걸쳐 아주 많은 뷰에서 지속적으로 반복되어야 하는 사용자 정의 동작이 있다면 사용자 정의 베이스 뷰를 사용하는 것은 좋은 선택이다.
+
+## `PUT` as create
+버전 3.0 이전의 REST framework의 mixin은 객체 존재 여부에 따라 `PUT`을 갱신이나 생성 동작으로 취급했다.
+
+`PUT`을 생성 동작으로 허용하는 것은 객체의 존재 또는 부재에 관한 정보를 반드시 노출하기 때문에 문제가 된다. 또한 이전에 제거된 인스턴스를 재생성하는 것을 투명하게 허용하는 것이 단순히 404 응답을 반환하는 것보다 더 나은 기본동작인지도 명백하지 않다.
+
+서로 다른 상황에서 *`PUT` 을 404로*나 *`PUT`을 생성으로* 둘 모두 유효할 수 있지만 버전 3.0부터 더 단순하고 더 명백하기 때문에 404 동작을 기본으로 정한다.
+
+만약 제네릭 *PUT을-생성으로* 동작이 필요하다면 뷰에 [이런 `AllowPUTAsCreateMixin` 클래스](https://gist.github.com/tomchristie/a2ace4577eff2c603b1b)를 추가하면 된다.
+
+## Third party packages
+다음의 서드파티 패키지는 추가적인 제네릭 뷰 구현을 제공한다.
+
+### Django Rest Multiple Models
+[Django Rest Multiple Models](https://github.com/MattBroach/DjangoRestMultipleModels)는 하나의 API 요청을 통해 여러 개의 직렬화된 모델 그리고/혹은 queryset을 전송하는 제네릭 뷰(그리고 mixin)을 제공한다.
