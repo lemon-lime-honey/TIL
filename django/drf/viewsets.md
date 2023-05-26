@@ -73,3 +73,65 @@ class UserViewSet(viewsets.ModelViewSet):
 - 라우터를 사용하기 때문에 URL conf를 연결하는데 신경을 덜 써도 된다.
 
 둘 모두 포기해야 하는 부분이 있다. 일반적인 뷰와 URL conf를 사용하는 것은 좀 더 명시적이고 더 많은 제어권을 가지게 한다. ViewSet은 빠르게 작성하고 싶거나 큰 API를 가졌는데 이를 통틀어 일관적인 URL 설정을 가지게 하고 싶을 때 도움이 된다.
+
+## ViewSet actions
+REST framework에 포함된 기본 라우터는 아래와 같이 표준적인 create/retrieve/update/destroy 스타일 동작 세트를 위한 경로를 제공한다.
+
+```python
+class UserViewSet(viewsets.ViewSet):
+    """
+    Example empty viewset demonstrating the standard
+    actions that will be handled by a router class.
+
+    If you're using format suffixes, make sure to also include
+    the `format=None` keyword argument for each action.
+    """
+
+
+    def list(self, request):
+        pass
+
+
+    def create(self, request):
+        pass
+
+
+    def retireve(self, request, pk=None):
+        pass
+
+
+    def update(self, request, pk=None):
+        pass
+
+
+    def partial_update(self, request, pk=None):
+        pass
+
+
+    def destroy(self, request, pk=None):
+        pass
+```
+
+## Introspecting ViewSet actions
+처리하는 동안 `ViewSet`에서 다음 속성을 사용할 수 있다.
+
+- `basename` - 생성되는 URL 이름에 사용되는 기반
+- `action` - 현재 동작의 이름 (`list`, `create` 등)
+- `detail` - 현재 동작이 리스트 또는 디테일 뷰에 할당되었는지 나타내는 불리언
+- `suffix` - viewset 종류를 보여주는 접미사. `detail` 속성을 반영한다.
+- `name` - viewset을 위한 표시용 이름. 이 인자는 `suffix`와 상호 배타관계에 있다.
+- `description` - viewset 내의 각각의 뷰를 위한 표시용 설명
+
+이러한 특성들을 검사하여 현재 작업에 기반해 동작을 조정할 수 있다. 예를 들어, 다음과 비슷하게 리스트 작업을 제외한 모든 것에 대한 권한을 제한할 수 있다.
+
+```python
+def get_permission(self):
+    """
+    Instantiates and returns the list of permissions that this view requires.
+    """
+    if self.action == 'list':
+        permission_classes = [IsAuthenticated]
+    else:
+        permission_classes = [IsAdminUser]
+    return [permission() for permission in permission_classes]
+```
