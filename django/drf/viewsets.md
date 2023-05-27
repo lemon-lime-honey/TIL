@@ -135,3 +135,64 @@ def get_permission(self):
         permission_classes = [IsAdminUser]
     return [permission() for permission in permission_classes]
 ```
+
+## Marking extra actions for routing
+만약 라우팅 가능해야 하는 애드-혹 메서드가 있는 경우 `@action` 데코레이터를 사용하여 표시할 수 있다. 일반적인 동작처럼, 추가 동작은 하나의 객체 또는 전체 콜렉션을 대상으로 할 수 있다. 이를 나타내려면 `detail` 인자의 값을 `True` 또는 `False`로 설정한다. 라우터가 URL 패턴을 이에 따라 구성할 것이다. 예를 들어, `DefaultRouter`는 URL 패턴에 pk를 포함하도록 디테일 동작을 구성한다.
+
+추가 동작에 관한 예시:
+
+```python
+from django.contrib.auth.models import User
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from myapp.serializers import UserSerializer, PasswordSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    A viewset that provides the standard actions
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    @action(detail=True, methods=['post'])
+    def set_password(self, request, pk=None):
+        user = self.get_object()
+        serializer = PasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            user.set_password(serializer.validated_data['password'])
+            user.save()
+            return Response({'status': 'password set'})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False)
+    def recent_users(self, request):
+        recent_users = User.objects.all().order_by('-last_login')
+
+        page = self.paginate_queryset(recent_users)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(recent_users, many=True)
+        return Response(serializer.data)
+```
+
+`action` 데코레이터는 기본적으로 `GET` 요청을 라우팅하지만 `methods` 인자를 설정하면 다른 HTTP 메서드 또한 수용한다. 예를 들면,
+
+```python
+@action(detail=True, methods=['post', 'delete'])
+def unset_password(self, request, pk=None):
+    ...
+```
+
+이 데코레이터는 `permission_classes`, `serializer_class`, `filter_backends`와 같은 viewset 수준 설정을 override할 수 있게 한다.
+
+```python
+@action(detail=True, methods=['post'], permission_classes=[IsAdminOrIsSelf])
+def set_password(self, request, pk=None)
+```
+
+두 개의 새로운 동작은 url `^users/{pk}/set_password/$`와 `^users/{pk}/unset_password/$`에서 사용할 수 있게 된다. `url_path`와 `url_name` 인자를 사용해 URL의 일부와 동작의 reverser URL 이름을 바꿀 수 있다.
+
+모든 추가 동작을 보려면, `.get_extra_actions()` 메서드를 호출한다.
