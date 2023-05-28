@@ -136,7 +136,7 @@ def get_permission(self):
     return [permission() for permission in permission_classes]
 ```
 
-## Marking extra actions for routing
+### Marking extra actions for routing
 만약 라우팅 가능해야 하는 애드-혹 메서드가 있는 경우 `@action` 데코레이터를 사용하여 표시할 수 있다. 일반적인 동작처럼, 추가 동작은 하나의 객체 또는 전체 콜렉션을 대상으로 할 수 있다. 이를 나타내려면 `detail` 인자의 값을 `True` 또는 `False`로 설정한다. 라우터가 URL 패턴을 이에 따라 구성할 것이다. 예를 들어, `DefaultRouter`는 URL 패턴에 pk를 포함하도록 디테일 동작을 구성한다.
 
 추가 동작에 관한 예시:
@@ -196,3 +196,39 @@ def set_password(self, request, pk=None)
 두 개의 새로운 동작은 url `^users/{pk}/set_password/$`와 `^users/{pk}/unset_password/$`에서 사용할 수 있게 된다. `url_path`와 `url_name` 인자를 사용해 URL의 일부와 동작의 reverser URL 이름을 바꿀 수 있다.
 
 모든 추가 동작을 보려면, `.get_extra_actions()` 메서드를 호출한다.
+
+### Routing additional HTTP methods for extra actions
+추가 동작은 `ViewSet` 메서드를 분리하기 위해 추가적인 HTTP 메서드를 매핑할 수 있다. 예를 들어, 위의 비밀번호 설정/제거 메서드는 하나의 경로로 통합될 수 있다. 추가적인 매핑이 인자를 허용하지 않는 점에 주의한다.
+
+```python
+@action(detail=True, methods=['put'], name='Change Password')
+def password(self, request, pk=None):
+    """Update the user's password."""
+    ...
+
+@password.mapping.delete
+def delete_password(self, request, pk=None):
+    """Delete the user's password."""
+    ...
+```
+
+## Reversing action URLs
+만약 동작으로부터 그 URL을 얻어야 한다면 `.reverse_action()` 메서드를 사용한다. 이는 자동으로 뷰의 `request` 객체를 전달하고 `url_name` 앞에 `.basename` 속성값을 추가하는 `reverse()`의 편리한 wrapper이다.
+
+`basename`이 `ViewSet` 등록 중 라우터에 의해 제공된다는 점에 .주의한다. 만약 라우터를 사용하지 않는다면 `.as_view()` 메서드에 `basement` 인자를 제공해야 한다.
+
+이전 섹션에서의 예시를 사용한다면:
+
+```python
+>>> view.reverse_action('set-password', args=['1'])
+'http://localhost:8000/api/users/1/set_password'
+```
+
+`@action` 데코레이터에 의해 설정된 `url_name` 속성을 사용할 수도 있다.
+
+```python
+>>> view.reverse_action(view.set_password.url_name, args=['1'])
+'http://localhost:8000/api/users/1/set_password'
+```
+
+`.reverse_action()`을 위한 `url_name` 인자는 `@action` 데코레이터의 같은 인자와 일치해야 한다. 추가적으로, 이 메서드는 `list`와 `create` 같은 기본 동작의 reverse를 구할 때에도 사용할 수 있다.
