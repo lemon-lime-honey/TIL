@@ -232,3 +232,92 @@ def delete_password(self, request, pk=None):
 ```
 
 `.reverse_action()`을 위한 `url_name` 인자는 `@action` 데코레이터의 같은 인자와 일치해야 한다. 추가적으로, 이 메서드는 `list`와 `create` 같은 기본 동작의 reverse를 구할 때에도 사용할 수 있다.
+
+# API Reference
+## ViewSet
+`ViewSet` 클래스는 `APIView` 클래스를 상속한다. Viewset의 API 정책을 제어하기 위해 `permission_classes`, `authentication_classes`와 같은 표준 특성들을 사용할 수 있다.
+
+`ViewSet` 클래스는 동작의 구현을 포함하지 않는다. `ViewSet` 클래스를 사용하려면 클래스를 override하고 동작 구현을 명시적으로 정의해야 한다.
+
+## GenericViewSet
+`GenericViewSet` 클래스는 `GenericAPIView` 클래스를 상속하며 기본적인 `get_object`, `get_queryset` 메서드 세트와 기본적으로는 어떠한 동작도 포함하지 않는 다른 제네릭 뷰 기반 동작을 제공한다.
+
+`GenericViewSet` 클래스를 사용하려면 클래스를 override하고 필요한 mixin 클래스를 조합하거나 동작 구현을 명시적으로 정의한다.
+
+## ModelViewSet
+`ModelViewSet` 클래스는 `GenericAPIView` 클래스를 상속하며 다양한 mixin 클래스의 동작을 조합해 다양한 동작 구현을 포함한다.
+
+`ModelViewSet` 클래스가 제공하는 동작에는 `.list()`, `.retrieve()`, `.create()`, `.update()`, `.partial_update()`, `.destroy()`가 있다.
+
+### Example
+`ModelViewSet`이 `GenericAPIView`를 확장하기 때문에 보통 최소한 `queryset`, `serializer_class` 속성을 제공해야 한다. 예를 들어:
+
+```python
+class AccountViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing accounts.
+    """
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+    permission_classes = [IsAccountAdminOrReadOnly]
+```
+
+`GenericAPIView`가 제공하는 표준 특성이나 메서드 override를 사용할 수 있다. 예를 들어, 작동해야할 queryset을 동적으로 결정하는 `ViewSet`을 사용하려면 이런 식으로 해야 한다.
+
+```python
+class AccountViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing the accounts
+    associated with the user.
+    """
+    serializer_class = AccountSerializer
+    permission_classes = [IsAccountAdminOrReadOnly]
+
+    def get_queryset(self):
+        return self.request.user.accounts.all()
+```
+
+그러나 `ViewSet`에서 `queryset` 속성을 제거하면 연결된 라우터가 자동으로 모델의 basename을 유도할 수 없으므로 라우터 등록을 할 때 `basename` 키워드 인자를 명시해야 한다는 점에 유의한다.
+
+또한 이 클래스가 기본으로 create/list/retrieve/update/destroy 동작의 완전한 세트를 제공할지라도, 표준 권한 클래스를 사용하여 사용 가능한 동작을 제한할 수 있다.
+
+## ReadOnlyModelViewSet
+`ReadOnlyModelViewSet` 클래스 또한 `GenericAPIView` 클래스를 상속한다. `ModelViewSet`처럼 다양한 동작 구현을 제공하지만 `ModelViewSet`과는 달리 오직 `.list()`와 `.retrieve()`와 같은 '읽기 전용' 동작만 제공한다.
+
+### Example
+`ModelViewSet`처럼, 보통 최소한 `queryset`과 `serializer_class` 속성을 제공해야 한다. 예를 들어:
+
+```python
+class AccountViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A simple ViewSet for viewing accounts.
+    """
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+```
+
+`ModelViewSet`처럼, `GenericAPIView`에 의해 사용 가능한 표준 특성과 메서드를 override할 수 있다.
+
+## Custom ViewSet base classes
+전체 `ModelViewSet` 동작 세트를 가지지 않은 사용자 정의 `ViewSet`을 제공하거나 다른 방법으로 동작을 커스터마이즈 해야 할 수도 있다.
+
+### Example
+`create`, `list`, `retrieve` 동작을 제공하고 `GenericViewSet`과 필요로 하는 동작을 조합하는 기본 viewset 클래스를 작성하려면:
+
+```python
+from rest_framework import mixins
+
+class CreateListRetrieveViewSet(mixins.CreateModelMixin,
+                                mixins.ListModelMixin,
+                                mixins.RetrieveModelMixin,
+                                Viewsets.GenericViewSet):
+    """
+    A viewset that provides `retrieve`, `create`, and `list` actions.
+
+    To use it, override the class and set the `.queryset` and
+    `.serializer_class` attributes.
+    """
+    pass
+```
+
+기본 `ViewSet` 클래스를 직접 작성하여 API를 통틀어 여러 viewset에서 재사용할 수 있는 공통 동작을 제공할 수 있다.
