@@ -8,6 +8,7 @@
 - [Generic Views](generic_views.md)
 - [Viewsets](viewsets.md)
 - [Routers](routers.md)
+- [Parsers](parsers.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
