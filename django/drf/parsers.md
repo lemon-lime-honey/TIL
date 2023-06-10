@@ -58,3 +58,57 @@ def example_view(request, format=None):
     """
     return Response({'received data': request.data})
 ```
+
+# API Reference
+## JSONParser
+`JSON` 요청 컨텐츠를 파싱한다. `request.data`는 데이터 딕셔너리로 채워진다.
+
+**.media_type**: `application/json`
+
+## FormParser
+HTML 폼 컨텐츠를 파싱한다. `request.data`는 데이터의 `QueryDict`로 채워진다.
+
+보통 HTML 폼 데이터를 온전히 지원하기 위해 `FormParser`와 `MultiPartParser`를 같이 사용한다.
+
+**.media_type**: `application/x-www-form-urlencoded`
+
+## MultiPartParser
+파일 업로드를 지원하는 multipart HTML 폼 컨텐츠를 파싱한다. 두 `request.data` 모두 `QueryDict`로 채워진다.
+
+보통 HTML 폼 데이터를 온전히 지원하기 위해 `FormParser`와 `MultiPartParser`를 같이 사용한다.
+
+**.media_type**: `multipart/form-data`
+
+## FileUploadParser
+원시 파일 업로드 컨텐츠를 파싱한다. `request.data` 속성은 업로드된 파일을 포함하는 하나의 키 `file`를 가지는 딕셔너리이다.
+
+만약 `FileUploadParser`와 같이 사용되는 뷰가 `filename` URL 키워드 인자로 호출된다면 그 인자가 파일 이름으로 사용된다.
+
+만약 `filename` URL 키워드 인자 없이 호출된다면, 클라이언트는 HTTP 헤더의 `Content-Disposition` 안에 파일 이름을 설정해야 한다. 예를 들면, `Content-Disposition: attachment; filename=upload.jpg`처럼.
+
+**.media_type**: `*/*`
+
+- Notes:<br>
+  -  `FileUploadParser`는 파일을 원시 데이터 요청으로 업로드할 수 있는 네이티브 클라이언트에서 사용하기 위한 것이다. 웹 기반 업로드 또는 multipart 업로드 지원이 가능한 네이티브 클라이언트에서는 `MultiPartParser`를 사용하는 것이 좋다.
+  - 이 parser의 `media_type`은 어떤 컨텐츠 타입에도 매치가 되기 때문에 `FileUploadParser`는 하나의 API 뷰에서 사용되는 유일한 parser여야 한다.
+  - `FileUploadParser`는 Django의 표준 `FILE_UPLOAD_HANDLERS` 설정과 `request.upload_handlers` 속성을 존중한다. 자세한 사항은 [Django 문서](https://docs.djangoproject.com/en/stable/topics/http/file-uploads/#upload-handlers)에서 확인할 수 있다.
+
+기본 사용 예시:
+```python
+# views.py
+class FileUploadView(views.APIView):
+    parser_classes = [FileUploadParser]
+
+    def put(self, request, filename, format=None):
+        file_obj = request.data['file']
+        # ...
+        # do some stuff with uploaded file
+        # ...
+        return Response(status=204)
+
+# urls.py
+urlpatterns = [
+    # ...
+    re_path(r'^upload/(?P<filename>[^/]+)$^', FileUploadView.as_view()),
+]
+```
