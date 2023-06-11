@@ -112,3 +112,91 @@ urlpatterns = [
     re_path(r'^upload/(?P<filename>[^/]+)$^', FileUploadView.as_view()),
 ]
 ```
+
+# Custom parsers
+사용자 정의 parser를 구현하려면 `BaseParser`를 override하고 `.media_type` 속성을 설정해야하며 `.parse(self, stream, media_type, parser_context)` 메서드를 구현해야 한다.
+
+메서드는 `request.data` 속성을 채우기 위한 데이터를 반환해야 한다.
+
+`.parse()`로 전달되는 인자는 다음과 같다.
+
+### Stream
+요창의 바디를 나타내는 stream과 유사한 객체
+
+### media_type
+선택인자. 주어진다면 들어오는 요청 컨텐츠의 미디어 유형이 된다.
+
+요청의 `Content-Type:` 헤더에 따라 정해지는데 렌더러의 `media_type` 속성보다 더 구체적일 수 있으며 미디어 유형 인자를 포함할 수 있다. 예를 들면 `"text/plain; charset=utf-8"`.
+
+### parser_context
+선택인자. 주어진다면 요청 컨텐츠를 parse하는데 요구되는 추가적인 컨텍스트를 포함하는 딕셔너리가 된다.
+
+기본값으로 다름의 키를 포함한다: `view`, `request`, `args`, `kwargs`
+
+## Example
+다음은 요청의 바디를 나타내는 문자열로 `request.data` 속성을 채우는 plaintext parser의 예시이다.
+
+```python
+class PlainTextParser(BaseParser):
+    """
+    Plain text parser.
+    """
+    media_type = 'text/plain'
+
+    def parse(self, stream, media_type=None, parser_context=None):
+        """
+        Simply return a string representing the body of the request.
+        """
+        return stream.read()
+```
+
+# Thrid party packages
+다음의 서드파티 패키지 또한 사용할 수 있다.
+
+## YAML
+[REST framework YAML](https://jpadilla.github.io/django-rest-framework-yaml/)은 [YAML](http://www.yaml.org/) parsing과 렌더링 지원을 제공한다. 이전에는 REST framework 패키지에 직접 포함되어 있었지만 지금은 서드파티 패키지로 지원된다.
+
+### Installation & configuration
+pip을 이용해 설치한다.
+```bash
+$ pip install djangorestframework-yaml
+```
+
+REST framework 설정을 변경한다.
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework_yaml.parsers.YAMLParser',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework_yaml.renderers.YAMLRenderer',
+    ],
+}
+```
+
+## XML
+[REST Framework XML](https://jpadilla.github.io/django-rest-framework-xml/)은 간단한 약식 XML 포맷을 제공한다. 이전에는 REST framework에 직접 포함되어 있었으나 지금은 서드파티 패키지로 지원된다.
+
+### Installation & configuration
+pip을 이용해 설치한다.
+```bash
+$ pip install djangorestframework-xml
+```
+
+REST framework 설정을 변경한다.
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework_xml.parsers.XMLParser',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework_xml.renderers.XMLRenderer',
+    ],
+}
+```
+
+## MessagePack
+[MessagePack](https://github.com/juanriaza/django-rest-framework-msgpack)은 빠르고 효율적인 바이너리 serialization 포맷이다. [Juan Riaza](https://github.com/juanriaza)가 REST framework에 MessagePack 렌더러와 parser 지원을 제공하는 [djangorestframework-msgpack](https://github.com/juanriaza/django-rest-framework-msgpack) 패키지를 관리한다.
+
+## CamelCase JSON
+[djangorestframework-camel-case](https://github.com/vbabiy/djangorestframework-camel-case)는 REST framework를 위한 카멜케이스 JSON 렌더러와 parser를 제공한다. 이는 serializer가 파이썬식 필드 명을 사용하게 하지만 API에서는 자바스크립트식 카멜 케이스 필드 명으로 보이게 한다. [Vitaly Babiy](https://github.com/vbabiy)가 관리한다.
