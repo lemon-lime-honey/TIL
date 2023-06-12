@@ -9,6 +9,7 @@
 - [Viewsets](viewsets.md)
 - [Routers](routers.md)
 - [Parsers](parsers.md)
+- [Renderers](renderers.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
