@@ -64,3 +64,28 @@ def user_count_view(request, format=None):
 API에 사용할 renderer 클래스를 명시할 때 각 미디어 유형에 따른 우선순위를 어떻게 정할지 고려해야 한다. 클라이언트가 `Accept: */*` 헤더를 보내거나 `Accept`헤더를 포함하지 않는 등 받을 수 있는 미디어 유형을 명시하지 않는다면 REST framework는 응답을 위해 리스트의 첫번째 renderer를 선택한다.
 
 예를 들어 API가 요청에 따라 일반적인 웹페이지와 API 응답을 모두 다룰 수 있는 뷰를 가진다면 [broken accept headers](http://www.gethifi.com/blog/browser-rest-http-accept-headers)를 보내는 오래된 브라우저를 잘 다루기 위해 `TemplateHTMLRenderer`를 기본 renderer로 설정하는 것을 고려해야 한다.
+
+# API Reference
+## JSONRenderer
+utf-8 인코딩을 사용해 요청 데이터를 `JSON`으로 렌더링한다.
+
+기본 스타일은 유니코드 문자를 포함하며 불필요한 공백이 없는 압축된 스타일을 이용해 응답을 렌더링한다.
+
+```
+{"unicode black star":"★", "value":999}
+```
+
+클라이언트는 반환된 `JSON`이 들여쓰기 되는 경우 `'indent'`  미디어 유형 인자를 추가적으로 포함시킨다. 예를 들면 `Accept: application/json; indent=4`.
+
+```
+{
+  "unicode black star": "★",
+  "value": 999
+}
+```
+
+기본 JSON 인코딩 스타일은 `UNICODE_JSON`, `COMPACT_JSON` 설정 키를 사용해 바꿀 수 있다.
+
+**.media_type**: `application/json`<br>
+**.format**: `'json'`<br>
+**.charset**: `None`<br>
