@@ -88,4 +88,48 @@ utf-8 인코딩을 사용해 요청 데이터를 `JSON`으로 렌더링한다.
 
 **.media_type**: `application/json`<br>
 **.format**: `'json'`<br>
-**.charset**: `None`<br>
+**.charset**: `None`
+
+## TemplateHTMLRenderer
+Django의 표준 템플릿 렌더링을 사용해 데이터를 HTML로 렌더링한다. 다른 renderer와 다르게, `Response`로 전달되는 데이터는 serialize될 필요가 없다. 또한 다른 renderer와 다르게, `Response`를 생성할 때 `template_name` 인자를 추가할 수 있다.
+
+TemplateHTMLRenderer는 `responser.data`를 컨텍스트 딕셔너리로 사용해 `RequestContext`를 생성하며 컨텍스트를 렌더링하기 위해 사용되는 템플릿 이름을 결정한다.
+
+- Note<br>
+  Serializer를 사용하는 뷰에서 사용될 때 렌더링을 위해 송신되는 `Response`가 딕셔너리가 아니므로 TemplateHTMLRenderer가 렌더링하게 하기 위해 반환하기 전에 딕셔너리로 감싸야 한다. 예를 들면,
+  ```python
+  response.data = {'results': response.data}
+  ```
+
+템플릿 이름은 다음에 의해 (선호도 순서로) 결정된다.
+
+1. 요청에 전달된 명시적인 `template_name` 인자
+2. 해당 클래스에서 명시적으로 설정된 `.template_name` 속성
+3. `view.get_template_names()`가 호출된 결과 반환하는 것
+
+다음은 `TemplateHTMLRenderer`를 사용하는 뷰의 예시이다.
+
+```python
+class UserDetail(generics.RetrieveAPIView):
+    """
+    A view that returns a templated HTML representation of a given user.
+    """
+    queryset = User.objects.all()
+    renderer_classes = [TemplateHTMLRenderer]
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return Response({'user': self.object}, template_name='user_detail.html')
+```
+
+REST framework를 사용하는 일반적인 HTML 페이지를 반환하거나 하나의 엔드포인트에서 HTML과 API 응답을 반환하게 할 때, 두 경우 모두 `TemplateHTMLRenderer`를 사용할 수 있다.
+
+만약 다른 renderer 클래스와 함께 `TemplateHTMLRenderer`를 사용하는 웹사이트를 작성 중이라면 `TemplateHTMLRenderer`를 `renderer_classes` 리스트의 가장 첫 클래스로 입력해 형편없이 생성된 `ACCEPT:` 헤더를 보내는 브라우저에서도 `TemplateHTMLRenderer`가 가장 처음으로 선택되게 하는 것을 고려해야 한다.
+
+`TemplateHTMLRenderer` 사용의 다른 예시는 [HTML & Forms Topic Page](https://www.django-rest-framework.org/topics/html-and-forms/)에서 확인할 수 있다.
+
+**.media_type**: `text/html`<br>
+**.format**: `'html'`<br>
+**.charset**: `utf-8`<br>
+
+See also: `StaticHTMLRenderer`
