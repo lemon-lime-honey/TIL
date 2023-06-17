@@ -133,3 +133,45 @@ REST framework를 사용하는 일반적인 HTML 페이지를 반환하거나 �
 **.charset**: `utf-8`<br>
 
 See also: `StaticHTMLRenderer`
+
+## StaticHTMLRenderer
+미리 렌더링된 HTML을 단순히 반환하는 단순한 renderer. 다른 renderer와는 달리 응답 객체로 전달되는 데이터는 반환되는 컨텐츠를 나타내는 문자열이어야 한다.
+
+`StaticHTMLRenderer`를 사용하는 뷰의 예시이다.
+
+```python
+@api_view(['GET'])
+@renderer_classes([StaticHTMLRenderer])
+def simple_html_view(request):
+    data = '<html><body><h1>Hello, world</h1></body></html>'
+    return Response(data)
+```
+
+REST framework를 사용하는 일반적인 HTML 페이지를 반환하거나 하나의 엔드포인트에서 HTML과 API 응답을 둘 다 반환하게 하는데 `StaticHTMLRenderer`를 사용할 수 있다.
+
+**.media_type**: `text/html`<br>
+**.format**: `'html'`<br>
+**.charset**: `'utf-8'`<br>
+
+See also: `TemplateHTMLRenderer`
+
+## BrowsableAPIRenderer
+브라우징 가능한 API를 위한 HTML로 데이터를 렌더링한다.
+
+![BrowsableAPIRenderer 사용 예시](https://www.django-rest-framework.org/img/quickstart.png)
+
+이 renderer는 어느 다른 renderer가 가장 높은 우선순위를 가지는지 결정하고, 그것을 HTML 페이지를 위한 API 스타일 응답에 사용한다.
+
+**.meida_type**: `text/html`<br>
+**.format**: `'api'`<br>
+**.charset**: `utf-8`<br>
+**.template**: `'rest_framework/api.html'`
+
+### Customizing BrowsableAPIRenderer
+기본적으로 응답 컨텐츠는 `BrowsableAPIRenderer`를 제외한 가장 높은 우선순위를 가진 renderer로 렌더링된다. 만약 기본 반환 포맷으로 HTML을 사용하지만 브라우징 가능한 API에서는 JSON을 사용하는 것과 같이 이런 동작을 커스터마이즈해야 한다면 `get_default_renderer()` 메서드를 override해서 구현할 수 있다. 예를 들면:
+
+```python
+class CustomBrowsableAPIRenderer(BrowsableAPIRenderer):
+    def get_default_renderer(self, view):
+        return JSONRenderer()
+```
