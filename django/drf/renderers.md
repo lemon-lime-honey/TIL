@@ -175,3 +175,27 @@ class CustomBrowsableAPIRenderer(BrowsableAPIRenderer):
     def get_default_renderer(self, view):
         return JSONRenderer()
 ```
+
+## AdminRenderer
+관리 페이지 같은 화면으로 데이터를 HTML로 렌더링한다.
+
+![AdminRenderer 사용예시](https://www.django-rest-framework.org/img/admin.png)
+
+이 renderer는 데이터를 관리하기 위한 사용자 친화적인 인터페이스를 표현하는 CRUD 스타일 웹 API에 적합하다.
+
+HTML 폼이 적절하게 지원하지 못하는 만큼, 입력에 시리얼라이저에 포함된 시리얼라이저나 나열된 시리얼라이저를 가지는 뷰는 `AdminRenderer`와 잘 동작하지 못한다는 점에 주의한다.
+
+Note: `AdminRenderer`는 오직 적절하게 설정된 `URL_FIELD_NAME`(기본값 `url`) 속성이 데이터에 존재할 때에만 디테일 페이지에 링크를 추가할 수 있다. `HyperlinkModelSerializer`가 한 예가 되겠지만, `ModelSerializer`나 단순한 `Serializer` 클래스에서는 필드를 명시적으로 추가해야 한다. 여기 모델에 `get_absolute_url` 메서드를 사용하는 예시가 있다.
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(source='get_absolute_url', read_only=True)
+
+    class Meta:
+        model = Account
+```
+
+**.media_type**: `text/html`<br>
+**.format**: `'admin'`<br>
+**.charset**: `utf-8`<br>
+**.template**: `'rest_framework/admin.html`
