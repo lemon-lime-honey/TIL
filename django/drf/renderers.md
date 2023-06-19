@@ -199,3 +199,32 @@ class AccountSerializer(serializers.ModelSerializer):
 **.format**: `'admin'`<br>
 **.charset**: `utf-8`<br>
 **.template**: `'rest_framework/admin.html`
+
+## HTMLFormRenderer
+시리얼라이저가 반환하는 데이터를 HTML 폼으로 렌더링한다. 이 renderer의 출력값은 `<form>` 태그나 숨겨진 CSRF 입력이나 제출 버튼을 포함하지 않는다.
+
+이 renderer는 직접적인 사용이 의도된 것은 아니지만 그 대신 시리얼라이저 인스턴스를 `render_form` 템플릿 태그로 전달해 사용할 수 있다.
+
+```python
+{% load rest_framework %}
+
+<form action="/submit-report/" method="post">
+  {% csrf_token %}
+  {% render_form serializer %}
+  <input type="submit" value="Save" />
+</form>
+```
+
+더 많은 정보는 [HTML & Forms](https://www.django-rest-framework.org/topics/html-and-forms/) 문서에서 확인할 수 있다.
+
+**.media_type**: `text/html`<br>
+**.format**: `'form'`<br>
+**.charset**: `utf-8`<br>
+**.template**: `'rest_framework/horizontal/form.html`
+
+## MultiPartRenderer
+HTML multipart 폼 데이터를 렌더링할 때 사용하는 renderer. **응답 renderer로는 적합하지 않지만** REST framework의 [테스트 클라이언트와 테스트 요청 팩토리](https://www.django-rest-framework.org/api-guide/testing/)를 사용해 테스트 요청을 생성하는데 사용된다.
+
+**.media_type**: `multipart/form-data; boundary=BoUnDaRyStRiNg`<br>
+**.format**: `'multipart'`<br>
+**.charset**: `utf-8`
