@@ -228,3 +228,63 @@ HTML multipart 폼 데이터를 렌더링할 때 사용하는 renderer. **응답
 **.media_type**: `multipart/form-data; boundary=BoUnDaRyStRiNg`<br>
 **.format**: `'multipart'`<br>
 **.charset**: `utf-8`
+
+# Custom renderers
+사용자 정의 renderer를 구현하려면 `BaseRenderer`를 override하고 `.media_type`, `.format` 속성을 설정해야 하며 `.render(self, data, accepted_media_type=None, renderer_context=None)` 메서드를 구현해야 한다.
+
+메서드는 HTTP 응답의 바디로 사용될 bytestring을 반환해야 한다.
+
+`.render()` 메서드로 전달되는 인자는 다음과 같다.
+  - `data`<br>
+    `Response()` 초기화에 의해 설정된 요청 데이터
+  - `accepted_media_type=None`<br>
+    선택인자. 주어진다면, 컨텐츠 협상 단계에서 결정되는 수용 가능한 미디어 유형이 된다.
+
+    클라이언트의 `Accept` 헤더에 따라 다르지만, renderer의 `media_type` 속성보다 더 구체적이고, 미디어 유형 인자를 포함할 수도 있다. 예를 들면 `"application/json; nested=true"`
+  - `renderer_context=None`<br>
+    선택인자. 주어진다면, 뷰에 의해 제공되는 컨텍스트 정보의 딕셔너리가 된다.
+
+    기본적으로 다음의 키를 가진다: `view`, `request`, `response`, `args`, `kwargs`
+
+## Example
+다음은 응답의 내용으로 `data` 인자를 가지는 응답을 반환하는 plaintext renderer의 예시이다.
+```python
+from django.utils.encoding import smart_text
+from rest_framework import renderers
+
+class PlainTextRenderer(renderers.BaseRenderer):
+    media_type = 'text/plain'
+    format = 'txt'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return smart_text(data, encoding=self.charset)
+```
+
+## Setting the character set
+기본 renderer 클래스는 `UTF-8` 인코딩을 사용한다고 간주된다. 다른 인코딩을 사용하려면 renderer에 `charset` 속성을 설정하면 된다.
+```python
+class PlainTextRenderer(renderers.BaseRenderer):
+    media_type = 'text/plain'
+    format = 'txt'
+    charset = 'iso-8859-1'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data.encode(self.charset)
+```
+
+Renderer 클래스가 유니코드 문자열을 반환하면 응답 컨텐츠가 renderer에서 설정되어 인코딩을 결정하는데 사용되는 `charset`속성과 함께 `Response` 클래스에 의해 bytestring으로 강제된다는 점에 주의한다.
+
+Renderer가 가공되지 않은 바이너리 컨텐츠를 표현하는 bytestring을 반환하면 응답의 `Content-Type` 헤더가 `charset` 값을 가지지 않게 하기 위해 charset 값을 `None`으로 설정해야 한다.
+
+`render_style` 속성을 `binary`로 설정할 수도 있다. 그렇게 하면 브라우징 가능한 API는 바이너리 컨텐츠를 문자열로 표현하지 않는다.
+
+```python
+class JPEGRenderer(renderers.BaseRenderer):
+    media_type = 'image/jpeg'
+    format = 'jpg'
+    charset = None
+    render_style = 'binary'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+```
