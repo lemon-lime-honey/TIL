@@ -288,3 +288,68 @@ class JPEGRenderer(renderers.BaseRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         return data
 ```
+
+# Advanced renderer usage
+REST framework의 renderer를 사용해 몇 가지 꽤 유연한 일을 할 수 있다. 다음은 그 예시이다.
+- 요청받은 미디어 유형에 따라 같은 엔드포인트에서 단순한, 또는 중첩된 표현을 제공한다.
+- 같은 엔드포인트에서 일반적인 HTML 웹페이지와 JSON 기반 API 응답을 모두 제공한다.
+- `media_type = 'images/*'`를 사용하는 식으로 renderer의 미디어 유형을 추상화하고, 응답의 인코딩을 다르게 하기 위해 `Accept` 헤더를 사용한다.
+
+## Varying behaviour by media type
+수용된 미디어 유형에 따라 뷰가 다른 serialization 스타일을 사용하게 할 수도 있다. 그렇게 하려면 응답에 사용된 협상된 renderer를 결정하기 위해 `request.accepted_renderer`에 접근한다.
+
+예를 들어:
+
+```python
+@api_view(['GET'])
+@renderer_classes([TemplateHTMLRenderer, JSONRenderer])
+def list_users(request):
+    """
+    A view that can return JSON or HTML representations
+    of the users in the system.
+    """
+    queryset = Users.objects.filter(active=True)
+
+    if request.accepted_renderer.format = 'html':
+        # TemplateHTMLRenderer takes a context dict,
+        # and additionally requires a 'template_name'.
+        # It does not require serialization.
+        data = {'users': queryset}
+        return Response(data, template_name='list_users.html')
+
+    # JSONRenderer requires serialized data as normal.
+    serializer = UserSerializer(instance=queryset)
+    data = serializer.data
+    return Response(data)
+```
+
+## Underspecifying the media type
+Renderer가 여러 메디어 유형을 다루게 할 수도 있다. 그렇게 하려면 `media_type` 값을 `image/*` 또는 `*/*`로 설정해 응답할 미디어 유형을 추상화하면 된다.
+
+Renderer의 미디어 유형을 추상화하면 `content_type` 속성을 사용해 응답을 반환할 때 미디어 유형을 명시적으로 구체화해야 한다. 예를 들면:
+
+```python
+return Response(data, content_type='image/png')
+```
+
+## Designing your media types
+많은 웹 API의 경우, 하이퍼링크 관계에 있는 단순한 `JSON` 응답이면 충분하다. 만약 온전한 RESTful 디자인과 [HATEOAS](http://timelessrepo.com/haters-gonna-hateoas)를 포용하고 싶다면 미디어 유형의 디자인과 사용 유형을 좀 더 구체적으로 고려해야 한다.
+
+[Roy Fielding의 말](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven)에 의하면, "REST API는 리소스와 실행 중인 애플리케이션의 상태를 표현하는데 사용되는 미디어 유형을 정의하거나, 확장된 관계명 그리고/또는 존재하는 표준 미디어 유형을 위한 하이퍼텍스트-가능한 마크업을 정의하는데 그 대부분의 서술적인 노력을 기울여야 한다".
+
+사용자 정의 미디어 유형의 좋은 예시로는 GitHub의 사용자 정의 [application/vnd.github+json](https://developer.github.com/v3/media/) 미디어 유형 사용이나 Mike Amundsen의 IANA approved [application/vnd.collection+json](http://www.amundsen.com/media-types/collection/) JSON 기반 하이퍼미디어를 참고한다.
+
+## HTML error views
+일반적으로 renderer는 일반적인 응답이나 `Http404`나 `PermissionDenied` 예외, 또는 `APIException`의 서브클래스와 같은 예외 발생으로 인한 응답을 같은 방식으로 대한다.
+
+만약 `TemplateHTMLRenderer`나 `StaticHTMLRenderer`를 사용하고 있고 예외가 발생한다면 동작이 약간 달라지며, [Django의 기본 에러 뷰 다루기](https://docs.djangoproject.com/en/stable/topics/http/views/#customizing-error-views)처럼 동작한다.
+
+HTML renderer에 의해 발생되고 다루어지는 예외는 우선순위에 따라 다음 중 한 가지 방법으로 렌더링을 시도한다.
+
+- `{status_code}.html`이라는 이름의 템플릿을 불러오고 렌더링한다.
+- `api_exception.html`이라는 이름의 템플릿을 불러오고 렌더링한다.
+- "404 Not Found"처럼 HTTP 상태 코드와 문자열을 렌더링한다.
+
+템플릿은 `status_code`와 `details` 키를 포함하는 `RequestContext`를 가지고 렌더링할 것이다.
+
+Note: `DEBUG=True`라면, HTTP 상태 코드와 문자열을 렌더링하는 대신 Django의 표준 traceback 에러 페이지가 나타날 것이다.
