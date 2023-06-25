@@ -353,3 +353,126 @@ HTML renderer에 의해 발생되고 다루어지는 예외는 우선순위에 �
 템플릿은 `status_code`와 `details` 키를 포함하는 `RequestContext`를 가지고 렌더링할 것이다.
 
 Note: `DEBUG=True`라면, HTTP 상태 코드와 문자열을 렌더링하는 대신 Django의 표준 traceback 에러 페이지가 나타날 것이다.
+
+# Third party packages
+다음의 서드파티 패키지를 사용할 수도 있다.
+
+## YAML
+[REST framework YAML](https://jpadilla.github.io/django-rest-framework-yaml/)은 [YAML](http://www.yaml.org/) 파싱과 렌더링 지원을 제공한다. 이전에는 REST framework 패키지에 직접 포함되어 있었지만, 지금은 서드파티 패키지로 제공된다.
+
+### Installation & configuration
+#### pip을 사용해 설치한다.
+```bash
+$ pip install djangorestframework-yaml
+```
+
+#### REST framework 설정을 바꾼다.
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework_yaml.parsers.YAMLParser',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework_yaml.renderers.YAMLRenderer',
+    ],
+}
+```
+
+## XML
+[REST Framework XML](https://jpadilla.github.io/django-rest-framework-xml/)는 간단한 약식 XML 포맷을 제공한다. 이전에는 REST framework 패키지에 직접 포함되어 있었지만, 지금은 서드파티 패키지로 지원된다.
+
+### Installation & configuration
+#### pip을 사용해 설치한다.
+```bash
+$ pip install djangorestframework-xml
+```
+
+#### REST framework 설정을 바꾼다.
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework_xml.parsers.XMLParser',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework_xml.renderers.XMLRenderer',
+    ],
+}
+```
+
+## JSONP
+[REST framework JSONP](https://jpadilla.github.io/django-rest-framework-jsonp/)는 JSONP 렌더링 지원을 제공한다. 이전에는 REST framework 패키지에 직접 포함되어 있었지만, 지금은 서드파티 패키지로 지원된다.
+
+**주의**: 만약 교차 도메인 AJAX 요청을 필요로 한다면, `JSONP` 대신 좀 더 현대적인 [CORS](https://www.w3.org/TR/cors/) 접근법을 사용해야 한다. 자세한 사항은 [CORS 문서](https://www.django-rest-framework.org/topics/ajax-csrf-cors/)에서 확인할 수 있다.
+
+`jsonp` 접근법은 근본적으로 브라우저 핵이며, `GET` 요청이 인증되지 않고 어떠한 사용자 권한도 필요로 하지 않는 [전역적으로 읽기 가능한 API 엔드포인트에서만 적절하다.](https://stackoverflow.com/questions/613962/is-jsonp-safe-to-use)
+
+### Installation & configuration
+#### pip을 사용해 설치한다.
+```bash
+$ pip install djangorestframework-jsonp
+```
+
+#### REST framework 설정을 바꾼다.
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework_jsonp.renderers.JSONPRenderer',
+    ],
+}
+```
+
+## MessagePack
+[MessagePack](https://msgpack.org/)은 빠르고 효율적인 이진 serialization 포맷이다. [Juan Riaza](https://github.com/juanriaza)가 REST framework에 MessagePack 렌더러와 parser를 지원하는 [djangorestframework-msgpack](https://github.com/juanriaza/django-rest-framework-msgpack) 패키지를 관리한다.
+
+## Microsoft Excel: XLSX (Binary Spreadsheet Endpoints)
+XLSX는 세계에서 가장 인기있는 이진 스프레드시트 포맷이다. [The Wharton School](https://github.com/wharton)의 [Tim Allen](https://github.com/flipperpa)가 OpenPyXL을 사용하는 XLSX 스트레드시트를 엔드포인트로 렌더링하고, 클라이언트가 다운로드 할 수 있게 하는 [drf-excel](https://github.com/wharton/drf-excel)을 관리한다. 스프레드시트는 뷰당 기반으로 스타일링 될 수 있다.
+
+### Installation & configuration
+#### pip을 사용해 설치한다.
+```bash
+$ pip install drf-excel
+```
+
+#### REST framework 설정을 바꾼다.
+```python
+REST_FRAMEWORK = {
+    ...
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'drf_excel.renderes.XLSXRenderer',
+    ],
+}
+```
+
+파일이 이름 없이(브라우저가 때로 기본값으로 확장자 없이 파일이름을 "download"로 설정하게 된다.) 스트리밍되는 것을 방지하려면, `Content-Disposition` 헤더를 override하는 mixin을 사용해야 한다. 만약 파일명이 주어지지 않는다면, 기본값인 `export.xlsx`로 지정된다. 예를 들어:
+
+```python
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from drf_excel.mixins import XLSXFileMixin
+from drf_excel.renderers import XLSXRenderer
+
+from .models import MyExampleModel
+from .serializers import MyExampleSerializer
+
+class MyExampleViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
+    queryset = MyExampleModel.objects.all()
+    serializer_class = MyExampleSerializer
+    renderer_classes = [XLSXRenderer]
+    filename = 'my_export.xlsx'
+```
+
+## CSV
+반점으로 구분된 값은 쉽게 스프레드시트 애플리케이션으로 가져올 수 있는 표 같은 일반 텍스트 포맷이다. [Mjumbe Poe](https://github.com/mjumbewu)가 REST framework에 CSV 렌더러 지원을 제공하는 [djangorestframework-csv](https://github.com/mjumbewu/django-rest-framework-csv) 패키지를 관리한다.
+
+## UltraJSON
+[UltraJSON](https://github.com/esnme/ultrajson) 현저하게 빠른 JSON 렌더링을 제공하는 최적화된 C JSON 인코더이다. [Adam Mertz](https://github.com/Amertz08)가 UJSON 패키지를 사용한 JSON 렌더링을 구현하는, 지금은 관리되지 않고 있는 [drf-ujson-renderer](https://github.com/gizmag/drf-ujson-renderer)의 포크인 [drf-ujson2](https://github.com/Amertz08/drf_ujson2)를 관리한다.
+
+## CamelCase JSON
+[djangorestframework-camel-case](https://github.com/vbabiy/djangorestframework-camel-case)는 REST framework를 위한 카멜케이스 JSON 렌더러와 parser를 제공한다. 이는 serializer가 파이썬식 필드 명을 사용하게 하지만 API에서는 자바스크립트식 카멜 케이스 필드 명으로 보이게 한다. [Vitaly Babiy](https://github.com/vbabiy)가 관리한다.
+
+## Pandas (CSV, Excel, PNG)
+[Django REST Pandas](https://github.com/wq/django-rest-pandas)는 추가적인 데이터 가공과 [Pandas](https://pandas.pydata.org/) 데이터프레임 API를 통한 결과물을 지원하는 serializer와 렌더러를 제공한다. Django REST Pandas는 Pandas 스타일 CSV 파일, 엑셀 파일(`.xls`와 `.xlsx` 둘 모두), 그리고 여러 [다른 포맷](https://github.com/wq/django-rest-pandas#supported-formats)을 위한 렌더러를 포함한다. [wq Project](https://github.com/wq)의 일부로 [S. Andrew Sheppard](https://github.com/sheppard)가 관리한다.
+
+## LaTeX
+[REST Framework Latex](https://github.com/mypebble/rest-framework-latex)는 Laulatex를 사용한 PDF 결과물을 렌더링하는 렌더러를 제공한다. [Pebble (S/F Software)](https://github.com/mypebble)가 관리한다.
