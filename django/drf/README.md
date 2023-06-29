@@ -10,6 +10,7 @@
 - [Routers](routers.md)
 - [Parsers](parsers.md)
 - [Renderers](renderers.md)
+- [Serializers](serializers.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
