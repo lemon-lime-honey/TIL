@@ -76,3 +76,84 @@ serializer.is_valid()
 serializer.validated_data
 # {'content': 'foo bar', 'email': 'example@example.com'. 'created': datetime.datetime(2023, 6, 29, 20, 11, 22, 458258)}
 ```
+
+## Saving instances
+유효성이 검증된 데이터에 기반한 온전한 객체 인스턴스를 반환하게 하고 싶다면 `.create()`와 `.update()` 메서드 중 하나 이상을 구현해야 한다. 예를 들면:
+
+```python
+class CommentSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    content = serializers.CharField(max_length=200)
+    created = serializers.DateTimeField()
+
+    def create(self, validated_data):
+        return Comment(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email', instance.email)
+        instance.content = validated_data.get('content', instance.content)
+        instance.created = validated_data.get('created', instance.created)
+        return instance
+```
+
+객체 인스턴스가 Django 모델에 대응된다면, 다음의 메서드가 데이터베이스에 객체를 저장하게 할 수 있다. 예를 들어 `Comment`가 Django 모델이라면, 메서드는 아래와 같이 작성될 것이다.
+
+```python
+def create(self, validated_data):
+    return Comment.objects.create(**validated_data)
+
+def update(self, instance, validated_data):
+    instance.email = validated_data.get('email', instance.email)
+    instance.content = validated_data.get('content', instance.content)
+    instance.created = validated_data.get('created', instance.created)
+    return instance
+```
+
+이제 데이터를 deserialize할 때 유효성이 검증된 데이터에 기반한 객체 인스턴스를 반환하기 위해 `.save()`를 호출할 수 있다.
+
+```python
+comment = serializer.save()
+```
+
+`.save()`를 호출하면 시리얼라이저 클래스를 초기화할 때 존재하는 인스턴스를 전달했는지의 여부에 따라 새로운 인스턴스를 생성하거나 이미 존재하는 인스턴스를 갱신한다.
+
+```python
+# .save() will create a new instance.
+serializer = CommentSerializer(data=data)
+
+# .save() will update the existing `comment` instance.
+serializer = CommentSerializer(comment, data=data)
+```
+
+`.create()` 와 `.update()`는 모두 선택적인 메서드이다. 시리얼라이저 클래스의 용도에 따라 전부 다, 혹은 하나만 구현하거나 아무것도 구현하지 않을 수 있다.
+
+### Passing additional attributes to `.save()`
+인스턴스를 저장하는 시점에 추가 데이터를 삽입할 수 있도록 뷰 코드를 작성할 수 있다. 이 추가 데이터는 현재 사용자, 현재 시각, 또는 요청 데이터에 포함되지 않은 어떤 내용과 같은 정보를 포함할 수 있다.
+
+`.save()`를 호출할 때 추가적인 키워드 인자를 포함하면 그렇게 할 수 있다. 예를 들면:
+
+```python
+serializer.save(owner=request.user)`
+```
+
+모든 추가적인 키워드 인자는 `.create()` 혹은 `.update()`가 호출되었을 때 `validated_data` 인자에 포함된다.
+
+### Overriding `.save()` directly.
+`.create()`와 `.update()`라는 이름이 의미있지 않은 경우가 있다. 예를 들어 연락 폼으로 새 인스턴스를 생성하는 대신 이메일이나 다른 메시지를 송신할 것이다.
+
+이런 경우 좀 더 가독성 있고 의미를 가지도록 `.save()`를 직접 override할 수 있다.
+
+예를 들면:
+
+```python
+class ContactForm(serializers.Serializer):
+    email = serializers.EmailField()
+    message = serializers.CharField()
+
+    def save(self):
+        email = self.validated_data['email']
+        message = self.validated_data['message']
+        send_email(form=email, message=message)
+```
+
+위의 경우 시리얼라이저의 `.validated_data` 속성에 직접 접근해야 한다는 점에 유의한다.
