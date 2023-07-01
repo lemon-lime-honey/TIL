@@ -157,3 +157,107 @@ class ContactForm(serializers.Serializer):
 ```
 
 위의 경우 시리얼라이저의 `.validated_data` 속성에 직접 접근해야 한다는 점에 유의한다.
+
+## Validation
+데이터를 deserialize할 때, 유효성이 검증된 데이터에 접근하려 하거나 객체 인스턴스를 저장하기 전에 꼭 `is_calid()`를 호출해야 한다. 유효성 오류가 발생하면 `.errors` 속성이 에러 메시지를 표현하는 딕셔너리를 포함하게 된다. 예를 들어:
+
+```python
+serializer = CommentSerializer(data={'email': 'foobar', 'content': 'baz'})
+serializer.is_valid()
+# False
+serializer.errors
+# {'email': ['Enter a valid e-mail address.'], 'created': ['This Field is required.']}
+```
+
+딕셔너리 안의 각각의 키는 필드명이 되고, 그 값은 해당하는 필드에 대응하는 에러 메시지 문자열의 리스트가 된다. `non_field_errors` 키 또한 존재할 수 있으며, 일반적인 유효성 오류를 나열할 것이다. REST framework 설정에서 `NON_FIELD_ERRORS_KEY`를 사용해 `non_field_errors` 키의 이름을 변경할 수 있다.
+
+아이템 리스트를 deserialize할 때에는 각각의 deserialize된 아이템을 나타내는 딕셔너리의 리스트로 에러가 반환된다.
+
+### Raising an exception on invalid data
+`.is_valid()` 메서드는 유효성 오류가 있을 때 `serializers.ValidationError` 예외를 발생시키기 위한 선택적인 `raise_exception` 플래그를 가진다.
+
+이러한 예외들은 REST framework가 제공하는 기본 예외 핸들러에 의해 자동으로 다루어지며, 기본으로 `HTTP 400 Bad Request` 응답을 반환한다.
+
+```python
+# Return a 400 response if the data was invalid.
+serializer.is_valid(raise_exception=True)
+```
+
+### Field-level validation
+`Serializer` 서브클래스에 `.validate_<field_name>` 메서드를 추가해 사용자 정의 필드 수준 유효성 검사를 명시할 수 있다. 이는 Django 폼의 `.clean_<field_name>` 메서드와 유사하다.
+
+이러한 메서드들은 유효성 검사를 필요로 하는 필드 값인 하나의 인자를 가진다.
+
+`validate_<field_name>` 메서드는 유효성이 검증된 값을 반환하거나 `serializers.ValidationError`를 발생시켜야 한다. 예를 들면:
+
+```python
+from rest_framework import serializers
+
+class BlogPostSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=100)
+    content = serializers.CharField()
+
+    def validate_title(self, value):
+        """
+        Check that the blog post is about Django.
+        """
+        if 'django' not in value.lower():
+            raise serializers.ValidationError("Blog post is not about Django")
+        return value
+```
+
+- **Note**<br>
+  만약 `<field_name>`이 `required=False` 인자와 함께 시리얼라이저에서 선언되었다면 해당 필드가 포함되지 않았을 때 이 유효성 검증 단계는 생략될 것이다.
+
+### Object-level validation
+유효성 검사가 복수의 필드에 접근하는 것을 요구한다면, `Serializer` 서브클래스에 `.validate()` 메서드를 추가한다. 이 메서드는 필드 값의 딕셔너리인 하나의 인자를 가진다. 필요하다면 `serializers.ValidationError`를 발생시키거나 유효성이 검증된 값을 반환한다. 예를 들면:
+
+```python
+from rest_framework import serializers
+
+class EventSerializer(serializers.Serializer):
+    description = serializers.CharField(max_length=100)
+    start = serializers.DateTimeField()
+    finish = serializers.DateTimeField()
+
+    def validate(self, data):
+        """
+        Check that start is before finish.
+        """
+        if data['start'] > data['finish']:
+            raise serializers.ValidationError("finish must occur after start")
+        return data
+```
+
+### Validators
+시리얼라이저에 있는 각각의 필드는 다음과 같이 필드 인스턴스에서 validator를 선언해 포함할 수 있다.
+
+```python
+def multiple_of_ten(value):
+    if value % 10 != 0:
+        raise serializers.ValidationError('Not a multiple of ten')
+
+class GameRecord(serializers.Serializer):
+    score = IntegerField(validators=[multiple_of_ten])
+    ...
+```
+
+시리얼라이저 클래스는 필드 테이터의 온전한 세트에 적용되는 재사용 가능한 validator를 포함할 수 있다. 이러한 validator는 다음과 같이 내부의 `Meta` 클래스에서 선언하여 포함될 수 있다.
+
+```python
+class EventSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    room_number = serializers.IntegerField(choices=[101, 102, 103, 201])
+    date = serializers.DateField()
+
+    class Meta:
+        # Each room only has one event per day.
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Event.objects.all(),
+                fields=['room_number', 'date']
+            )
+        ]
+```
+
+더 많은 정보는 [validators 문서](https://www.django-rest-framework.org/api-guide/validators/)에서 확인할 수 있다.
