@@ -261,3 +261,52 @@ class EventSerializer(serializers.Serializer):
 ```
 
 더 많은 정보는 [validators 문서](https://www.django-rest-framework.org/api-guide/validators/)에서 확인할 수 있다.
+
+## Accessing the initial data and instance
+초기 객체나 queryset을 시리얼라이저 인스턴스로 전달할 때 객체는 `.instance`로 사용 가능하게 된다. 초기 객체가 전달되지 않았다면 `.instance` 속성은 `None`이 된다.
+
+시리얼라이저 인스턴스로 데이터를 전달할 때, 수정되지 않은 데이터는 `.initial_data`로 사용 가능하게 된다. `data` 키워드 인자가 전달되지 않았다면 `initial_data` 속성이 존재하지 않게 된다.
+
+
+## Partial updates
+기본적으로 시리얼라이저에는 모든 필수 필드를 위한 값이 전달되어야 하며, 그렇지 않을 경우 유효성 검사 오류가 발생한다. 부분 갱신을 하려면 `partial` 인자를 사용하면 된다.
+
+```python
+# Update `comment` with partial data
+serializer = CommentSerializer(comment, data={'content': 'foo bar'}, partial=True)
+```
+
+## Dealing with nested objects
+이전 예시는 단순한 데이터 타입만을 가지는 객체를 다루는 데에는 괜찮았지만 때로 객체의 속성이 문자열, 날짜 또는 정수와 같은 단순한 데이터 타입이 아닌 좀 더 복잡한 객체를 나타낼 수 있어야 한다.
+
+`Serializer` 클래스는 그 스스로 `Field`의 유형이며, 하나의 객체 유형이 다른 객체 안에 중첩된 관계를 나타내는데 사용될 수 있다.
+
+```python
+class UserSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    username = serializers.CharField(max_length=100)
+
+class CommentSerializer(serializers.Serializer):
+    user = UserSerializer()
+    conent = serializers.CharField(max_length=200)
+    created = serializers.DateTimeField()
+```
+
+중첩된 표현이 부분적으로 `None` 값을 수용한다면, 중첩된 시리얼라이저에 `required=False` 플래그를 전달해야 한다.
+
+```python
+class CommentSerializer(serializers.Serializer):
+    user = UserSerializer(required=False) # May be an anonymous user.
+    content = serializers.CharField(max_length=200)
+    created = serializers.DateTimeField()
+```
+
+유사하게, 중첩된 표현이 아이템의 리스트가 되어야 한다면 중첩된 시리얼라이저에 `many=True` 플래그를 전달해야 한다.
+
+```python
+class CommentSerializer(serializers.Serializer):
+    user = UserSerializer(required=False)
+    edits = EditItemSerializer(many=True) # A nested list of 'edit' items.
+    content = serializers.CharField(max_length=200)
+    created = serializers.DateTimeField()
+```
