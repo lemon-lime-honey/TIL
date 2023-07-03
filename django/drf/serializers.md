@@ -310,3 +310,143 @@ class CommentSerializer(serializers.Serializer):
     content = serializers.CharField(max_length=200)
     created = serializers.DateTimeField()
 ```
+
+## Writable nested representations
+데이터 deserialize를 지원하는 중첩된 표현을 다룰 때, 중첩된 객체에 관한 어느 오류라도 중첩된 객체의 필드명 아래 중첩될 것이다.
+
+```python
+serializer = CommentSerializer(data={'user': {'email': 'foobar', 'username': 'doe'}, 'content': 'baz'})
+serializer.is_valid()
+# False
+serializer.errors
+# {'user': {'email': ['Enter a valid e-mail address']}, 'created': ['This field is required.']}
+```
+
+이와 유사하게, `.validated_data`속성이 중첩된 자료 구조에 포함될 것이다.
+
+### Writing `.create()` methods for nested representations
+작성 가능한 중첩된 표현을 지원해야 한다면, 복수 객체 저장을 다루는 `.create()` 혹은 `.update()` 메서드를 작성해야 한다.
+
+다음 예시는 중첩된 프로필 객체를 동반한 사용자 생성을 다루는 방법을 보여준다.
+
+```python
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'profile']
+
+    def create(self, validated_data):
+        profile_data = validated_data.pop('profile')
+        user = User.objects.create(**validated_data)
+        Profile.objects.create(user=user, **profile_data)
+        return user
+```
+
+### Writing `.update()` methods for nested representations
+관계 갱신을 어떻게 다루어야 할지에 관해 고려해보자. 예를 들어 관계의 데이터가 `None`이거나 제공되지 않았다면 다음 중 어느 것이 일어나야 할까?
+
+- 데이터베이스에서 관계를 `NULL`로 설정하기
+- 연관된 인스턴스 삭제하기
+- 데이터를 무시하고 인스턴스를 그대로 두기
+- 유효성 검증 오류를 발생시키기
+
+다음은 이전의 `UserSerializer` 클래스의 `.update()` 메서드 예시이다.
+
+```python
+def update(self, instance, validated_data):
+    profile_data = validated_data.pop('profile')
+    # Unless the application properly enforces that this field is
+    # always set, the following could raise a `DoesNotExist`, which would need to be handled.
+    profile = instance.profile
+
+    instance.username = validated_data.get('username', instance.username)
+    instance.email = validated_data.get('email', instance.email)
+    instance.save()
+
+    profile.is_premium_member = profile_data.get(
+        'is_premium_member',
+        profile.is_premium_member
+    )
+    profile.has_support_contract = profile_data.get(
+        'has_support_contract',
+        profile.has_support_contract
+    )
+    profile.save()
+
+    return instance
+```
+
+중첩된 생성과 갱신의 동작이 모호할 수 있고, 연관된 모델 사이에 복잡한 의존성이 요구될 수 있으므로 REST framework 3은 이러한 메서드를 명시적으로 작성할 것을 요구한다. 기본 `ModelSerializer`의 `.create()`와 `.update()` 메서드는 작성 가능한 중첩된 표현에 관한 지원을 포함하지 않는다.
+
+그러나 자동으로 작성 가능한 중첩된 표현을 지원하는 [DRF Writable Nested](https://www.django-rest-framework.org/api-guide/serializers/#drf-writable-nested)와 같은 서드파티 패키지를 사용할 수 있다.
+
+### Handling saving related instances in model manager classes
+시리얼라이저에서 복수의 연관된 인스턴스를 저장하는 다른 방법은 정확한 인스턴스 생성을 다루는 사용자 정의 모델 매니저 클래스를 작성하는 것이다.
+
+예를 들어 `User` 인스턴스와 `Profile` 인스턴스가 언제나 한 쌍으로 같이 생성되게 해야 한다고 해보자. 다음과 같은 사용자 정의 클래스를 작성할 수 있다.
+
+```python
+class UserManager(models.Manager):
+    ...
+
+    def create(self, username, email, is_premium_member=False, has_support_contract=False):
+        user = User(username=username, email=email)
+        user.save()
+        profile = Profile(
+            user=user,
+            is_premium_member=is_premium_member,
+            has_support_contract=has_support_contract
+        )
+        profile.save()
+        return user
+```
+
+이제 매니저 클래스는 사용자 인스턴스와 프로필 인스턴스가 언제나 같은 시간에 생성하는 것을 더 멋지게 캡슐화한다. 이제 새 매니저 메서드를 사용하기 위해 시리얼라이저의 `.create()` 메서드를 재작성한다.
+
+```python
+def create(self, validated_data):
+    return User.objects.create(
+        username=validated_data['username'],
+        email=validated_data['email'],
+        is_premium_member=validated_data['profile']['is_premium_member'],
+        has_support_contract=validated_data['profile']['has_support_contract']
+    )
+```
+
+이 접근에 관한 자세한 사항은 [모델 매니저에 관한 Django 문서](https://docs.djangoproject.com/en/stable/topics/db/managers/)와 [모델과 매니저 클래스를 사용하는 법에 관한 블로그](https://www.dabapps.com/blog/django-models-and-encapsulation/)에서 확인할 수 있다.
+
+## Dealing with multiple objects
+`Serializer` 클래스는 객체 리스트의 serialization이나 deserialization 또한 다룰 수 있다.
+
+### Serializing multiple objects
+하나의 객체 인스턴스 대신 queryset이나 객체 리스트를 serialize하려면 시리얼라이저를 초기화할 때 `many=True` 플래그를 전달해야 한다. 그 다음 serialize 되어야 할 queryset이나 객체 리스트를 전달할 수 있다.
+
+```python
+queryset = Book.objects.all()
+serializer = BookSerializer(queryset, many=True)
+serializer.data
+# [
+#    {'id': 0, 'title': 'Children of the Rune: Blooded 5', 'author': 'Jeon Min-Hee'},
+#    {'id': 1, 'title': 'The Handmaid's Tale', 'author': 'Margaret Atwood'},
+#    {'id': 2, 'title': 'Harry Potter and the Deathly Hallows', 'author': 'J. K. Rowling'}
+# ]
+```
+
+### Deseiralizing multiple objects
+복수의 개체를 deserialize하는 기본 동작은 복수의 개체 생성을 지원하지만 복수의 개체 갱신은 지원하지 않는 것이다. 이런 경우를 어떻게 지원할지, 혹은 어떻게 커스터마이즈를 할지에 관한 정보는 아래의 [ListSerializer](https://www.django-rest-framework.org/api-guide/serializers/#listserializer) 문서에서 확인할 수 있다.
+
+## Including extra context
+Serialize 되는 객체에 더해 추가적인 컨텍스트를 시리얼라이저에 제공해야 하는 경우가 있다. 흔한 경우 중 하나는 적절하게 온전히 작동하는 URL을 생성할 수 있도록 시리얼라이저가 현재 요청에 접근하게 하는 것을 필요로 하는 하이퍼링크된 관계를 포함하는 시리얼라이저를 사용할 때이다.
+
+시리얼라이저를 초기화할 때 `context` 인자를 전달해 임의의 추가적인 컨텍스트를 제공할 수 있다. 예를 들면:
+
+```python
+serializer = AccountSerializer(account, context={'request': request})
+serializer.data
+# {'id': 6, 'owner': 'lemon-lime-honey', 'created': datetime.datetime(2023, 7, 3, 21, 35, 47, 413287), 'details': 'https://github.com/lemon-lime-honey'}
+```
+
+컨텍스트 딕셔너리는 `self.context` 속성에 접근해 사용자 정의 `.to_representation()` 메서드와 같은 어느 시리얼라이저 필드 로직에서도 사용될 수 있다.
