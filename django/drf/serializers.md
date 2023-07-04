@@ -450,3 +450,42 @@ serializer.data
 ```
 
 컨텍스트 딕셔너리는 `self.context` 속성에 접근해 사용자 정의 `.to_representation()` 메서드와 같은 어느 시리얼라이저 필드 로직에서도 사용될 수 있다.
+
+# ModelSerializer
+Django 모델 정의와 유사한 시리얼라이저 클래스를 작성할 수도 있다.
+
+`ModelSerializer` 클래스는 모델 필드에 대응되는 필드를 동반하는 `Serializer` 클래스를 자동으로 생성할 수 있게 한다.
+
+**`ModelSerializer` 클래스는 다음 특징을 제외하면 일반적인 `Serializer` 클래스와 같다.**
+
+- 모델에 기반해 자동으로 필드 세트를 생성한다.
+- unique_together 유효성 검사기와 같은 시리얼라이저를 위한 유효성 검사기를 자동으로 생성한다.
+- 기본으로 `.create()`와 `.update()`의 단순한 구현을 포함한다.
+
+`ModelSerializer`를 선언하는 것은 이렇다.
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['id', 'account_name', 'users', 'created']
+```
+
+기본적으로 클래스 안의 모든 모델 필드는 대응되는 시리얼라이저 필드에 매핑될 것이다.
+
+외래키와 같은 모델의 관계는 `PrimaryKeyRelatedField`에 매핑될 것이다. 역관계는 [시리얼라이저 관계](https://www.django-rest-framework.org/api-guide/relations/) 문서에서 기술된 것처럼 명시적으로 포함된 것이 아니라면 기본으로 포함되지는 않는다.
+
+### Inspecting a `ModelSerializer`
+시리얼라이저 클래스는 필드 상태를 온전히 점검할 수 있게 해주는 도움말 문자열을 생성한다. 이는 어떤 필드와 유효성 검사기 세트가 자동으로 생성되는지 결정하기 위해 `ModelSerializers`를 다룰 때 특히 유용하다.
+
+그렇게 하려면 `python manage.py shell`을 사용해 Django 셸을 열고 시리얼라이저 클래스를 불러온 다음 초기화를 시킨 후 객체 표현을 출력한다.
+
+```python
+>>> from myapp.serializers import AccountSerializer
+>>> serializer = AccountSerializer()
+>>> print(repr(serializer))
+AccountSerializer():
+    id = IntegerField(label='ID', read_only=True)
+    name = CharField(allow_blank=True, max_length=100, required=False)
+    owner = PrimaryKeyRelatedField(queryset=User.objects.all())
+```
