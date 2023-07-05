@@ -489,3 +489,60 @@ AccountSerializer():
     name = CharField(allow_blank=True, max_length=100, required=False)
     owner = PrimaryKeyRelatedField(queryset=User.objects.all())
 ```
+
+## Specifying which fields to include
+모델 시리얼라이저에 사용될 기본 필드의 일부 만을 사용하고 싶다면, `ModelForm`에서 했던 것처럼 `fields`나 `exclude` 옵션을 사용하면 된다. `fields` 속성을 사용해 serialize되어야 할 모든 필드를 명시적으로 설정하는 것을 강력히 권고한다. 이는 모델이 변경되었을 때 의도치 않게 데이터가 노출될 확률을 줄일 수 있다.
+
+예를 들면:
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['id', 'account_name', 'users', 'created']
+```
+
+`fields` 속성에 모델의 모든 필드가 사용되어야 한다는 것을 표시하기 위한 특별 값 `'__all__'`을 설정해도 된다.
+
+예를 들면:
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = '__all__'
+```
+
+`exclude` 속성에 시리얼라이저에서 제외되어야 할 필드의 리스트를 설정할 수도 있다.
+
+예를 들면:
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        exclude = ['users']
+```
+
+위의 예시에서 `Account` 모델이 `account_name`, `users`, `created`라는 세 개의 필드를 가진다면 필드 `account_name`과 `created`가 serialize되는 결과가 나올 것이다.
+
+`fields`와 `excludes` 속성 안의 이름은 보통 모델 클래스의 모델 필드에 매핑된다.
+
+그 대신에 `fields` 옵션 안의 이름은 모델 클래스에 존재하는 인자를 가지지 않는 속성이나 메서드에 매핑될 수도 있다.
+
+버전 3.0.0부터 `fields` 혹은 `exclude` 중 하나를 제공하는 것이 **강제**된다.
+
+## Specifying nested serialization
+기본 `ModelSerializer`는 관계를 위해 기본키를 사용하지만, `depth` 옵션을 사용한 중첩 표현을 쉽게 생성할 수 있다.
+
+```python
+class AccountSerializer(serializers.ModelSerialzer):
+    class Meta:
+        model = Account
+        fields = ['id', 'account_name', 'users', 'created']
+        depth = 1
+```
+
+`depth` 옵션은 납작한 표현으로 되돌아 가기 전에 지나야 할 관계의 깊이를 나타내는 정수 값으로 설정되어야 한다.
+
+Serialization이 되는 방식을 커스터마이즈하고 싶다 해도 필드를 직접 정의할 필요는 없다.
