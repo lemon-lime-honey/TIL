@@ -546,3 +546,70 @@ class AccountSerializer(serializers.ModelSerialzer):
 `depth` 옵션은 납작한 표현으로 되돌아 가기 전에 지나야 할 관계의 깊이를 나타내는 정수 값으로 설정되어야 한다.
 
 Serialization이 되는 방식을 커스터마이즈하고 싶다 해도 필드를 직접 정의할 필요는 없다.
+
+## Specifying fields explicitly
+`ModelSerializer`에 추가 필드를 더하거나, `Serializer` 클래스에서처럼 클래스 내의 필드를 선언해 기본 필드를 override할 수 있다.
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(source='get_absolute_url', read_only=True)
+    groups = serializers.PrimaryKeyRelatedField(many=True)
+
+    class Meta:
+        model = Account
+        fields = ['url', 'groups']
+```
+
+추가 필드는 모델에 있는 속성이나 호출 가능한 것에 대응될 수 있다.
+
+## Specifying read only fields
+복수의 필드를 읽기전용으로 명시할 수 있다. 각 필드에 `read_only=True` 속성을 명시하는 대신 Meta 옵션인 `read_only_fields`를 사용하면 된다.
+
+이 옵션은 필드 이름의 리스트 혹은 튜플이어야 하며, 다음과 같이 선언되어야 한다.
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['id', 'account_name', 'users', 'created']
+        read_only_fields = ['account_name']
+```
+
+`editable=False` 설정을 가진 모델 필드나 `AutoField` 필드는 기본적으로 읽기 전용으로 설정될 것이며, `read_only_fields` 옵션에 추가될 필요가 없다.
+
+- **Note**: <br>
+  읽기 전용 필드가 모델 수준에서 `unique_together` 제한의 일부인 특수한 경우가 있다. 이 경우, 제한 조건을 충족시키기 위해 해당 필드가 시리얼라이저 클래스에서 요구되지만, 동시에 사용자에 의해 수정되어서는 안 된다.
+
+  이를 다루는 방법은 시리얼라이저에서 `read_only=True`와 `default=...` 키워드 인자를 제공하며 필드를 명시하는 것이다.
+
+  한 가지 예시는 다른 식별자와 `unique_together`인 현재 인증된 `User`의 읽기 전용 관계이다. 이 경우 사용자 필드를 다음과 같이 선언한다.
+
+  ```python
+  user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+  ```
+
+  [UniqueTogetherValidator](https://www.django-rest-framework.org/api-guide/validators/#uniquetogethervalidator)와 [CurrentUserDefault](https://www.django-rest-framework.org/api-guide/validators/#currentuserdefault) 클래스에 관한 자세한 내용은 [Validators 문서](https://www.django-rest-framework.org/api-guide/validators/)에서 확인할 수 있다.
+
+## Additional keyword arguments
+`extra_kwargs` 옵션을 사용해 필드의 임의의 키워드 인자를 명시할 수 있는 방법이 있다. `read_only_fields`의 경우처럼 이는 시리얼라이저에 필드를 명시적으로 선언하지 않아도 된다는 것을 의미한다.
+
+이 옵션은 필드 이름을 키워드 인자의 딕셔너리로 매핑하는 딕셔너리이다. 예를 들면:
+
+```python
+class CreateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+```
+
+필드가 이미 시리얼라이저 클래스에서 명시적으로 선언되었다면 `extra_kwargs` 옵션이 무시된다는 점을 유의한다.
