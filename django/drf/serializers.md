@@ -613,3 +613,69 @@ class CreateUserSerializer(serializers.ModelSerializer):
 ```
 
 필드가 이미 시리얼라이저 클래스에서 명시적으로 선언되었다면 `extra_kwargs` 옵션이 무시된다는 점을 유의한다.
+
+## Relational fields
+모델 인스턴스를 serialize할 때 관계를 나타내는 여러 다른 방법이 있다. `ModelSerializer`의 기본 표현은 연관된 인스턴스의 기본키를 사용하는 것이다.
+
+다른 표현 방식에는 하이퍼링크를 이용한 serialize, 중첩된 표현을 온전히 serialize하는 것 또는 사용자 정의 표현을 serialize하는 것이 있다.
+
+[serializer relations](https://www.django-rest-framework.org/api-guide/relations/)문서에서 더 많은 정보를 확인할 수 있다.
+
+## Customizing field mappings
+ModelSerializer 클래스는 시리얼라이저를 초기화할 때 어떻게 자동으로 시리얼라이저 필드가 결정되리 정하기 위해 override할 수 있는 API를 노출시킨다.
+
+보통 `ModelSerializer`는 필요로 하는 필드를 기본으로 생성하지는 않기 때문에 클래스에 필드를 명시적으로 추가하거나 대신 일반적인 `Serializer` 클래스를 사용해야 한다. 한편, 주어진 모델을 위해 시리얼라이저 필드가 어떻게 생성되어야 할지를 정의하는 새로운 베이스 클래스를 작성할 수 있다.
+
+#### `.serializer_field_mapping`
+Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는 것. 이 매핑을 각 모델 필드에 사용할 기본 시리얼라이저 필드로 바꾸기 위해 override할 수 있다.
+
+#### `.serializer_related_field`
+이 속성은 기본적으로 과계 필드에 사용되는 시리얼라이저 필드 클래스가 되어야 한다.
+
+`ModelSerializer`의 경우 기본 값은 `serializers.PrimaryKeyRelatedField`<br>
+`HyperlinkedModelSerializer`의 경우 기본 값은 `serializers.HyperlinkedRelatedField`
+
+#### `.serializer_url_field`
+시리얼라이저에 있는 `url` 필드에 사용되는 시리얼라이저 필드 클래스.
+
+기본값: `serializers.HyperlinkedIdentityField`
+
+#### `.serializer_choice_field`
+시리얼라이저에 있는 초이스 필드에 사용되는 시리얼라이저 필드 클래스.
+
+기본값: `serializers.ChoiceField`
+
+### The field_class and field_kwargs API
+다음의 메서드는 자동으로 시리얼라이저에 포함될 각 필드를 위한 클래스와 키워드 인자를 결정하기 위해 호출된다. 각 메서드는 튜플 `(field_class, field_kwargs)`를 반환한다.
+
+#### `.build_standard_field(self, field_name, model_field)`
+일반적인 모델 필드로 매핑되는 시리얼라이저 필드를 생성하기 위해 호출된다.
+
+기본 구현은 `serializer_field_mapping` 속성에 기반한 시리얼라이저 클래스를 반환한다.
+
+#### `.build_relational_field(self, field_name, relation_info)`
+관계 모델 필드로 매핑되는 시리얼라이저 필드를 생성하기 위해 호출된다.
+
+기본 구현은 `serializer_related_field` 속성에 기반한 시리얼라이저 클래스를 반환한다.
+
+`related_info` 인자는 속성 `model_field`, `related_model`, `to_many`, `has_through_model`을 포함하는 named 튜플이다.
+
+#### `.build_nested_field(self, field_name, relation_info, nested_depth)`
+`depth` 옵션이 설정되었을 때, 관계 모델 필드로 매핑되는 시리얼라이저 필드를 생성하기 위해 호출된다.
+
+기본 구현은 `ModelSerializer` 또는 `HyperlinkedModelSerializer`에 기반한 중첩된 시리얼라이저 클래스를 동적으로 생성한다.
+
+`nested_depth`는 `depth` 옵션의 값에서 1을 뺀 값이다.
+
+`relation_info` 인자는 속성 `model_field`, `related_model`, `to_many`, `has_through_model`을 포함하는 named 튜플이다.
+
+#### `.build_property_field(self, field_name, model_class)`
+모델 클래스의 속성이나 인자 없는 메서드로 매핑되는 시리얼라이저 필드를 생성하기 위해 호출된다.
+
+기본 구현은 `ReadOnlyField` 클래스를 반환한다.
+
+#### `.build_url_field(self, field_name, model_class)`
+시리얼라이저 자체 `url` 필드를 위한 시리얼라이저 필드를 생성하기 위해 호출된다. 기본 구현은 `HyperlinkedIdentityField` 클래스를 반환한다.
+
+#### `.build_unknown_field(self, field_name, model_class)`
+필드 이름이 어느 모델 필드나 모델 속성에도 매핑되지 않을 때 호출된다. 기본 구현은 서브클래스가 이런 동작을 커스터마이즈할 수 있지만 에러를 발생시킨다.
