@@ -679,3 +679,84 @@ Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는
 
 #### `.build_unknown_field(self, field_name, model_class)`
 필드 이름이 어느 모델 필드나 모델 속성에도 매핑되지 않을 때 호출된다. 기본 구현은 서브클래스가 이런 동작을 커스터마이즈할 수 있지만 에러를 발생시킨다.
+
+# HyperlinkedModelSerializer
+`HyperlinkedModelSerializer` 클래스는 관계를 표현하기 위해 기본키가 아닌 하이퍼링크를 사용한다는 점을 제외하면 `ModelSerializer` 클래스와 유사하다.
+
+기본적으로, 시리얼라이저는 기본키 필드 대신 `url` 필드를 포함하게 된다.
+
+url 필드는 `HyperlinkedIdentityField` 시리얼라이저 필드를 사용해 표현될 것이며, 모델에 있는 모든 관계는 `HyperlinkedRelatedField` 시리얼라이저 필드를 사용해 표현된다.
+
+다음과 같이 `fields` 옵션에 기본키를 명시해 추가할 수도 있다.
+
+```python
+class AccountSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['url', 'id', 'account_name', 'users', 'created']
+```
+
+## Absolute and relative URLs
+다음과 같이 `HyperlinkedModelSerializer`를 초기화할 때에는 시리얼라이저 컨텍스트에 현재 `request`를 포함시켜야 한다.
+
+```
+serializer = AccountSerializer(queryset, context={'request': request})
+```
+
+이렇게 하면 하이퍼링크가 적절한 호스트 네임을 포함하는 것을 보장할 수 있으며 그러면 다음과 같이 표현되는 정규화된 URL을 결과물로 사용하게 된다.
+
+```
+http://api.example.com/accounts/1
+```
+
+다음과 같은 상대 경로 대신.
+
+```
+/accounts/1/
+```
+
+상대 경로를 *사용하고 싶다*면, 시리얼라이저 컨텍스트에 `{'request': None}`을 명시적으로 전달해야 한다.
+
+## How hyperlinked views are determined
+모델 인스턴스에 하이퍼링크되는데 사용하는 뷰를 결정하는 방법이 필요하다.
+
+기본적으로 하이퍼링크는 `'{model_name}-detail'` 형식의 이름을 가지는 뷰에 대응되고, `pk` 키워드 인자로 인스턴스를 찾는다.
+
+다음과 같이 `extra_kwargs` 설정에서 `view_name`과 `lookup_field` 옵션 중 하나 혹은 둘 모두를 사용해 URL 필드 뷰 이름과 탐색 필드를 override할 수 있다.
+
+```python
+class AccountSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['account_url', 'account_name', 'users', 'created']
+        extra_kwargs = {
+            'url': {'view_name': 'accounts', 'lookup_field': 'account_name'},
+            'users': {'lookup_field': 'username'}
+        }
+```
+
+시리얼라이저의 필드를 명시적으로 설정할 수도 있다. 예를 들면:
+
+```python
+class AccountSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='accounts',
+        lookup_field='slug'
+    )
+    users = serializers.HyperlinkedRelatedField(
+        view_name='user-detail',
+        lookup_field='username',
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = Account
+        fields = ['url', 'account_name', 'users', 'created']
+```
+
+- **Tip**:<br>
+  하이퍼링크된 표현과 URL 설정을 적절하게 일치시키는 것은 간혹 성가시다. `HyperlinkedModelSerializer` 인스턴스의 `repr`를 출력하는 것이 관계를 매핑하기 위해 어느 뷰 이름과 검색 필드를 찾을 때에도 특히 유용한 방법이다.
+
+## Changing the URL field name
+URL 필드의 기본 름은 `url`이다. `URL_FIELD_NAME` 설정을 사용해 전역적으로 override할 수 있다.
