@@ -759,4 +759,125 @@ class AccountSerializer(serializers.HyperlinkedModelSerializer):
   하이퍼링크된 표현과 URL 설정을 적절하게 일치시키는 것은 간혹 성가시다. `HyperlinkedModelSerializer` 인스턴스의 `repr`를 출력하는 것이 관계를 매핑하기 위해 어느 뷰 이름과 검색 필드를 찾을 때에도 특히 유용한 방법이다.
 
 ## Changing the URL field name
-URL 필드의 기본 름은 `url`이다. `URL_FIELD_NAME` 설정을 사용해 전역적으로 override할 수 있다.
+URL 필드의 기본 이름은 `url`이다. `URL_FIELD_NAME` 설정을 사용해 전역적으로 override할 수 있다.
+
+# ListSerializer
+`ListSerializer` 클래스는 복수의 개체를 한 번에 serialize하고 유효성을 확인하기 위한 동작을 제공한다. 보통은 `ListSerializer`를 직접 사용할 일이 없고, 대신 단순히 시리얼라이저를 초기화할 때 `many=True`를 전달한다.
+
+시리얼라이저가 초기화되고 `many=True`가 전달될 때, `ListSerializer` 인스턴스가 생성된다. 시리얼라이저 클래스는 그 다음에 부모 `ListSerializer`의 자신이 된다.
+
+다음의 인자는 `ListSerializer` 필드나 `many=True`가 전달된 시리얼라이저에 전달될 수 있다.
+
+#### `allow_empty`
+기본적으로 `True`이지만 빈 리스트를 유효한 입력으로 허용하고 싶지 않다면 `False`로 설정한다.
+
+#### `max_length`
+기본적으로 `None`이지만 리스트의 최대 길이에 제한을 두고 싶다면 양의 정수로 설정한다.
+
+#### `min_length`
+기본적으로 `None`이지만 리스트의 최소 길이에 제한을 두고 싶다면 양의 정수로 설정한다.
+
+## Customizing `ListSerializer` behavior
+`ListSerializer`의 동작을 수정하게 되는 몇 가지 경우가 있다. 예를 들면:
+
+- 리스트 내의 한 원소가 다른 원소와 충돌을 일으키지 않는지 확인하는 등의 리스트에 특정한 유효성 검사를 제공하는 경우
+- 복수의 객체를 생성하거나 갱신하는 동작을 수정하는 경우
+
+이러한 경우, 시리얼라이저의 `Meta` 클래스의 `list_serializer_class` 옵션을 사용해 `many=True`가 전달되었을 때 사용될 클래스를 수정한다.
+
+예를 들어:
+
+```python
+class CustomListSerializer(serializers.ListSerializer):
+    ...
+
+
+class CustomSerializer(serializers.Serializer):
+    ...
+    class Meta:
+        list_serializer_class = CustomListSerializer
+```
+
+### Customizing multiple create
+복수의 개체를 생성하는 기본 구현은 단순히 리스트에 있는 각각의 아이템에 대해 `.create()`를 호출하는 것이다. 이 동작을 수정하려면, `many=True`가 전달되었을 때 사용되는 `ListSerializer` 클래스의 `.create()` 메서드를 커스터마이즈해야 한다.
+
+예를 들면:
+
+```python
+class BookListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        books = [Book(**item) for item in validated_data]
+        return Book.objects.bulk_create(books)
+
+
+class BookSerializer(serializers.Serializer):
+    ...
+    class Meta:
+        list_serializer_class = BookListSerializer
+```
+
+### Customizing multiple update
+`ListSerializer` 클래스는 기본적으로 다중 갱신을 지원하지 않는다. 왜냐하면 삽입과 삭제에 관해 예상되는 동작이 모호하기 때문이다.
+
+다중 갱신을 지원하려면 명시적으로 해야 한다. 다음을 염두에 두고 다중 갱신 코드를 작성해야 한다.
+
+- 데이터 리스트의 아이템 중 어느 인스턴스가 갱신되어야할지 어떻게 결정할 수 있을까?
+- 삽입은 어떻게 다루어져야 하는가? 유효하지 않은 것인가, 아니면 새 객체를 생성하게 되는가?
+- 삭제는 어떻게 다루어져야 하는가? 객체 삭제를 의미하는가, 혹은 관계 삭제를 의미하는가? 조용히 무시되어야 하는 것인가 혹은 유효하지 않은 것인가?
+- 순서는 어떻게 다루어져야 하는가? 두 아이템의 위치를 바꾸는 것이 어떤 상태의 변화를 의미하는가 혹은 무시되는가?
+
+인스턴스 시리얼라이저에 명시적인 `id` 필드를 추가해야 한다. 암묵적으로 생성되는 기본 `id` 필드는 `read_only`로 표시된다. 이는 갱신될 때 삭제된다. 한 번 명시적으로 선언하면 리스트 시리얼라이저의 `update` 메서드에서 사용할 수 있다.
+
+다음은 다중 갱신을 구현하는 한 가지 방법이다.
+
+```python
+class BookListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        # Maps for id -> instance and id -> data item.
+        book_mapping = {book.id: book for book in instance}
+        data_mapping = {item['id']: item for item in validated_data}
+
+        # Perform creations and updates.
+        ret = []
+        for book_id, data in data_mapping.items():
+            book = book_mapping.get(book_id, None)
+            if book is None:
+                ret.append(self.child.create(data))
+            else:
+                ret.append(self.child.update(book, data))
+
+        # Perform deletions.
+        for book_id, book in book_mapping.items():
+            if book_id not in data_mapping:
+                book.delete()
+
+        return ret
+
+
+class BookSerializer(serializers.Serializer):
+    # We need to identify elements in the list using their primay key,
+    # so use a writable field here, rather than the default which would be read-only.
+    id = serializers.IntegerField()
+    ...
+
+    class Meta:
+        list_serializer_class = BookListSerializer
+```
+
+REST framework 2에 존재했던 `allow_add_remove` 동작과 유사한, 다중 갱신 연산 자동 지원을 제공하는 서드파티 패키지를 3.1 버전과 함께 사용할 수도 있다.
+
+### Customizing ListSerializer initialization
+`many=True`인 시리얼라이저를 인스턴스화할 때 어느 인자와 키워드 인자가 자식 `Serializer` 클래스와 부모 `ListSerializer` 클래스의 `.__init__()` 메서드에 전달되어야 하는지 결정해야 한다.
+
+기본 구현은 자식 시리얼라이저 클래스를 대상으로 하는 것으로 간주되는 `validator`와 사용자 정의 키워드 인자를 제외한 모든 인자를 두 클래스에 전달하는 것이다.
+
+때때로 `many=True`가 전달될 때 자식과 부모 클래스가 어떻게 인스턴스화되어야 하는지 명시적으로 구체화해야 하는 경우가 있다. `many_init` 클래스 메서드를 사용하면 된다.
+
+```python
+@classmethod
+def many_init(cls, *args, **kwargs):
+    # Instantiate the child serializer.
+    kwargs['child'] = cls()
+    # Instantiate the parent list serializer.
+    return CustomListSerializer(*args, **kwargs)
+```
