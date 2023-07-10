@@ -881,3 +881,152 @@ def many_init(cls, *args, **kwargs):
     # Instantiate the parent list serializer.
     return CustomListSerializer(*args, **kwargs)
 ```
+
+# BaseSerializer
+`BaseSerializer` 클래스는 또 다른 serialization과 deserialization 방식을 쉽게 지원하기 위해 사용된다.
+
+이 클래스는 `Serializer` 클래스와 같은 기본 API를 구현한다.
+
+- `.data`: 가공되지 않은 출력 표현을 반환한다.
+- `.is_valid()`: 들어오는 데이터를 deserialize하고 그 유효성을 검사한다.
+- `.validated_data`: 들어온 유효한 데이터를 반환한다.
+- `.errors`: 유효성 검사 중 발생한 에러를 반환한다.
+-`.save()`: 유효한 데이터를 객체 인스턴스로 남긴다.
+
+시리얼라이저 클래스가 지원하기를 바라는 기능에 따라 override될 수 있는 네 개의 메서드가 있다.
+
+- `.to_representation()`: 읽기 연산에 serialization을 지원하기 위해 override한다.
+- `.to_internal_value()`: 쓰기 연산에 deserialization을 지원하기 위해 override한다.
+- `.create`, `.update()`: 인스턴스 저장을 지원하기 위해 둘 중 하나 이상을 override한다.
+
+이 클래스가 `Serializer` 클래스와 동일한 인터페이스를 제공하기 때문에 일반적인 `Serializer`나 `ModelSerializer`의 경우에서 그러하듯이 존재하는 generic 클래스 기반 뷰와 함께 사용할 수 있다.
+
+그럴 때의 유일한 차이점은 `BaseSerializer` 클래스가 브라우징 가능한 API를 HTML 폼으로 생성하지 않을 것이라는 점이다. 왜냐하면 반환하는 데이터가 각 필드를 적절한 HTML 입력으로 렌더링할 수 있도록 해주는 필드 정보를 포함하고 있지 않기 때문이다.
+
+## Read-only `BaseSerializer` classes
+`BaseSerializer`를 사용해 읽기 전용 시리얼라이저를 구현하려면 `.to_representation()` 메서드를 override한다. 다음은 간단한 Django 모델을 사용한 예시이다.
+
+```python
+class HighScore(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    player_name = models.CharField(max_length=10)
+    score = models.IntegerField()
+```
+
+`HighScore` 인스턴스를 원시 데이터형으로 변환하는 읽기 전용 시리얼라이저를 생성하는 것은 간단하다.
+
+```python
+class HighScoreSerializer(serializers.BaseSerializer):
+    def to_representation(self, instance):
+        return {
+            'score': instance.score,
+            'player_name': instance.player_name
+        }
+```
+
+이제 이 클래스를 하나의 `HighScore` 인스턴스를 serialize하는데 사용할 수 있다.
+
+```python
+@api_view(['GET'])
+def high_score(request, pk):
+    instance = HighScore.objects.get(pk=pk)
+    serializer = HighScoreSerializer(instance)
+    return Response(serializer.data)
+```
+
+혹은 복수의 인스턴스를 serialize하기 위해 사용할 수 있다.
+
+```python
+@api_view(['GET'])
+def all_high_scores(request):
+    queryset = HighScore.objects.order_by('-score')
+    serializer = HighScoreSerializer(queryset, many=True)
+    return Response(serializer.data)
+```
+
+## Read-write `BaseSerializer` classes
+읽기-쓰기 시리얼라이저를 생성하려면 우선 `.to_internal_value` 메서드를 구현할 필요가 있다. 이 메서드는 객체 인스턴스를 생성하기 위해 사용되는 유효한 값을 반환하며, 제공된 데이터가 정확하지 않은 형식이라면 `serializers.ValidationError`를 발생시킨다.
+
+`.to_internal_value()`를 구현하면 시리얼라이저에서 기본 유효성 검사 API를 사용할 수 있게 되며 `.is_valid()`, `.validated_data`, `.errors`를 사용할 수 있게 된다.
+
+`.save()`를 지원하려면 `.create()`나 `.update()` 메서드 중 하나 혹은 둘 모두를 구현하면 된다.
+
+다음은 읽기와 쓰기 연산을 둘 다 지원하도록 갱신된 `HighScoreSerializer`의 완성된 예시이다.
+
+```python
+class HighScoreSerializer(serializers.BaseSerializer):
+    def to_internal_value(self, data):
+        score = data.get('score')
+        player_name = data.get('player_name')
+
+        # Perform the data validation.
+        if not score:
+            raise serializers.ValidationError({
+                'score': 'This field is required.'
+            })
+        if not player_name:
+            raise serializers.ValidationError({
+                'player_name': 'This field is required.'
+            })
+        if len(player_name) > 10:
+            raise serializers.ValidationError({
+                'player_name': 'May not be more than 10 characters.'
+            })
+
+        # Return the validation values. This will be available as
+        # the `.validated_data` property.
+        return {
+            'score': int(score),
+            'player_name': player_name
+        }
+
+    def to_representation(self, instance):
+        return {
+            'score': instance.score,
+            'player_name': instance.player_name
+        }
+
+    def create(self, validated_data):
+        return HighScore.objects.create(**validated_data)
+```
+
+## Creating new base classes
+`BaseSerializer` 클래스는 특정한 serialization 형식을 다루기 위해, 혹은 대체 스토리지 백엔드와 통합하기 위해 새로운 generic 시리얼라이저 클래스를 구현할 때에도 유용하다.
+
+다음의 클래스는 임의의 복잡한 객체를 원시 표현으로 강제하는 것을 다루는 generic 시리얼라이저의 예시이다.
+
+```python
+class ObjectSerializer(serializers.BaseSerializer):
+    """
+    A read-only serializer that coerces arbitrary complex objects
+    into primitive representations.
+    """
+    def to_representation(self, instance):
+        output = {}
+        for attribute_name in dir(instance):
+            attribute = getattr(instance, attribute_name)
+            if attribute_name.startswith('_'):
+                # Ignore private attributes.
+                pass
+            elif hasattr(attribute, '__call__'):
+                # Ignore methods and other callables.
+                pass
+            elif isinstance(attribute, (str, int, bool, float, type(None))):
+                # Primitive types can be passed through unmodified.
+                output[attribute_name] = attribute
+            elif isinstance(attribute, list):
+                # Recursively deal with items in lists.
+                output[attribute_name] = [
+                    self.to_representation(item) for item in attribute
+                ]
+            elif isinstance(attribute, dict):
+                # Recursively deal with items in dictionaries.
+                output[attribute_name] = {
+                  str(key): self.to_representation(value)
+                  for key, value in attribute.items()
+                }
+            else:
+                # Force anything else to its string representation.
+                output[attribute_name] = str(attribute)
+        return output
+```
