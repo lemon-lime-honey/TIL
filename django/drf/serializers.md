@@ -1030,3 +1030,169 @@ class ObjectSerializer(serializers.BaseSerializer):
                 output[attribute_name] = str(attribute)
         return output
 ```
+
+# Advanced serializer usage
+## Overriding serialization and deserialization behavior
+시리얼라이저 클래스의 serialize나 deserialize 동작을 변경해야 한다면 `.to_representation()`이나 `.to_internal_value()` 메서드를 override하면 된다.
+
+이것이 유용한 이유는...
+
+- 새로운 시리얼라이저 베이스 클래스를 위한 새로운 동작을 추가한다.
+- 이미 존재하는 클래스의 동작을 약간 변경한다.
+- 많은 데이터를 반환하는 접근이 잦은 API 엔드포인트의 serialization 퍼포먼스를 향상시킨다.
+
+이 메서드의 특징은 다음과 같다.
+
+### `.to_representation(self, instance)`
+Serialize가 필요한 객체 인스턴스를 전달받아 원시적인 표현을 반환한다. 보통 이는 빌트인 파이썬 데이터형 구조로 반환하는 것을 의미한다. 다루게 되는 정확한 데이터형은 API를 위해 설정된 렌더 클래스에 따라 다르다.
+
+표현 양식을 변경하기 위해 override될 수 있다. 예를 들면:
+
+```python
+def to_representation(self, instance):
+    # Convert `username` to lowercase.
+    ret = super().to_representation(instance)
+    ret['username'] = ret['username'].lower()
+    return ret
+```
+
+### `.to_internal_value(self, data)`
+유효성 검증이 되지 않은 들어오는 데이터를 입력으로 받아 `serializer.validated_data`로 사용가능하게 되는 유효한 데이터를 반환한다. 반환값은 시리얼라이저 클래스에서 `.save()`가 반환되었을 때 `.create()` 또는 `.update()` 메서드로 전달된다.
+
+유효성 검증에 실패한다면 메서드는 `serializers.ValidationError(errors)`를 발생시킨다. `errors` 인자는 필드 이름(또는 `settings.NON_FIELD_ERRORS_KEY`)을 오류 메시지의 리스트로 매핑하는 딕셔너리여야 한다. Deserialization 동작을 바꾸지 않는 대신 객체 수준의 유효성 검사를 제공하고 싶다면 `.validate()` 메서드를 override하는 것을 권장한다.
+
+이 메서드로 전달되는 `data` 인자는 보통 `request.data`의 값이므로 이것이 제공하는 데이터형은 API를 위해 설정한 parser 클래스에 따라 다르다.
+
+## Serializer Inheritance
+Django 폼과 유사하게, 상속을 통해 시리얼라이저를 확장하고 재사용할 수 있다. 이는 여러 시리얼라이저에서 사용할 수 있는 필드나 메서드의 공통적인 세트를 부모 클래스에 선언할 수 있게 한다.
+
+```python
+class MyBaseSerializer(Serializer):
+    my_field = serializers.CharField()
+
+    def validate_my_field(self, value):
+        ...
+
+class MySerializer(MyBaseSerializer):
+    ...
+```
+
+Django의 `Model`과 `ModelForm` 클래스처럼, 시리얼라이저 내부의 `Meta` 클래스는 부모 내부의 `Meta` 클래스를 반드시 상속받지는 않는다. 부모 클래스로부터 `Meta` 클래스를 상속받고 싶다면 명시적으로 해야 한다. 예를 들어:
+
+```python
+class AccountSerializer(MyBaseSerializer):
+    class Meta(MyBaseSerializer.Meta):
+        model = Account
+```
+
+보통 내부 Meta 클래스를 상속받는 것을 권장하지 *않는* 대신, 모든 옵션을 명시적으로 선언하는 것을 권장한다.
+
+추가적으로, 시리얼라이저 상속에 적용되는 주의사항은 다음과 같다.
+
+- 일반적인 파이썬 이름 확인 규칙이 적용된다. 내부 `Meta` 클래스를 선언하는 복수의 베이스 클래스가 있다면 오직 첫번째 것이 사용된다. 이는 존재한다면 자식의 `Meta`, 그렇지 않다면 첫번째 부모의 `Meta`를 의미한다.
+- 서브클래스에서 이름이 `None`이 되도록 설정해 부모 클래스에서 상속받은 `Field`를 선언하듯이 제거할 수 있다.
+  ```python
+  class MyBaseSerializer(ModelSerializer):
+      my_field = serializers.CharField()
+  
+  class MySerializer(MyBaseSerializer):
+      my_field = None
+  ```
+  그러나 이 방법은 부모 클래스에 의해 선언하듯이 정의된 필드를 없앨 때에만 사용할 수 있다. 이것은 `ModelSerializer`가 기본 필드를 생성하는 것을 방지하지 못한다. 기본 필드를 사용하지 않으려면 [어느 필드를 포함할지 구체화하기](https://www.django-rest-framework.org/api-guide/serializers/#specifying-which-fields-to-include) 문서를 확인한다.
+
+## Dynamically modifying fields
+일단 시리얼라이저가 초기화되면, `.fields` 속성을 사용해 시리얼라이저에 설정된 필드 딕셔너리에 접근할 수 있다. 이 속성에 접근하는 것과 이 속성을 수정하는 것은 시리얼라이저를 동적으로 수정할 수 있게 한다.
+
+`fields` 인자를 직접 수정하면 시리얼라이저를 선언하는 순간이 아니라 동작 중 시리얼라이저 필드의 인자를 변경하는 등의 흥미로운 일을 할 수 있게 된다.
+
+### Example
+예를 들어, 시리얼라이저를 초기화하는 시점에 어느 필드를 시리얼라이저에서 사용할지 정하게 하고 싶다면 시리얼라이저 클래스를 다음과 같이 작성하면 된다.
+
+```python
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        fields = kwargs.pop('fields', None)
+
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument.
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+```
+
+이는 다음을 가능하게 한다.
+
+```python
+>>> class UserSerializer(DynamicFieldsModelSerializer):
+>>>     class Meta:
+>>>         model = User
+>>>         fields = ['id', 'username', 'email']
+>>>
+>>> print(UserSerializer(user))
+{'id': 2, 'username': 'lime', 'email': 'lime@example.com'}
+>>>
+>>> print(UserSerializer(user, fields=('id', 'email')))
+{'id': 2, 'email': 'lime@example.com'}
+```
+
+## Customizing the default fields
+REST framework 2는 개발자가 `ModelSerializer` 클래스가 어떻게 필드의 기본 세트를 자동으로 생성할지 override할 수 있게 해주는 API를 제공했다.
+
+이 API는 `.get_field()`, `.get_pk_field()`와 다른 메서드를 포함했다.
+
+3.0에서 시리얼라이저가 근본적으로 재설계되었기 때문에 이 API는 더이상 존재하지 않는다. 여전히 생성되는 필드를 수정할 수 있지만 소스 코드를 참조해야 하며, API의 private bit에 반하는 변경사항이 발생하는 경우 이 또한 변경될 수 있다는 점에 유의해야 한다.
+
+# Third party packages
+다음의 서드파티 패키지를 사용할 수 있다.
+
+## Django REST marshmallow
+[django-rest-marshmallow](https://marshmallow-code.github.io/django-rest-marshmallow/) 패키지는 파이썬 [marshmallow](https://marshmallow.readthedocs.io/en/latest/) 라이브러리를 사용해 시리얼라이저의 대체 구현을 제공한다. REST framework 시리얼라이저와 같은 API를 제공하며 일부 사용 예시에서 드롭 인 대체로 사용될 수 있다.
+
+## Serpy
+[serpy](https://github.com/clarkduvall/serpy) 패키지는 속도를 위해 빌드된 시리얼라이저를 위한 대체 구현이다. Serpy는 복잡한 데이터형을 단순한 네이티브 형으로 serialize한다. 네이티브 형은 JSON이나 다른 필요로 하는 포맷으로 쉽게 변환될 수 있다.
+
+## MongoengineModelSerializer
+[django-rest-framework-mongoengine](https://github.com/umutbozkurt/django-rest-framework-mongoengine) 패키지는 Django REST framework를 위한 스토리지 레이어로 MongoDB를 사용할 수 있게 지원하는 `MongoEngineModelSerializer` 시리얼라이저 클래스를 제공한다.
+
+## GeoFeatureModelSerializer
+[django-rest-framework-gis](https://github.com/djangonauts/django-rest-framework-gis) 패키지는 읽기와 쓰기 연산을 위한 GeoJSON을 지원하는 `GeoFeatureModelSerializer` 시리얼라이저 클래스를 제공한다.
+
+## HStoreSerializer
+[django-rest-framework-hstore](https://github.com/djangonauts/django-rest-framework-hstore)는 [django-hstore](https://github.com/djangonauts/django-hstore)의 `DictionaryField` 모델 필드와 `schema-mode` 기능을 지원하는 `HStoreSerializer`를 제공한다.
+
+## Dynamic REST
+[dynamic-rest](https://github.com/AltSchool/dynamic-rest) 패키지는 ModelSerializer와 ModelViewSet 인터페이스를 확장해 시리얼라이저에 의해 정의된 모든 필드와 관계를 필터링, 정렬, 그리고 포함/제외하는 API 쿼리 인자를 추가한다.
+
+## Dynamic Fields Mixin
+[drf-dynamic-fields](https://github.com/dbrgn/drf-dynamic-fields) 패키지는 URL 인자에 의해 구체화된 서브셋으로 시리얼라이저 당 필드를 동적으로 제한하는 mixin을 제공한다.
+
+## DRF FlexFields
+[drf-flex-fields](https://github.com/rsinger86/drf-flex-fields)는 URL 인자와 시리얼라이저 클래스 정의로부터 동적으로 정해지는 필드와 원시 필드를 중첩된 모델로 확장하는 자주 사용되는 기능을 제공하기 위해 ModelSerializer와 ModelViewSet을 확장한다.
+
+## Serializer Extensions
+[django-rest-framework-serializer-extensions](https://github.com/evenicoulddoit/django-rest-framework-serializer-extensions) 패키지는 필드를 뷰당/요청 기준에 따라 정의되도록 허용하는 것으로 시리얼라이저를 DRY(Don't Repeat Yourself)하기 위한 도구 모음을 제공한다. 필드를 화이트리스트나 블랙리스트에 올릴 수 있고 자식 시리얼라이저는 선택적으로 확장될 수 있다.
+
+## HTML JSON Forms
+[html-json-forms](https://github.com/wq/html-json-forms) 패키지는 `<form>` 제출을 (비활성화된)[HTML JSON FORM specification](https://www.w3.org/TR/html-json-forms/)에 따라 가공하기 위한 알고리즘과 시리얼라이저를 제공한다. 시리얼라이저는 HTML 내의 임의의 중첩된 JSON 구조를 가공하는 것을 용이하게 한다. 예를 들어 `<input name="items[0][id]" value="5">`는 `{"items": [{"id": "5"}]}`로 해석된다.
+
+## DRF-Base64
+[DRF-Base64](https://bitbucket.org/levit_scs/drf_base64)는 base64 인코딩된 파일 업로드를 다루는 필드의 세트와 모델 시리얼라이저를 제공한다.
+
+## QueryFields
+[djangorestframework-queryfields](https://djangorestframework-queryfields.readthedocs.io/)는 쿼리 인자 포함/제외를 통해 API 클라이언트가 어느 필드를 응답에 포함시킬 것인지 구체화하도록 한다.
+
+## DRF Writable Nested
+[drf-writable-nested](https://github.com/beda-software/drf-writable-nested) 패키지는 중첩된 연관 데이터로 모델을 생성/갱신할 수 있게 해주는 쓰기 가능한 중첩된 모델 시리얼라이저를 제공한다.
+
+## DRF Encrypt Content
+[drf-encrypt-content](https://github.com/oguzhancelikarslan/drf-encrypt-content) 패키지는 ModelSerializer를 통해 serialize된 데이터를 암호화하는 것을 도화준다. 데이터를 암호화하는데 도움을 주는 몇 가지 도우미 함수 또한 포함하고 있다.
