@@ -11,6 +11,7 @@
 - [Parsers](parsers.md)
 - [Renderers](renderers.md)
 - [Serializers](serializers.md)
+- [Serializer fields](serializer_fields.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
