@@ -135,3 +135,156 @@ Django 2.1에서 `models.BooleanField`의 `blank` 키워드 인자를 제거했�
 `django.db.models.fields.BooleanField`에 대응된다.
 
 **Signature**: `BooleanField()`
+
+# String fields
+## CharField
+텍스트 표현. 조건이 주어지면 `max_length`보다 짧고 `min_length`보다 긴 텍스트의 유효성을 검사한다.
+
+`django.db.models.fields.CharField` 또는 `django.db.models.fields.TextField`에 대응된다.
+
+**Signature**: `CharField(max_length=None, min_length=None, allow_blank=False, trim_whitespace=True)`
+
+- `max_length`<br>
+  이 길이를 넘지 않는 개수의 문자를 포함하는 입력의 유효성을 검증한다.
+- `min_length`<br>
+  이 길이보다 적지 않은 개수의 문자를 포함하는 입력의 유효성을 검증한다.
+- `allow_blank`<br>
+  `True`로 설정된다면 빈 문자열이 유효한 값으로 간주된다. `False`로 설정된다면 빈 문자열이 유효하지 않은 값으로 간주되며 유효성 오류를 일으킨다. 기본값은 `False`.
+- `trim_whitespace`<br>
+  `True`로 설정된다면 양 끝의 공백이 제거된다. 기본값은 `True`.
+
+`allow_blank`의 선호도로 잘 사용되지는 않지만 문자열 필드에 `allow_null` 옵션 또한 사용할 수 있다. `allow_blank=True`와 `allow_null=True`를 함께 사용하는 것도 가능하지만 이렇게 하면 문자열 표현에 있어 허용되는 빈 값이 서로 다른 두 종류가 되지 때문에 데이터가 비일관성과 미묘한 애플리케이션 버그가 발생할 수 있다.
+
+## EmailField
+텍스트 표현. 텍스트가 유효한 전자우편 주소인지 검증한다.
+
+`django.db.models.fields.EmailField`에 대응된다.
+
+**Signature**: `EmailField(max_length=None, min_length=None, allow_blank=False)`
+
+## RegexField
+텍스트 표현. 주어진 값이 특정 정규표현식과 일치하는지 검증한다.
+
+`django.forms.fields.RegexField`에 대응된다.
+
+**Signature**: `RegexField(regex, max_length=None, min_length=None, allow_blank=False)`
+
+필수 `regex` 인자는 문자열 또는 컴파일된 파이썬 정규표현 객체가 될 수 있다.
+
+유효성 검증에 Django의 `django.core.validators.RegexValidator`를 사용한다.
+
+## SlugField
+입력이 패턴 `[a-zA-Z0-9_-]+`과 일치하는지 검증하는 `RegexField`
+
+`django.db.models.fields.SlugField`에 대응된다.
+
+**Signature**: `SlugField(max_length=50, min_length=None, allow_blank=False)`
+
+## URLField
+입력이 URL 매핑 패턴과 일치하는지 검증하는 `RegexField`. `http://<host>/<path>` 형식의 정규화된 URL이어야 한다.
+
+`django.db.models.fields.URLField`에 대응된다. 유효성 검증에 Django의 `django.core.validators.URLValidator`를 사용한다.
+
+## UUIDField
+입력이 유효한 UUID 문자열임을 보장하는 필드. `to_internal_value` 메서드가 `uuid.UUID` 인스턴스를 반환한다. 출력 시 필드는 다음과 같은 정규 하이픈 형식의 문자열을 반환한다.
+
+```
+"de305d54-75b4-431b-adb2-eb6b9e546013"
+```
+
+**Signature**: `UUIDField(format='hex_verbose')`
+
+- `format`: uuid 값의 표현 형식을 결적힌다.
+  - `'hex_verbose`<br>
+    하이픈을 포함한 정규 16진법 표현: `"5ce0e9a5-5ffa-654b-cee0-1238041fb31a"`
+  - `'hex'`<br>
+    하이픈을 포함하지 않은 UUID의 압축된 16진법 표현: `"5ce0e9a55ffa654bcee01238041fb31a"`
+  - `'int'`<br>
+    UUID의 128 비트 정수 표현: `"123456789012312313134124512351145145114"`
+  - `'urn'`<br>
+    UUID의 RFC 4122 URN 표현: `"urn:uuid:5ce0e9a5-5ffa-654b-cee0-1238041fb31a"`<br>
+    `format` 인자의 변경은 표현 값에만 영향을 준다. 모든 포맷은 `to_internal_value`에 의해 수용된다.
+
+## FilePathField
+파일시스템의 특정 디렉토리 안의 파일 이름으로 선택이 한정된 필드.
+
+`django.forms.fields.FilePathField`에 대응된다.
+
+**Signature**: `FilePathField(path, match=None, recursive=False, allow_files=True, allow_folders=False, required=None, **kwargs)`
+
+- `path`<br>
+  이 FilePathField가 위치를 저장해야 할 파일이 있는 디렉토리의 절대경로
+- `match`<br>
+  FilePathField가 파일 이름을 필터링하기 위해 사용할 문자열 정규 표현식
+- `recursive`<br>
+  경로의 모든 서브 디렉토리를 포함시킬지 여부. 기본값은 `False`
+- `allow_files`<br>
+  명시된 위치에 있는 파일을 포함시킬지 여부. 기본값은 `True`. 이 조건 또는 `allow_folders`은 `True`여야 한다.
+- `allow_folders`<br>
+  명시된 위치에 있는 폴더를 포함시킬지 여부. 기본값은 `False`. 이 조건 또는 `allow_files`는 `True`여야 한다.
+
+## IPAddressField
+입력이 유효한 IPv4 또는 IPv6 문자열임을 보장하는 필드.
+
+`django.forms.fields.IPAddressField`와 `django.forms.fields.GenericIPAddressField`에 대응된다.
+
+**Signature**: `IPAddressField(protocol='both', unpack_ipv4=False, **options)`
+
+- `protocol`는 명시된 프로토콜로 유효한 입력을 제한한다. 수용 가능한 값으로는 'both'(기본값), 'IPv4', 'IPv6'이 있다. 대소문자를 구분하지 않고 일치하는 것을 찾는다.
+- `unpack_ipv4`는 ::ffff:192.0.2.1과 같은 IPv4로 매핑된 주소를 unpack한다. 이 옵션이 활성화되면 언급한 주소가 192.0.2.1로 unpack된다. 기본값은 비활성화. 프로토콜이 'both'로 설정되어 있을 때에만 사용할 수 있다.
+
+# Numeric fields
+## IntegerField
+정수형 표현.
+
+`django.db.models.fields.IntegerField`, `django.db.models.fields.SmallIntegerField`, `django.db.models.fields.PositiveIntegerField`, `django.db.models.fields.PositiveSmallIntegerField`에 대응된다.
+
+**Signature**: `IntegerField(max_value=None, min_value=None)`
+
+- `max_value`: 주어진 숫자가 이 값보다 크지 않은지 검증한다.
+- `min_value`: 주어진 숫자가 이 값보다 작지 않은지 검증한다.
+
+## FloatField
+부동 소수점 표현.
+
+`django.db.models.fields.FloatField`에 대응된다.
+
+**Signature**: `FloatField(max_value=None, min_value=None)`
+
+- `max_value`: 주어진 숫자가 이 값보다 크지 않은지 검증한다.
+- `min_value`: 주어진 숫자가 이 값보다 작지 않은지 검증한다.
+
+## DecimalField
+`Decimal` 인스턴스에 의해 파이썬에서 표현되는 십진 고정 소수점 및 부동 소수점 표현.
+
+`django.db.models.fields.DecimalField`에 대응된다.
+
+**Signature**: `DecimalField(max_digits, decimal_places, coerce_to_string=None, max_value=None, min_value=None)`
+
+- `max_digits`<br>
+  숫자에서 허용되는 최대 자리수. `None`이거나 `decimal_places` 이상인 정수여야 한다.
+- `decimal_places`<br>
+  숫자를 저장하기 위한 자리의 개수
+- `coerce_to_string`<br>
+  문자열 값으로 반환되어야 한다면 `True`, `Decimal` 객체가 반환되어야 한다면 `False`로 설정한다. 기본값은 override되지 않는다면 `True`인 `CORECE_DECIMAL_TO_STRING` 설정 키와 같은 값이다. 시리얼라이저가 `Decimal` 객체를 반환하면 최종 출력 포맷은 렌더러에 의해 결정된다. `localize`를 설정하면 `True`로 강제된다는 점에 주의한다.
+- `max_value`<br>
+  주어진 숫자가 이 값보다 크지 않은지 검증한다.
+- `min_value`<br>
+  주어진 숫자가 이 값보다 작지 않은지 검증한다.
+- `localize`<br>
+  현재 로케일에 기반해 입력과 출력을 로컬라이즈하려면 `True`로 설정한다. 그러면 `coerce_to_string` 또한 강제로 `True`가 된다. 기본값은 `False`이다. 설정 파일에서 `USE_L10N=True`를 설정했다면 데이터 포맷팅이 가능하다는 점에 주의한다.
+- `rounding`<br>
+  양자화 시 설정된 정밀도로 반올림 모드를 설정한다. 유효한 값은 [`decimal` 모듈 반올림 모드](https://docs.python.org/3/library/decimal.html#rounding-modes)이다. 기본값은 `None`.
+
+### Example usage
+999까지의 수를 decimal 두 자리수의 해상도로 유효하게 하려면 이렇게 작성한다.
+
+```python
+serializers.DecimalField(max_digits=5, decimal_places)
+```
+
+10억 이하의 숫자를 decimal 10자리수의 해상도로 유효하게 하려면 이렇게 작성한다.
+
+```python
+serializer.DecimalField(max_digits=19, decimal_places=10)
+```
