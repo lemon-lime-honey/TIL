@@ -288,3 +288,111 @@ serializers.DecimalField(max_digits=5, decimal_places)
 ```python
 serializer.DecimalField(max_digits=19, decimal_places=10)
 ```
+
+# Date and time fields
+## DateTimeField
+날짜와 시간 표현.
+
+`django.db.models.fields.DateTimeField`에 대응된다.
+
+**Signature**: `DateTimeField(format=api_settings.DATETIME_FORMAT, input_formats=None, default_timezone=None)`
+
+- `format`<br>
+  출력 형식을 나타내는 문자열. 주어지지 않았을 때, 설정되지 않았다면 기본값은 `'iso-8601`이 되는 `DATETIME_FORMAT` 설정 키와 같은 값이 된다. 형식 문자열 설정은 `to_representation`의 반환값이 문자열 출력에서 무조건 적용되어야 하는 것을 의미한다. 이 값을 `None`으로 설정하는 것은 파이썬 `datetime` 객체가 `to_representation`에 의해 반환되어야 한다는 것을 의미한다. 이 경우 datetime 인코딩은 렌더러에 의해 결정된다.
+- `input_formats`<br>
+  날짜를 파싱할 때 사용될 수 있는 입력 형식을 나타내는 문자열의 리스트. 주어지지 않는다면 `['iso-8601']`을 기본값으로 갖는 `DATETIME_INPUT_FORMATS` 설정이 사용된다.
+- `default_timezone`<br>
+  시간대를 나타내는 `tzinfo` 서브 클래스(`zoneinfo` 또는 `pytz`). 주어지지 않았고, `USE_TZ` 설정이 활성화되었다면 [현재 시간대](https://docs.djangoproject.com/en/stable/topics/i18n/timezones/#default-time-zone-and-current-time-zone)가 기본값이 된다. `USE_TZ`가 비활성화되었다면 datetime 객체는 naive하다.
+
+### `DateTimeField` format strings
+형식 문자열은 형식을 명시적으로 구체화하는 [파이썬 strftime formats](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior)이나 [ISO 8601](https://www.w3.org/TR/NOTE-datetime) 형식 날짜와 시간(예: `'2013-01-29T12:34:56.000000Z'`)이 사용되어야 함을 가리키는 특수 문자열 `'iso-8601'`이 될 수 있다.
+
+형식에 `None` 값이 사용된다면 `datetime` 객체는 `to_representation`에 의해 반환될 것이며 최종 출력 표현은 렌더러 클래스에 의해 결정될 것이다.
+
+### `auto_now` and `auto_now_add` model fields
+`ModelSerializer` 혹은 `HyperlinkedModelSerializer`를 사용할 때, `auto_now=True` 또는 `auto_now_add=True`인 모델 필드는 기본적으로 `read_only=True`인 시리얼라이저 필드를 사용한다는 점에 주의한다.
+
+이런 동작을 override하고 싶다면, 시리얼라이저에 `DateTimeField`를 명시적으로 선언해야 한다. 예를 들면:
+
+```python
+class CommentSerializer(serializers.ModelSerializer):
+    created = serializers.DateTimeField()
+
+    class Meta:
+        model = Comment
+```
+
+## DateField
+날짜 표현.
+
+`django.db.models.fields.DateField`에 대응된다.
+
+**Signature**: `DateField(format=api_settings.DATE_FORMAT, input_formats=None)`
+
+- `format`<br>
+  출력 형식을 표현하는 문자열. 주어지지 않는다면 따로 설정되지 않는 한 `'iso-8601'`인 `DATE_FORMAT` 설정 키와 같은 값을 기본값으로 갖는다. 형식 문자열을 설정하는 것은 `to_representation`의 반환 값이 문자열 출력에서 무조건 적용되어야 한다는 것을 의미한다. 형식 문자열은 아래에서 설명된다. 이 값을 `None`으로 설정하는 것은 파이썬 `date` 객체가 `to_representation`에 의해 반환되어야 한다는 것을 의미한다. 이 경우 날짜 인코딩은 렌더러에 의해 결정된다.
+- `input_formats`<br>
+  날짜를 파싱하기 위해 사용되는 입력 형식을 나타내는 문자열의 리스트. 주어지지 않는다면 `['iso-8601']`을 기본값으로 가지는 `DATE_INPUT_FORMATS` 설정이 사용된다.
+
+### `DateField` format strings
+형식 문자열은 형식을 명시적으로 구체화하는 [파이썬 strftime formats](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior)이나 [ISO 8601](https://www.w3.org/TR/NOTE-datetime) 형식 날짜(예: `'2013-01-29'`)가 사용되어야 함을 가리키는 특수 문자열 `'iso-8601'`이 될 수 있다.
+
+## TimeField
+시간 표현.
+
+`django.db.models.fields.TimeField`에 대응된다.
+
+**Signature**: `TimeField(format=api_settings.TIME_FORMAT, input_formats=None)`
+
+- `format`<br>
+  출력 형식을 표현하는 문자열. 주어지지 않는다면 따로 설정되지 않는 한 `'iso-8601'`인 `DATE_FORMAT` 설정 키와 같은 값을 기본값으로 갖는다. 형식 문자열을 설정하는 것은 `to_representation`의 반환 값이 문자열 출력에서 무조건 적용되어야 한다는 것을 의미한다. 형식 문자열은 아래에서 설명된다. 이 값을 `None`으로 설정하는 것은 파이썬 `time` 객체가 `to_representation`에 의해 반환되어야 한다는 것을 의미한다. 이 경우 시간 인코딩은 렌더러에 의해 결정된다.
+- `input_formats`<br>
+  시간를 파싱하기 위해 사용되는 입력 형식을 나타내는 문자열의 리스트. 주어지지 않는다면 `['iso-8601']`을 기본값으로 가지는 `DATE_INPUT_FORMATS` 설정이 사용된다.
+
+### `TimeField` format strings
+형식 문자열은 형식을 명시적으로 구체화하는 [파이썬 strftime formats](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior)이나 [ISO 8601](https://www.w3.org/TR/NOTE-datetime) 형식 시간(예: `'12:34:56.000000'`)이 사용되어야 함을 가리키는 특수 문자열 `'iso-8601'`이 될 수 있다.
+
+## DurationField
+기간 표현. `django.db.models.fields.DurationField`에 대응된다.
+
+이 필드를 위한 `validated_data`는 `datetime.timedelta` 인스턴스를 포함한다. `'[DD] [HH:[MM:]]ss[.uuuuuu]'`과 같은 형식을 가지는 문자열 표현이다.
+
+**Signature**: `DurationField(max_value=None, min_value=None)`
+
+- `max_value`: 주어진 기간이 이 값보다 길지 않은지 검증한다.
+- `min_value`: 주어진 기간이 이 값보다 짧지 않은지 검증한다.
+
+# Choice selection fields
+## ChoiceField
+한정된 선택 모음의 값만 허용하는 필드
+
+대응되는 모델 필드가 `choices=...` 인자를 가지는 경우 자동으로 필드를 생성하기 위해 `ModelSerializer`에 의해 사용된다.
+
+**Signature**: `ChoiceField(choices)`
+
+- `choices`<br>
+  유효한 값 또는 `(key, display_name)` 튜플의 리스트
+- `allow_blank`<br>
+  `True`로 설정된다면 빈 문자열이 유효한 값으로 간주된다. `False`로 설정된다면 빈 문자열이 유효하지 않은 값으로 간주되며 유효성 검증 오류를 일으킨다. 기본값은 `False`.
+- `html_cutoff`<br>
+  설정된다면 HTML 선택 드롭다운에서 보여지는 선택지의 최대 숫자가 된다. 자동으로 생성된 매우 많은 선택지를 가진 ChoiceField가 템플릿 폼 렌더링을 방해하지 않는 것을 보장하기 위해 사용될 수 있다. 기본값은 `None`.
+- `html_cutoff_text`<br>
+  설정된다면 HTML 선택 드롭다운에서 최대 숫자를 넘겨 생략된 아이템이 있을 때 텍스트 설명을 보여준다. 기본값은 `"More than {count} items..."`
+
+둘 모두를 사용하기 보다 하나만 사용하는 것이 강력히 권장되지만, `allow_blank`와 `allow_null` 모두 `ChoiceField`에서 유효한 옵션이다. `allow_blank`는 문자 선택지, `allow_null`은 숫자 또는 문자가 아닌 다른 선택지에 선호된다.
+
+## MultipleChoiceField
+한정된 선택지에서 선택된 빈 값, 하나 혹은 여러 개의 값 모음을 허용하는 필드. 하나의 필수 인자를 가진다. `to_internal_value`는 선택된 값을 포함하는 `set`를 반환한다.
+
+**Signature**: `MultipleChoiceField(choices)`
+
+- `choices`<br>
+  유효한 값 또는 `(key, display_name)` 튜플의 리스트
+- `allow_blank`<br>
+  `True`로 설정된다면 빈 문자열이 유효한 값으로 간주된다. `False`로 설정된다면 빈 문자열이 유효하지 않은 값으로 간주되며 유효성 검증 오류를 일으킨다. 기본값은 `False`.
+- `html_cutoff`<br>
+  설정된다면 HTML 선택 드롭다운에서 보여지는 선택지의 최대 숫자가 된다. 자동으로 생성된 매우 많은 선택지를 가진 ChoiceField가 템플릿 폼 렌더링을 방해하지 않는 것을 보장하기 위해 사용될 수 있다. 기본값은 `None`.
+- `html_cutoff_text`<br>
+  설정된다면 HTML 선택 드롭다운에서 최대 숫자를 넘겨 생략된 아이템이 있을 때 텍스트 설명을 보여준다. 기본값은 `"More than {count} items..."`
+
+`ChoiceField`에서처럼, 둘 모두를 사용하기 보다 하나만 사용하는 것이 강력히 권장되지만 `allow_blank`와 `allow_null` 모두 `ChoiceField`에서 유효한 옵션이다. `allow_blank`는 문자 선택지, `allow_null`은 숫자 또는 문자가 아닌 다른 선택지에 선호된다.
