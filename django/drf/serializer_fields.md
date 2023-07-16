@@ -396,3 +396,114 @@ class CommentSerializer(serializers.ModelSerializer):
   설정된다면 HTML 선택 드롭다운에서 최대 숫자를 넘겨 생략된 아이템이 있을 때 텍스트 설명을 보여준다. 기본값은 `"More than {count} items..."`
 
 `ChoiceField`에서처럼, 둘 모두를 사용하기 보다 하나만 사용하는 것이 강력히 권장되지만 `allow_blank`와 `allow_null` 모두 `ChoiceField`에서 유효한 옵션이다. `allow_blank`는 문자 선택지, `allow_null`은 숫자 또는 문자가 아닌 다른 선택지에 선호된다.
+
+# File upload fields
+### Parsers and file uploads
+`FileField`와 `ImageField` 클래스는 오직 `MultiPartParser` 또는 `FileUploadParser`와 함께 사용할 수 있다. JSON과 같은 대부분의 parser는 파일 업로드를 지원하지 않는다. Django의 표준 [FILE_UPLOAD_HANDERS](https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-FILE_UPLOAD_HANDLERS)가 파일 업로드를 다루기 위해 사용된다.
+
+## FileField
+파일 표현. Django의 표준 FileField 유효성 검증을 수행한다.
+
+`django.forms.fields.FileField`에 대응된다.
+
+**Signature**: `FileField(max_length=None, allow_empty_file=False, use_url=UPLOADED_FILES_USE_URL)`
+
+- `max_length`<br>
+  파일 이름의 최대 길이를 지정한다.
+- `allow_empty_file`<br>
+  빈 파일 허용 여부를 지정한다.
+- `use_url`<br>
+  `True`로 설정되면 출력 표현에 URL 문자열 값이 사용된다. `False`로 설정되면 출력 표현에 파일 이름 문자열 값이 사용된다. 다르게 설정되지 않았다면 `True`인 `UPLOADED_FILE_USE_URL` 설정 키 값을 기본값으로 가진다.
+
+## ImageField
+이미지 표현. 업로드된 파일이 알려진 이미지 포맷에 맞는지 유효성을 검증한다.
+
+`django.forms.fields.ImageField`에 대응된다.
+
+**Signature**: `ImageField(max_length=None, allow_empty_file=False, use_url=UPLOADED_FILES_USE_URL)`
+
+- `max_length`<br>
+  파일 이름의 최대 길이를 지정한다.
+- `allow_empty_file`<br>
+  빈 파일 허용 여부를 지정한다.
+- `use_url`<br>
+  `True`로 설정되면 출력 표현에 URL 문자열 값이 사용된다. `False`로 설정되면 출력 표현에 파일 이름 문자열 값이 사용된다. 다르게 설정되지 않았다면 `True`인 `UPLOADED_FILE_USE_URL` 설정 키 값을 기본값으로 가진다.
+
+`Pillow` 또는 `PIL` 패키지를 필요로 한다. `PIL`이 오랫동안 관리되지 않았기 때문에 `Pillow` 패키지가 권장된다.
+
+# Composite fields
+## ListField
+객체 리스트의 유효성을 검사하는 필드 클래스
+
+**Signature**: `ListField(child=<A_FILED_INSTANCE>, allow_empty=True, min_length=None, max_length=None)`
+
+- `child`<br>
+  리스트 내부의 객체의 유효성을 검사하기 위해 사용되는 필드 인스턴스. 이 인자가 제공되지 않는다면 리스트 내부의 객체의 유효성이 검사되지 않는다.
+- `allow_empty`<br>
+  빈 리스트 허용 여부를 지정한다.
+- `min_length`<br>
+  리스트가 이 숫자보다 적은 개수의 원소를 가지지 않았는지 검증한다.
+- `max_length`<br>
+  리스트가 이 숫자보다 많은 개수의 원소를 가지지 않았는지 검증한다.
+
+예를 들어, 정수 리스트의 유효성을 검사하려면 다음과 같은 코드를 작성한다.
+
+```python
+scores = serializers.ListField(
+    child=serializers.IntegerField(min_value=0, max_value=100)
+)
+```
+
+`ListField` 클래스는 재사용 가능한 리스트 필드 클래스를 작성하도록 허용하는 선언 형식을 지원한다.
+
+```python
+class StringListField(serializers.ListField):
+    child = serializers.CharField()
+```
+
+`child` 인자를 제공할 필요 없이, 애플리케이션에서 사용자 정의 `StringListField` 클래스를 재사용할 수 있게 된다.
+
+## DictField
+객체 딕셔너리의 유효성을 검사하는 필드 클래스. `DictField` 내의 키는 언제나 문자열 값으로 간주된다.
+
+**Signature**: `DictField(child=<A_FIELD_INSTANCE>, allow_empty=True)`
+
+- `child`<br>
+  딕셔너리 내의 값의 유효성을 검사하기 위해 사용되는 필드 인스턴스. 이 인자가 주어지지 않는다면 매핑된 값의 유효성이 검사되지 않는다.
+- `allow_empty`<br>
+  빈 딕셔너리 허용 여부를 지정한다.
+
+예를 들어, 문자열에 문자열을 매핑한 것의 유효성을 검사하는 필드를 생성하려면 다음과 같은 코드를 작성한다.
+
+```python
+document = DictField(child=CharField())
+```
+
+`ListField`에서 그러하듯이 선언 형식을 사용할 수도 있다. 예를 들면:
+
+```python
+class DocumentField(DictField):
+    child = CharField()
+```
+
+## HStoreField
+Django의 postgres `HStoreField`와 호환되는 미리 설정된 `DictField`.
+
+**Signature**: `HStoreField(child=<A_FIELD_INSTANCE>, allow_empty=True)`
+
+- `child`<br>
+  딕셔너리 내의 값의 유효성을 검사하기 위해 사용되는 필드 인스턴스. 기본 child 필드는 빈 문자열과 null 값을 모두 허용한다.
+- `allow_empty`<br>
+  빈 딕셔너리 허용 여부를 지정한다.
+
+hstore 확장이 값을 문자열로 저장하기 때문에 child 필드는 **반드시** `CharField`의 인스턴스여야 한다는 점에 주의한다.
+
+## JSONField
+들어오는 자료 구조가 유효한 JSON 원시 요소로 구성되어 있는지 검증하는 필드 클래스. 대체 이진 모드에서는 JSON 인코딩 이진 문자열을 표현하고 그 유효성을 검사한다.
+
+**Signature**: `JSONField(binary, encoder)`
+
+- `binary`<br>
+  `True`로 설정되어 있다면 필드는 원시적인 자료 구조 대신 JSON 인코딩 문자열을 출력하고 그 유효성을 검사한다. 기본값은 `False`.
+- `encoder`<br>
+  입력 객체를 serialize하기 위한 JSON 인코더. 기본값은 `None`.
