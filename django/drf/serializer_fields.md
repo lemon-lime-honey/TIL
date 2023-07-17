@@ -507,3 +507,69 @@ hstore 확장이 값을 문자열로 저장하기 때문에 child 필드는 **�
   `True`로 설정되어 있다면 필드는 원시적인 자료 구조 대신 JSON 인코딩 문자열을 출력하고 그 유효성을 검사한다. 기본값은 `False`.
 - `encoder`<br>
   입력 객체를 serialize하기 위한 JSON 인코더. 기본값은 `None`.
+
+# Miscellaneous fields
+## ReadOnlyField
+필드의 값을 수정하지 않고 단순히 반환하는 필드 클래스
+
+이 필드는 모델 필드 대신 속성에 관련된 필드 이름을 포함할 때 `ModelSerializer`와 함께 기본값으로 사용된다.
+
+**Signature**: `ReadOnlyField()`
+
+예를 들어 `has_expired`가 `Account` 모델의 속성이었다면, 다음의 시리얼라이저는 이를 `ReadOnlyField`로 자동으로 생성한다.
+
+```python
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['id', 'account_name', 'has_expired']
+```
+
+## HiddenField
+사용자 입력에 기반한 값을 가지지 않고 기본값이나 호출 가능한 것으로부터 값을 가져오는 필드 클래스
+
+**Signature**: `HiddenField()`
+
+예를 들어, 시리얼라이저의 유효한 값의 일부로 언제나 현재 시간을 제공하는 필드를 포함시키려면 다음과 같이 작성한다.
+
+```python
+modified = serializers.HiddenField(default=timezone.now)
+```
+
+`HiddenField` 클래스는 대개 미리 제공된 필드 값에 기반하여 유효성 검사를 해야하지만 최종 사용자에게 모든 필드를 노출하고 싶지 않을 때에만 필요하다.
+
+`HiddenField`에 관한 더 많은 예시는 [validators](https://www.django-rest-framework.org/api-guide/validators/) 문서에서 확인할 수 있다.
+
+## ModelField
+임의의 모델 필드에 묶일 수 있는 제네릭 필드. `ModelField` 클래스는 serialization/deserialzation 작업을 연결된 모델 필드에 위임한다. 이 필드는 새로운 사용자 정의 시리얼라이저 필드를 생성할 필요 없이 사용자 정의 모델 필드를 위해 시리얼라이저 필드를 생성하기 위해 사용될 수 있다.
+
+이 필드는 `ModelSerializer`에 의해 사용자 정의 필드 클래스에 대응하기 위해 사용된다.
+
+**Signature**: `ModelField(model_field=<Django ModelField instance>)`
+
+`ModelField` 클래스는 일반적으로 내부 사용을 목적으로 하지만 필요 시에는 API에 의해 사용될 수 있다. `ModelField`를 적절하게 인스턴스화하기 위해서, 인스턴스화된 모델에 속한 필드를 전달해야 한다. 예를 들면: `ModelField(model_field=MyModel()._meta.get_field('custom_field'))`
+
+## SerializerMethodField
+읽기 전용 필드이다. 속해있는 시리얼라이저 클래스에 있는 메서드를 호출해 값을 불러온다. 객체의 serialize된 표현에 아무 종류의 데이터를 추가하기 위해 사용될 수 있다.
+
+**Signature**: `SerializerMethodField(method_name=None)`
+
+- `method_name`: 시리얼라이저에 있는 호출될 메서드의 이름. 주어지지 않는다면 기본값은 `get_<field_name>`로 정해진다.
+
+`method_name` 인자에 의해 참조되는 시리얼라이저 메서드는 serialize되는 객체인 하나의 인자(`self`에 더해)를 수용해야 한다. 객체의 serialize된 표현에 포함되기를 바라는 것이라면 무엇이든 반환해야 한다. 예를 들면:
+
+```python
+from django.contrib.auth.models import User
+from django.utils.timezone import now
+from rest_framework import serializers
+
+class UserSerializer(serializers.ModelSerializer):
+    days_since_joined = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = '__all__'
+
+    def get_days_since_joined(self, obj):
+        return (now() - obj.date_joined).days
+```
