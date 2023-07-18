@@ -573,3 +573,250 @@ class UserSerializer(serializers.ModelSerializer):
     def get_days_since_joined(self, obj):
         return (now() - obj.date_joined).days
 ```
+
+# Custom fields
+사용자 정의 필드를 생성하고 싶다면 `Field`의 서브클래스를 작성하고 `.to_representation()`과 `.to_internal_value()` 메서드 중 최소 하나를 override한다. 이 두 메서드는 초기 데이터형과 serialize 가능한 원시 데이터형 간의 변환에 사용된다. 원시 데이터형은 보통 숫자, 문자열, 불리언, `date`/`time`/`datetime` 또는 `None`이다. 다른 원시 객체를 포함하는 리스트나 딕셔너리 같은 객체가 될 수도 있다. 사용하는 렌더러에 따라 다른 타입 또한 지원될 수 있다.
+
+`.to_representation()` 메서드는 초기 데이터형을 serialize 가능한 원시 데이터형으로 변환하기 위해 호출된다.
+
+`.to_internal_value()` 메서드는 원시 데이터형을 내부 파이썬 표현으로 복원하기 위해 호출된다. 이 메서드는 데이터가 유효하지 않으면 `serializers.ValidationError`를 발생시켜야 한다.
+
+## Examples
+### A Basic Custom Field
+다음은 RGB 색상값을 표현하는 클래스를 serialize하는 예시이다.
+
+```python
+class color:
+    """
+    A color represented in the RGB colorspace.
+    """
+    def __init__(self, red, green, blue):
+        assert(red >= 0 and green >= 0 and blue >= 0)
+        assert(red < 256 and green < 256 and blue < 256)
+        self.red, self.green, self.blue = red, green, blue
+
+class ColorField(serializers.Field):
+    """
+    Color objects are serialized into 'rgb(#, #, #)' notation.
+    """
+    def to_representation(self, value):
+        return "rgb(%d, %d, %d)" % (value.red, value.green, value.blue)
+
+    def to_internal_value(self, data):
+        data = data.strip('rgb(').rstrip(')')
+        red, green, blue = [int(col) for col in data.split(',')]
+        return Color(red, green, blue)
+```
+
+기본적으로 필드 값은 객체 속성으로 매핑되는 것으로 취급된다. 필드 값이 어떻게 접근되고 설정되는지를 커스터마이즈하려면 `.get_attribute()`와/또는 `.get_value()`를 override해야 한다.
+
+다음은 serialize되는 객체의 클래스 이름을 표현하기 위해 사용될 수 있는 필드를 생성하는 예시이다.
+
+```python
+class ClassNameField(serializers.Field):
+    def get_attribute(self, instance):
+        # We pass the object instance onto `to_representation`,
+        # not just the field attribute.
+        return instance
+
+    def to_representation(self, value):
+        """
+        Serialize the value's class name.
+        """
+        return value.__class__.__name__
+```
+
+### Raising validation errors
+위에서 작성한 `ColorField` 클래스는 데이터 유효성 검사를 시행할 수 없다. 유효하지 않은 데이터를 가리키려면 다음과 같이 `serializers.ValidationError`를 발생시켜야 한다.
+
+```python
+def to_internal_value(self, data):
+    if not isinstance(data, str):
+        msg = 'Incorrect type. Expected a string, but got %s'
+        raise ValidationError(msg % type(data).__name__)
+
+    if not re.match(r'^rgb\([0-9]+,[0-9]+,[0-9]+\)$', data):
+        raise ValidationError('Incorrect format. Expected `rgb(#,#,#)`.')
+
+    data = data.strip('rgb('.rstrip(')'))
+    red, green, blue = [int(col) for col in data.split(',')]
+
+    if any([col > 255 or col < 0 for col in (red, green, blue)]):
+        raise ValidationError('Value out of range. Must be between 0 and 255.')
+
+    return Color(red, green, blue)
+```
+
+`.fail()` 메서드는 `error_messages` 딕셔너리에서 메시지 문자열을 가져오는 `ValidationError`를 발생시키는 간단한 방법이다. 예를 들면:
+
+```python
+default_error_messages = {
+    'incorrect_type': 'Incorrect type. Expected a string, but got {input_type}',
+    'incorrect_format': 'Incorrect format. Expected `rgb(#,#,#)`.',
+    'out_of_range': 'Value out of range. Must be between 0 and 255.'
+}
+
+def to_internal_value(self, data):
+    if not isinstance(data, str):
+        self.fail('incorrect_type', input_type=type(data).__name__)
+
+    if not re.match(r'^rgb\([0-9]+,[0-9]+,[0-9]+\)$', data):
+        self.fail('incorrect_format')
+
+    data = data.strip('rgb('.rstrip(')'))
+    red, green, blue = [int(col) for col in data.split(',')]
+
+    if any([col > 255 or col < 0 for col in (red, green, blue)]):
+        self.fail('out_of_range')
+
+    return Color(red, green, blue)
+```
+
+이 형식은 오류 메시지를 더 깔끔하게, 그리고 코드로부터 더 분리되어 유지되게 하며 선호되어야 한다.
+
+### Using `source='*'`
+다음은 `x_coordinate`와 `y_coordinate` 속성을 가진 *평평한* `DataPoint` 모델의 예시이다.
+
+```python
+class DataPoint(models.Model):
+    label = models.CharField(max_length=50)
+    x_coordinate = models.SmallIntegerField()
+    y_coordinate = models.SmallIntegerField()
+```
+
+사용자 정의 필드와 `source='*'`를 사용하면 좌표 쌍의 중첩된 표현을 제공할 수 있다.
+
+```python
+class CoordinateField(serializers.Field):
+    def to_representation(self, value):
+        ret = {
+            "x": value.x_coordinate,
+            "y": value.y_coordinate
+        }
+        return ret
+
+    def to_internal_value(self, data):
+        ret = {
+            "x_coordinate": data["x"],
+            "y_coordinate": data["y"]
+        }
+        return ret
+
+
+class DataPointSerializer(serializers.ModelSerializer):
+    coordinates = CoordinateField(source='*')
+
+    class Meta:
+        model = DataPoint
+        fields = ['label', 'coordinates']
+```
+
+이 예시에서는 유효성 검사를 하지 않는다는 점에 유의한다. 부분적인 이유로는, 실제 프로젝트에서는 연관된 필드를 가리키는 각자의 `source`를 가지는 두 `IntegerField` 인스턴스를 가지는, `source='*'`를 사용하는 중첩된 시리얼라이저로 좌표 중첩을 다루는 것이 더 낫기 때문이다.
+
+예시에서 주목할 만한 부분은 다음과 같다.
+
+- `to_representation`로 `DataPoint` 객체 전체가 전달되며, 목적한 출력으로 매핑한다.
+
+  ```python
+  >>> instance = DataPoint(label='Example', x_coordinate=1, y_coordinate=2)
+  >>> out_serializer = DataPointSerializer(instance)
+  >>> out_serializer.data
+  ReturnDict([('label', 'Example'), ('coordinates', {'x': 1, 'y': 2})])
+  ```
+
+- 필드가 읽기 전용이 아니라면, `to_internal_value`는 목표 객체를 갱신하기에 적합한 딕셔너리로 다시 매핑되어야 한다. `source='*'`가 주어지면 `to_internal_value`가 반환한 것이 하나의 키 대신 유효한 데이터 딕셔너리의 루트를 갱신할 것이다.
+
+  ```python
+  >>> data = {
+  ...     "label": "Second Example",
+  ...     "coordinates": {
+  ...         "x": 3,
+  ...         "y": 4,
+  ...     }
+  ... }
+  >>> in_serializer = DataPointSerializer(data=data)
+  >>> in_serializer.is_valid()
+  True
+  >>> in_serializer.validated_data
+  OrderedDict([('label', 'Second Example'),
+              ('y_coordinate', 4),
+              ('x_coordinate', 3)])
+  ```
+
+완성도를 위해 위에서 제안한 중첩된 시리얼라이저 접근으로 같은 것을 다시 해본다.
+
+```python
+class NestedCoordinateSerializer(serializers.Serializer):
+    x = serializers.IntegerField(source='x_coordinate')
+    y = serializers.IntegerField(source='y_coordinate')
+
+
+class DataPointSerializer(serializers.ModelSerializer):
+    coordinates = NestedCoordinateSerializer(source='*')
+
+    class Meta:
+        model = DataPoint
+        fields = ['label', 'coordinates']
+```
+
+여기 있는 목표와 소스 속성 쌍(`x`와 `x_coordinate`, `y`와 `y_coordinate`) 사이의 매핑은 `IntegerField` 선언에서 다뤄진다. `source='*'`를 가져가는 것은 `NestedCoordinateSerializer`이다.
+
+새로운 `DataPointSerializer`는 사용자 정의 필드 접근으로 같은 동작을 표현한다.
+
+Serializing:
+```python
+>>> out_serializer = DataPointSerializer(instance)
+>>> out_serializer.data
+ReturnDict([('label', 'testing'),
+            ('coordinates', OrderedDict([('x', 1), ('y', 2)]))])
+```
+
+Deserializing:
+```python
+>>> in_serializer = DataPointSerializer(data=data)
+>>> in_serializer.is_valid()
+True
+>>> in_serializer.validated_data
+OrderedDict([('label', 'still testing'),
+             ('x_coordinate', 3),
+             ('y_coordinate', 4)])
+```
+
+빌트인 유효성 검사는 자유롭게 사용할 수 있다.
+
+```python
+>>> invalid_data = {
+...     "label": "Still testing",
+...     "coordinates": {
+...         "x": 'a',
+...         "y": 'b',
+...     }
+... }
+>>> invalid_serializer = DataPointSerializer(data=invalid_data)
+>>> invalid_serializer.is_valid()
+False
+>>> invalid_serializer.errors
+ReturnDict([('coordinates',
+             {'x': ['A valid integer is required.'],
+              'y': ['A valid integer is required.']})])
+```
+
+이런 이유로, 중첩된 시리얼라이저 접근을 가장 먼저 시도해야 한다. 중첩된 시리얼라이저가 사용 불가능해지거나 지나치게 복잡해진다면 사용자 정의 필드 접근을 사용한다.
+
+# Third party packages
+다음의 서드파티 패키지를 사용할 수 있다.
+
+## DRF Compound Fields
+[drf-compound-fields](https://drf-compound-fields.readthedocs.io/) 패키지는 `many=True` 옵션을 가지는 시리얼라이저 대신 다른 필드로 묘사될 수 있는 단순한 값의 리스트와 같은 "복합" 시리얼라이저 필드를 제공한다. 또한 특정 타입 또는 그 타입의 아이템 TypedDict와 값을 위한 필드를 제공한다.
+
+## DRF Extra Fields
+[drf-extra-fields](https://github.com/Hipo/drf-extra-fields) 패키지는 REST framework에 `Base64ImageField`와 `PointField` 클래스를 포함한 추가적인 시리얼라이저 필드를 제공한다.
+
+## djangorestframework-recursive
+[djangorestframework-recursive](https://github.com/heywbj/django-rest-framework-recursive) 패키지는 재귀 구조를 serialize하고 deserialize하기 위한 `RecursiveField`를 제공한다.
+
+## django-rest-framework-gis
+[django-rest-framework-gis](https://github.com/djangonauts/django-rest-framework-gis) 패키지는 REST framework에 `GeometryField` 필드와 GeoJSON 시리얼라이저와 같은 지리적 애드온을 제공한다.
+
+## django-rest-framework-hstore
+[django-rest-framework-hstore](https://github.com/djangonauts/django-rest-framework-hstore) 패키지는 [django-hstore](https://github.com/djangonauts/django-hstore)의 `DictionaryField` 모델 필드를 제공하기 위한 `HStoreField`를 제공한다.
