@@ -12,6 +12,7 @@
 - [Renderers](renderers.md)
 - [Serializers](serializers.md)
 - [Serializer fields](serializer_fields.md)
+- [Serializer relations](serializer_relations.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
