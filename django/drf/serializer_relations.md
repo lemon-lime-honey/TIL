@@ -290,3 +290,189 @@ class AlbumSerializer(serializers.HyperlinkedModelSerializer):
   검색 필드에 대응되는 URL 설정에서 정의된 키워드 인자의 이름. 기본값은 `lookup_field`와 같은 값을 사용하는 것이다.
 - `format`<br>
   포맷 접미사를 사용하면 `format` 인자를 사용해 override 되지 않는 한 하이퍼링크된 필드가 타켓에 같은 포맷 접미사를 사용한다.
+
+# Nested relationships
+이전에 논의한 다른 엔터티에 관한 *참조*와는 달리, 참조된 엔터티는 그 엔터티를 참조하는 객체 표현에 포함되거나 *중첩*될 수 있다. 그러한 중첩된 관계는 필드로 시리얼라이저를 사용하여 표현될 수 있다.
+
+필드가 ~ 대 다 관계를 표현하기 위해 사용된다면 시리얼라이저 필드에 `many=True` 플래그를 추가해야 한다.
+
+## Example
+예를 들어, 다음의 시리얼라이저는
+
+```python
+class TrackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Track
+        fields = ['order', 'title', 'duration']
+
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = TrackSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+다음의 중첩된 표현으로 serialize될 수 있다.
+
+```python
+>>> album = Album.objects.create(album_name='In Rainbows', artist='Radiohead')
+>>> Track.objects.create(album=album, order=1, title='15 Step', duration=238)
+<Track: Track object>
+>>> Track.objects.create(album=album, order=2, title='Bodysnatchers', duration=242)
+<Track: Track object>
+>>> Track.objects.create(album=album, order=3, title='Nude', duration=255)
+<Track: Track object>
+>>> serializer = AlbumSerializer(instance=album)
+>>> serializer.data
+{
+    'album_name': 'In Rainbows',
+    'artist': 'Radiohead',
+    'tracks': [
+        {'order': 1, 'title': '15 Step', 'duration': 238},
+        {'order': 2, 'title': 'Bodysnatchers', 'duration': 242},
+        {'order': 3, 'title': 'Nude', 'duration': 255},
+        ...
+    ]
+}
+```
+
+## Writable nested serializers
+기본적으로 중첩된 시리얼라이저는 읽기 전용이다. 중첩된 시리얼라이저 필드에 쓰기 연산을 지원하고 싶다면 어떻게 자식 관계가 저장되는지를 명시적으로 구체화하기 위해 `create()` 그리고/또는 `update()` 메서드를 생성해야 한다.
+
+```python
+class TrackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Track
+        fields = ['order', 'title', 'duration']
+
+
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = TrackSerializer(many=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+
+    def create(self, validated_data):
+        track_data = validated_data.pop('tracks')
+        album = Album.objects.create(**validated_data)
+        for track_data in tracks_data:
+            Track.objects.create(album=album, **track_data)
+        return album
+
+>>> data = {
+    'album_name': 'In Rainbows',
+    'artist': 'Radiohead',
+    'tracks': [
+        {'order': 1, 'title': '15 Step', 'duration': 238},
+        {'order': 2, 'title': 'Bodysnatchers', 'duration': 242},
+        {'order': 3, 'title': 'Nude', 'duration': 255},
+        ...
+    ]
+}
+>>> serializer = AlbumSerializer(data=data)
+>>> serializer.is_valid()
+True
+>>> serializer.save()
+<Album: Album object>
+```
+
+# Custom relational fields
+이미 존재하는 관계 스타일 중 필요로 하는 표현에 맞는 것이 없는 경우 모델 인스턴스로부터 출력 표현이 정확히 어떻게 생성되는지를 설명하는 사용자 정의 관계 필드를 구현할 수 있다.
+
+사용자 정의 필드를 구현하기 위해서는 `RelatedField`를 override해야 하고, `.to_representation(self, value)` 메서드를 구현해야 한다. 이 메서드는 필드의 타겟을 `value` 인자로 가지고, 타겟을 serialize하기 위해 사용되어야 할 표현을 반환한다. `value` 인자는 보통 모델 인스턴스이다.
+
+읽기-쓰기 관계 필드를 구현해야 한다면 [`.to_internal_value(self, data)` 메서드](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/serializers.md#to_internal_valueself-data)를 구현해야 한다.
+
+`context`에 기반한 동적 queryset을 제공하려면 클래스에서 혹은 필드를 초기화할 때 `.queryset`을 구체화하는 대신 `.get_queryset(self)`를 override하면 된다.
+
+## Example
+예를 들어, 트랙을 그 순서, 제목, 그리고 시간을 사용한 사용자 정의 문자열 표현으로 serialize하기 위한 관계 필드를 정의할 수 있다.
+
+```python
+import time
+
+class TrackListingField(serializers.RelatedField):
+    def to_representation(self, value):
+        duration = time.strftime('%M:%S', time.gmtime(value.duration))
+        return 'Track %d: %s (%s)' % (value.order, value.name, duration)
+
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = TrackListingField(many=True)
+
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+```
+
+이 사용자 정의 필드는 다음 표현으로 serialize된다.
+
+```
+{
+    'album_name': 'In Rainbows',
+    'artist': 'Radiohead',
+    'tracks': [
+        'Track 1: 15 Step (3:58)',
+        'Track 2: Bodysnatchers (4:02)',
+        'Track 3: Nude (4:15)',
+        ...
+    ]
+}
+```
+
+# Custom hyperlinked fields
+하나보다 많은 탐색 필드를 필요로 하는 URL을 표현하기 위해 하이퍼링크된 필드의 동작을 커스터마이즈해야 하는 경우가 있다.
+
+`HyperlinkedRelatedField`를 override하여 구현할 수 있다. 다음은 Override해야 할 두 메서드이다.
+
+#### get_url(self, obj, view_name, request, format)
+`get_url` 메서드는 객체 인스턴스를 URL 표현으로 매핑하는데 사용된다.
+
+`view_name`과 `lookup_field` 속성이 URL 설정에 정확히 맞지 않게 제공된다면 `NoReverseMatch`를 발생시킨다.
+
+#### get_object(self, view_name, view_args, view_kwargs)
+쓰기 가능한 하이퍼링크된 필드를 지원하고 싶다면 들어오는 URL을 대표하는 객체로 다시 매핑하기 위해 `get_object`를 override한다. 읽기 전용인 하이퍼링크된 필드는 이 메서드를 override할 필요가 없다.
+
+이 메서드의 반환값은 매치된 URL 설정 인자에 대응되는 객체이다.
+
+`ObjectDoesNotExist` 예외를 발생시킬 수 있다.
+
+## Example
+다음과 같이 두 개의 키워드 인자를 가지는 고객 객체를 위한 URL이 있다고 하자.
+
+```
+/api/<organization_slug>/customers/<customer_pk>/
+```
+
+이것은 하나의 검색 필드만을 수용하는 기본 구현으로는 표현될 수 없다.
+
+이 경우 원하는 동작을 얻기 위해 `HyperlinkedRelatedField`를 override해야 한다.
+
+```python
+from rest_framework import serializers
+from rest_framework.reverse import reverse
+
+class CustomerHyperlink(serializers.HyperlinkedRelatedField):
+    # We define these as class attributes, so we don't need to pass them as arguments.
+    view_name = 'customer-detail'
+    queryset = Customer.objects.all()
+
+    def get_url(self, obj, view_name, request, format):
+        url_kwargs = {
+            'organization_slug': obj.organization.slug,
+            'customer_pk': obj.pk
+        }
+        return reverse(view_name, kwargs=url_kwargs, request=request, format=format)
+
+    def get_object(self, view_name, view_args, view_kwargs):
+        lookup_kwargs = {
+            'organization__slug': view_kwargs['organization_slug'],
+            'pk': view_kwargs['customer_pk']
+        }
+        return self.get_queryset().get(**lookup_kwargs)
+```
+
+이 스타일을 제네릭 뷰와 함께 사용하고 싶다면 탐색이 올바르게 동작하도록 뷰의 `.get_object`를 override해야 한다.
+
+보통 가능하면 API 표현에 납작한 스타일을 권장하지만, 적절히 사용된다면 중첩된 URL 스타일 또한 타당하다.
