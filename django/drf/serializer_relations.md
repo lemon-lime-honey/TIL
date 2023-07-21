@@ -476,3 +476,171 @@ class CustomerHyperlink(serializers.HyperlinkedRelatedField):
 이 스타일을 제네릭 뷰와 함께 사용하고 싶다면 탐색이 올바르게 동작하도록 뷰의 `.get_object`를 override해야 한다.
 
 보통 가능하면 API 표현에 납작한 스타일을 권장하지만, 적절히 사용된다면 중첩된 URL 스타일 또한 타당하다.
+
+# Further notes
+## The `queryset` argument
+`queryset` 인자는 *쓰기 가능한* 관계 필드에서만 필요로 하는데, 이 경우 가공되지 않은 사용자 입력을 모델 인스턴스로 매핑하는 모델 인스턴스 탐색을 수행하는데 사용된다.
+
+버전 2.x에서는 `ModelSerializer` 클래스가 사용되는 *경우* *간혹* 시리얼라이저 클래스가 자동으로 `queryset` 인자를 결정했다.
+
+이 동작은 이제 쓰기 가능한 관계 필드에서 명시적인 `queryset` 인자를 *언제나* 사용하는 것으로 대체되었다.
+
+그렇게 하면 `ModelSerializer`가 제공하는 숨겨진 '마법'의 양이 줄어들어 필드의 동작을 더 투명하게 되고, `ModelSerializer` 지름길을 사용하거나 완전히 명시적인 `Serializer` 클래스를 사용하는 것은 사소한 일이라는 걸 보장한다.
+
+## Customizing the HTML display
+모델의 빌트인 `__str__` 메서드는 `choices` 속성을 채우기 위해 사용되는 객체의 문자열 표현을 생성하는데 사용된다. 이 선택지는 브라우징 가능한 API의 select HTML 입력을 채우는데 사용된다.
+
+그런 입력에 사용자 정의 표현을 제공하려면, `RelatedField` 서브클래스의 `display_value()`를 override한다. 이 메서드는 모델 객체를 받아 그것을 표현하기에 적절한 문자열을 반환한다. 예를 들면:
+
+```python
+class TrackPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def display_value(self, instance):
+        return 'Track %s' % (instance.title)
+```
+
+## Select field cutoffs
+브라우징 가능한 API에서 렌더링될 때, 관계 필드는 최대 1000개까지의 선택지를 표시한다. 만약 더 많은 선택지가 있다면 "More than 1000 items..."인 선택 불가능한 옵션이 나타날 것이다.
+
+이 동작은 템플릿이 매우 큰 양의 관계가 보이는 것 때문에 수용 가능한 시간 내에 렌더링하는 것이 불가능해지는 것을 방지하는 것을 의도한다.
+
+이 동작을 제어하기 위해 사용할 수 있는 두 개의 키워드 인자가 있다.
+
+- `html_cutoff`<br>
+  설정하면 HTML select 드롭다운에 표시되는 선택지의 최대 개수가 된다. 제한을 없애려면 `None`으로 설정한다. 기본값은 `1000`.
+- `html_cutoff_text`<br>
+  설정하면 HTML select 드롭다운에서 최대 개수보다 많은 선택지가 있어 생략되는 경우 텍스트 알림이 된다. 기본값은 `"More than {count} items..."`.
+
+전역적으로 `HTML_SELECT_CUTOFF`와 `HTML_SELECT_CUTOFF_TEXT` 설정을 사용해 제어할 수도 있다.
+
+생략이 강제되는 경우 HTML 폼에서 단순한 입력 필드를 대신 사용할 수 있다. `style` 키워드 인자를 사용하면 된다. 예를 들어:
+
+```python
+assigned_to = serializers.SlugRelatedField(
+    queryset=User.objects.all(),
+    slug_field='username',
+    style={'base_template': 'input.html'}
+)
+```
+
+## Reverse relations
+역관계는 `ModelSerializer`와 `HyperlinkedModelSerializer`에 의해 자동으로 유도되지 않는다는 점에 유의한다. 역관계를 포함하려면 필드 목록에 명시적으로 추가해야 한다. 예를 들어:
+
+```python
+class AlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ['tracks', ...]
+```
+
+보통 관계에 적절한 `related_name`을 설정하는 것을 보장하기 위해 필드 이름을 사용한다. 예를 들어:
+
+```python
+class Track(models.Model):
+    album = models.ForeignKey(Album, related_name='tracks', on_delete=models.CASCADE)
+    ...
+```
+
+역관계에 관계명을 설정하지 않으면 `fields` 인자에 있는 자동으로 생성된 관계명을 사용해야 한다. 예를 들면:
+
+```python
+class AlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ['track_set', ...]
+```
+
+더 많은 정보는 [역관계](https://docs.djangoproject.com/en/stable/topics/db/queries/#following-relationships-backward)에 관한 Django 공식문서에서 확인할 수 있다.
+
+## Generic relationships
+제네릭 외래키를 serialize하고 싶다면 관계의 타겟을 어떻게 serialize하는지 명시적으로 결정하기 위해 사용자 정의 필드를 정의해야 한다.
+
+다음은 다른 임의의 모델과 제네릭한 관계를 가진 태그를 위한 모델의 예시이다.
+
+```python
+class TaggedItem(models.Model):
+    """
+    Tags arbitrary model instances using a generic relation.
+
+    See: https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/
+    """
+    tag_name = models.SlugField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    tagged_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return self.tag_name
+```
+
+그리고 다음은 연관된 태그를 가지는 두 모델이다.
+
+```python
+class Bookmark(models.Model):
+    """
+    A bookmark consists of a URL, and 0 or more descriptive tags.
+    """
+    url = models.URLField()
+    tags = GenericRelation(TaggedItem)
+
+
+class Note(models.Model):
+    """
+    A note consists of some text, and 0 or more descriptive tags.
+    """
+    text = models.CharField(max_length=1000)
+    tags = GenericRelation(TaggedItem)
+```
+
+어떻게 serialize될 것인지를 결정하기 위해 각 인스턴스의 타입을 사용해 태그된 인스턴스를 serialize하기 위해 사용되는 사용자 정의 필드를 정의한다.
+
+```python
+class TaggedObjectRelatedField(serializers.RelatedField):
+    """
+    A custom field to use for the `tagged_object` generic relationship.
+    """
+
+    def to_representation(self, value):
+        """
+        Serialize tagged objects to a simple textual representation.
+        """
+        if isinstance(value, Bookmark):
+            return 'Bookmark: ' + value.url
+        elif isinstance(value, Note):
+            return 'Note: ' + value.text
+        raise Exception('Unexpected type of tagged object')
+```
+
+관계의 타겟이 중첩된 표현을 가진다면 `.to_representation` 메서드 안에서 필요한 시리얼라이저를 사용한다.
+
+```python
+def to_representation(self, value):
+    """
+    Serialize bookmark instances using a bookmark serializer,
+    and note instances using a note serializer.
+    """
+    if isinstance(value, Bookmark):
+        serializer = BookmarkSerializer(value)
+    elif isinstance(value, Note):
+        serializer = NoteSerializer(value)
+    else:
+        raise Exception('Unexpected type of tagged object')
+    return serializer.data
+```
+
+관계 안의 타겟의 타입이 언제나 알려져 있기 때문에 `GenericRelation` 필드를 사용해 표현되는 역 제네릭 키가 일반적인 관계 필드 타입을 사용해 serialize될 수 있다는 점에 유의한다.
+
+더 많은 정보는 [제네릭한 관계에 관한 Django 공식문서](https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/#id1)에서 확인한다.
+
+## ManyToManyFields with a Through Model
+기본적으로, `through` 모델로 구체화된 `ManyToManyField`를 목적으로 하는 관계 필드는 읽기 전용으로 설정된다.
+
+through 모델을 사용한 `ManyToManyField`를 가리키는 관계 필드를 명시적으로 구체화하고 싶다면 `read_only`를 `True`로 설정해야 한다.
+
+[through 모델인 추가 필드](https://docs.djangoproject.com/en/stable/topics/db/models/#intermediary-manytomany)를 표현하고 싶다면 through 모델을 [중첩된 객체](https://www.django-rest-framework.org/api-guide/serializers/#dealing-with-nested-objects)로 serialize한다.
+
+# Third Party Packages
+다음의 서드파티 패키지를 사용할 수 있다.
+
+## DRF Nested Routers
+[drf-nested-routers](https://github.com/alanjds/drf-nested-routers) 패키지는 중첩된 요소를 다루기 위한 라우터와 관계 필드를 제공한다.
+
+# Rest Framework Generic Relations
+[rest-framework-generic-relations](https://github.com/Ian-Foote/rest-framework-generic-relations) 라이브러리는 제네릭한 외래키를 위한 읽기/쓰기 serialization을 제공한다.
