@@ -1,0 +1,167 @@
+# [Validators](https://www.django-rest-framework.org/api-guide/validators/)
+```
+유효성 검사기는 서로 다른 타입의 필드 사이에서 유효성 검사 로직을 재사용하는데 유용할 수 있다.
+- Django 공식문서
+```
+
+REST framework에서 유효성 검사를 다루는 대부분의 시간동안 단순히 기본 필드 유효성 검사에 의존하거나 혹은 시리얼라이저나 필드 클래스의 명시적인 유효성 검사 메서드를 작성할 것이다.
+
+그러나 가끔 유효성 검사 로직을 재사용 가능한 요소에 배치해 코드베이스를 통틀어 쉽게 재사용될 수 있게 하고 싶을 수 있다. 이는 유효성 검사 함수와 유효성 검사기 클래스를 사용해 달성할 수 있다.
+
+## Validation in REST framework
+Django REST framework 시리얼라이저에서의 유효성 검사는 Django의 `ModelForm` 클래스에서 유효성 검사가 동작하는 것과 조금 다르게 다루어진다.
+
+`ModelForm`에서는 유효성 검사가 폼에서 부분적으로, 모델 인스턴스에서 부분적으로 실행된다. REST framework의 유효성 검사는 완전히 시리얼라이저 클래스에서만 실행된다. 이는 다음의 이유에서 유리하다.
+
+- 문제를 적절히 분리해 코드 동작을 더 명확하게 한다.
+- 지름길 `ModelSerializer` 클래스를 사용하는 것과 명시된 `Serializer` 클래스를 사용하는 것을 전환하기 쉽다. `ModelSerializer`에 사용되는 유효성 검사 동작은 복제하기 단순하다.
+- 시리얼라이저 인스턴스의 `repr`를 출력하는 것은 그것이 어떤 유효성 검사 규칙을 적용하는지 보여주게 된다. 모델 인스턴스에 의해 호출되는 추가적인 숨겨진 유효성 검사 동작이 없다.
+
+`ModelSerializer`를 사용할 때 이 모든 것은 자동으로 다루어진다. 대신 `Serializer` 클래스를 사용하고 싶다면 유효성 검사 규칙을 명시적으로 정의해야 한다.
+
+### Example
+REST framework가 어떻게 명시적 유효성 검사를 사용하는지의 예시로 유일성 제한이 있는 필드를 가지는 단순한 모델 클래스를 사용한다.
+
+```python
+class CustomerReportRecord(models.Model):
+    time_raised = models.DateTimeField(default=timezone.now, editable=False)
+    reference = models.CharField(unique=True, max_length=20)
+    description = models.TextField()
+```
+
+다음은 `CustomerReportRecord`의 인스턴스를 생성하거나 갱신하기 위해 사용할 수 있는 기본 `ModelSerializer`이다.
+
+```python
+class CustomerReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerReportRecord
+```
+
+`manage.py shell`을 사용해 Django 셸을 연다.
+
+```python
+>>> from project.example.serializers import CustomerReportSerializer
+>>> serializer = CustomerReportSerializer()
+>>> print(repr(serializer))
+CustomerReportSerializer():
+    id = IntegerField(label='ID', read_only=True)
+    time_raised = DateTimeField(read_only=True)
+    reference = CharField(max_length=20, validators=[<UniqueValidator(queryset=CustomerReportRecord.objects.all())>])
+    description = CharField(style={'type': 'textarea'})
+```
+여기서 눈 여겨볼 만한 것은 `reference` 필드이다. 시리얼라이저 필드의 유효성 검사기에 의해 유일성 제한이 명시적으로 강제되는 것을 확인할 수 있다.
+
+이러한 더 명시적인 형식 때문에 REST framework는 core Django에서는 사용할 수 없는 몇 개의 유효성 검사기 클래스를 가진다. 아래에서 기술한다.
+
+## UniqueValidator
+이 유효성 검사기는 모델 필드에 `unique=True` 제한을 강제하는데 사용할 수 있다. 하나의 필수 인자와 선택 인자 `messages`를 가진다.
+
+- `queryset` *필수*<br>
+  유일성이 강제되어야 하는 queryset이다.
+- `message`<br>
+  유효성 검사에 실패했을 때 사용되는 오류 메시지이다.
+- `lookup`<br>
+  값의 유효성이 검사될 때 존재하는 인스턴스를 찾기 위해 사용되는 lookup이다. 기본값은 `exact`.
+
+이 유효성 검사지는 다음과 같이 *시리얼라이저 필드*에 적용되어야 한다.
+
+```python
+from rest_framework.validators import UniqueValidator
+
+slug = SlugField(
+    max_field=100,
+    validators=[UniqueValidator(queryset=BlogPost.objects.all())]
+)
+```
+
+## UniqueTogetherValidator
+이 유효성 검사기는 모델 인스턴스에 `unique_together` 제한을 강제하는데 사용할 수 있다. 두 개의 필수 인자와 하나의 선택인자 `messages`를 가진다.
+
+- `queryset` *필수*<br>
+  유일성이 강제되어야 하는 queryset이다.
+- `fields` *필수*<br>
+  유일한 세트가 되어야 하는 필드 이름의 리스트 또는 튜플. 시리얼라이저 클래스에 필드로 존재해야 한다.
+- `message`<br>
+  유효성 검사에 실패했을 때 사용되는 오류 메시지이다.
+
+이 유효성 검사기는 다음과 같이 *시리얼라이저 클래스*에 적용되어야 한다.
+
+```python
+from rest_framework.validators import UniqueTogetherValidator
+
+class ExampleSerializer(serializers.Serializer):
+    # ...
+    class Meta:
+        # ToDo items belong to a parent list, and have an ordering defined
+        # by the 'position' field. No two items in a given list may share
+        # the same position.
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ToDoItem.objects.all(),
+                fields=['list', 'position']
+            )
+        ]
+```
+
+- **Note**:<br>
+  `UniqueTogetherValidator` 클래스는 항상 적용되는 필드가 언제나 필수로 다루어지게 하는 암묵적인 제한을 둔다. `default` 값을 가지는 필드는 사용자 입력에서 생략되어도 언제나 값을 제공하기 때문에 예외이다.
+
+## UniqueForDateValidator
+## UniqueForMonthValidator
+## UniqueForYearValidator
+이 유효성 검사기들은 모델 인스턴스에 `unique_for_date`, `unique_for_month`, `unique_for_year` 제한을 강제하기 위해 사용한다. 다음의 인자를 가진다.
+
+- `queryset` *필수*<br>
+  유일성이 강제되어야 하는 queryset이다.
+- `field` *필수*<br>
+  주어진 날짜 범위에서 유일성에 관한 유효성이 검증될 필드 이름이다. 시리얼라이저 클래스에 필드로 존재해야 한다.
+- `date_field` *필수*<br>
+  유일성 제한을 위한 날짜 범위를 결정하는데 사용되는 필드 이름이다. 시리얼라이저 클래스에 필드로 존재해야 한다.
+- `message`<br>
+  유효성 검사에 실패했을 때 사용되는 오류 메시지이다.
+
+이 유효성 검사기는 다음과 같이 *시리얼라이저 클래스*에 적용되어야 한다.
+
+```python
+from rest_framework.validators import UniqueForYearValidator
+
+class ExampleSerializer(serializers.Serializer):
+    # ...
+    class Meta:
+        # Blog posts should have a slug that is unique for the current year.
+        validators = [
+            UniqueForYearValidator(
+                queryset=BlogPostItem.objects.all(),
+                field='slug',
+                date_field='published'
+            )
+        ]
+```
+
+유효성 검사에 사용되는 날짜 필드는 언제나 시리얼라이저 클래스에 존재해야 한다. 단순히 모델 클래스의 `default=...`에 의존할 수는 없는데, 왜냐하면 기본값에 사용되는 값이 유요성 검사를 실행하기 전까지는 생성되지 않기 때문이다.
+
+API 동작에 따라 이것을 사용할 수 있는 스타일이 여러 가지 있다. `ModelSerializer`를 사용한다면 단순히 REST framework가 생성하는 기본 검사기에 의존할 수 있지만 `Serializer`를 사용하거나 그저 더 명시적인 제어를 원한다면 아래의 스타일을 사용한다.
+
+### Using with a writable date field.
+날짜 필드가 쓰기 가능이라면 `default` 인자 설정에 의해, 혹은 `required=True` 설정에 의해 입력 데이터에서 언제나 사용 가능하다는 것을 보장해야 한다.
+
+```
+published = serializers.DateTimeField(required=True)
+```
+
+### Using with a read-only date field.
+날짜 필드가 보이지만 사용자에 의해 수정될 수 없는 것을 원한다면 `read_only=True`를 설정하고 추가적으로 `default=...` 인자를 설정한다.
+
+```python
+published = serializers.DateTimeField(read_only=True, default=timezone.now)
+```
+
+### Using with a hidden date field.
+날짜 필드를 사용자가 볼 수 없게 하고 싶다면 `HiddenField`를 사용한다. 이 필드 타입은 사용자 입력을 허용하지 않지만 언제나 시리얼라이저의 `validated_data`에 기본값을 반환한다.
+
+```python
+published = serializers.HiddenField(default=timezone.now)
+```
+
+- **Note**:<br>
+  `UniqueFor<Range>Validator` 클래스는 항상 적용되는 필드가 언제나 필수로 다루어지게 하는 암묵적인 제한을 둔다. `default` 값을 가지는 필드는 사용자 입력에서 생략되어도 언제나 값을 제공하기 때문에 예외이다.

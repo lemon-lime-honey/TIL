@@ -13,6 +13,7 @@
 - [Serializers](serializers.md)
 - [Serializer fields](serializer_fields.md)
 - [Serializer relations](serializer_relations.md)
+- [Validators](validators.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
