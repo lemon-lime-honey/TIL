@@ -165,3 +165,114 @@ published = serializers.HiddenField(default=timezone.now)
 
 - **Note**:<br>
   `UniqueFor<Range>Validator` 클래스는 항상 적용되는 필드가 언제나 필수로 다루어지게 하는 암묵적인 제한을 둔다. `default` 값을 가지는 필드는 사용자 입력에서 생략되어도 언제나 값을 제공하기 때문에 예외이다.
+
+# Advanced field defaults
+시리얼라이저에서 복수의 필드에 적용되는 유효성 검사기는 때로 API 클라이언트에 의해 제공되지 않아야 하지만 유효성 검사기의 입력으로는 사용 가능한 필드 입력을 필요로 한다.
+
+이러한 종류의 유효성 검사를 위해 사용할 수 있는 두 가지 패턴은 다음과 같다.
+
+- `HiddenField` 사용. 이 필드는 `validated_data`에는 존재하지만 시리얼라이저 출력 표현에는 사용되지 *않을* 것이다.
+- `read_only=True` 뿐만 아니라 `default=...` 인자 또한 가진 표준 필드 사용. 이 필드는 시리얼라이저 출력 표현에 사용 *될* 것이지만, 사용자가 직접 설정할 수는 없다.
+
+REST framework는 이 맥락에서 유용할 두 개의 기본값을 가진다.
+
+### CurrentUserDefault
+현재 사용자를 나타내기 위해 사용할 수 있는 기본값 클래스. 이것을 사용하려면 시리얼라이저를 인스턴스화할 때 컨텍스트 딕셔너리에 'request'가 반드시 들어가야 한다.
+
+```python
+owner = serializers.HiddenField(
+    default=serializers.CurrentUserDefault()
+)
+```
+
+### CreateOnlyDefault
+*생성 작업 중에만 설정할 수 있는 기본값 인자*에 사용할 수 있는 기본값 클래스. 이 필드는 갱신 중에는 생략된다.
+
+기본값 또는 생성 작업 중에 사용되어야 할 호출 가능한 것인 하나의 인자를 가진다.
+
+```python
+created_at = serializers.DateTimeField(
+    default=serializers.CreateOnlyDefault(timezone.now)
+)
+```
+
+# Limitations of validators
+`ModelSerializer`가 생성하는 기본 시리얼라이저 클래스에 의존하기보다 명시적으로 유효성 검사를 다루어야 하는 모호한 경우가 있다.
+
+이러한 경우 시리얼라이저의 `Meta.validators` 속성에 빈 리스트를 명시해 자동으로 생성된 유효성 검사기를 비활성화 할 수 있다.
+
+## Optional fields
+기본적으로 "unique together" 유효성 검사는 모든 필드가 `required=True`가 되도록 강제한다. 몇 가지 경우, 요구되는 유효성 검사의 동작이 모호한 필드에 명시적으로 `required=False`를 적용하기를 원할 수 있다.
+
+이러한 경우 보통 시리얼라이저에서 유효성 검사기를 제외하고 `.validate()` 메서드나 뷰에서 유효성 검사 로직을 명시적으로 작성할 필요가 있다.
+
+예를 들면:
+
+```python
+class BillingRecordSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        # Apply custom validation either here, or in the view.
+
+        class Meta:
+            fields = ['client', 'date', 'amount']
+            extra_kwargs = {'client': {'required': False}}
+            validators = [] # Remove a default "unique together" constraint.
+```
+
+## Updating nested serializers
+이미 존재하는 인스턴스를 갱신할 때, 유일성 유효성 검사기는 유일성 검사에서 현재 인스턴스를 제외한다. 현재 인스턴스는 유일성 검사 컨텍스트에서 사용할 수 있는데, 왜냐하면 시리얼라이저를 초기화할 때 `instance=...`를 통해 초기에 전달되기 때문에 시리얼라이저의 속성으로 존재하기 때문이다.
+
+*중첩된* 시리얼라이저에서의 갱신 동작의 경우 인스턴스를 사용할 수 없기 때문에 이러한 예외를 적용할 방법이 없다.
+
+다시 말하자면, 시리얼라이저에서 유효성 검사기를 명시적으로 제외하고 `.validate()` 메서드나 뷰에서 유효성 검사 로직을 명시적으로 작성할 수 있다.
+
+## Debugging complex cases
+`ModelSerializer` 클래스가 생성하는 동작이 정확히 어떤 것인지 확실하지 않다면 `manage.py shell`을 실행한 후 시리얼라이저의 인스턴스를 출력해 자동으로 생성되는 필드와 유효성 검사기를 확인하는 것이 좋다.
+
+```python
+>>> serializer = MyComplexModelSerializer()
+>>> print(serializer)
+class MyComplexModelSerializer:
+    my_fields = ...
+```
+
+복잡한 경우 기본 `ModelSerializer` 동작에 의존하기 보다는 명시적으로 시리얼라이저 클래스를 정의하는 것이 낫다는 점에 유의한다. 좀 더 많은 코드를 필요로 하지만 결과 동작이 좀 더 투명하게 된다.
+
+# Writing custom validators
+이미 존재하는 Django의 유효성 검사기를 사용하거나 사용자 정의 유효성 검사기를 작성할 수 있다.
+
+## Function based
+유효성 검사기는 실패시 `serializers.ValidationError`를 발생시키는 호출 가능한 것이다.
+
+```python
+def even_number(value):
+    if value % 2 != 0:
+        raise serializers.ValidationError('This field must be an even number.')
+```
+
+### Field-level validation
+`Serializer` 서브클래스에 `.validate_<field_name>`  메서드를 추가해 사용자 정의 필드 수준 유효성 검사를 명시할 수 있다. [시리얼라이저 문서](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/serializers.md#field-level-validation)에 기술되어 있다.
+
+## Class-based
+클래스 기반 유효성 검사기를 작성하려면 `__call__` 메서드를 사용한다. 클래스 기반 유효성 검사기는 매개변수화와 재사용 동작을 허용하기 때문에 유용하다.
+
+```python
+class MultipleOf:
+    def __init__(self, base):
+        self.base = base
+
+    def __call__(self, value):
+        if value % self.base != 0:
+            message = 'This field must be a multiple of %d.' % self.base
+            raise serializers.ValidationError(message)
+```
+
+### Accessing the context
+좀 더 발전한 경우 추가 컨텍스트로 사용되는 시리얼라이저 필드로 전달되는 유효성 검사기를 원할 수 있다. 유효성 검사기에 `required_context = True` 속성을 설정하면 된다. `__call__` 메서드는 추가 인자로 `serializer_field` 또는 `serializer`와 함께 호출될 것이다.
+
+```python
+requires_context = True
+
+def __call__(self, value, serializer_field):
+    ...
+```
