@@ -14,6 +14,7 @@
 - [Serializer fields](serializer_fields.md)
 - [Serializer relations](serializer_relations.md)
 - [Validators](validators.md)
+- [Authentication](authentication.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
