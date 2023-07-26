@@ -311,3 +311,124 @@ REST framework의 CSRF 유효성 검사는 같은 뷰에 세션 기반, 세션�
 
 - [Apache Authentication How-To](https://httpd.apache.org/docs/2.4/howto/auth.html)
 - [NGINX (Restricting Access)](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/)
+
+# Custom authentication
+사용자 정의 인증 스킴을 구현하려면 `BaseAuthentication`의 서브클래스를 작성하고 `.authenticate(self, request)` 메서드를 override한다. 메서드는 인증에 성공하면 `(user, auth)` 튜플 쌍을, 아니면 `None`을 반환해야 한다.
+
+`None`을 반환하는 대신 `.authenticate()` 메서드가 `AuthenticationFailed` 예외를 발생시키게 할 수도 있다.
+
+일반적으로 취해야 할 접근 방식은 다음과 같다.
+
+- 인증이 시도되지 않는다면 `None`을 반환한다. 사용 중인 다른 인증 스킴 또한 계속 체크한다.
+- 인증을 시도했으나 실패한다면 ` AuthenticationFailed` 예외를 발생시킨다. 예외 응답은 권한 체크에 관계 없이, 그리고 다른 인증 스킴 체크 없이 즉시 반환된다.
+
+`.authenticate_header(self, request)` 메서드 또한 override할 수 있다. 구현된다면 `HTTP 401 Unauthorized` 응답 내 `WWW-Authenticate` 헤더의 값으로 사용될 문자열을 반환해야 한다.
+
+만약 `.authenticate_header()` 메서드가 override되지 않았다면 인증 스킴은 인증되지 않은 요청의 접근이 거부되었을 때 `HTTP 403 Forbidden` 응답을 반환한다.
+
+- **Note**:<br>
+  요청 객체의 `.user` 또는 `.auth` 속성에 의해 사용자 정의 authenticator가 호출되면 `AttributeError`가 `WrappedAttributeError`로 재발생한다. 이는 속성 외부 접근에 의해 원 예외가 억제되는 것을 방지하기 위해 필요하다. 파이썬은 `AttributeError`가 사용자 정의 authenticator로부터 기인한다는 것을 인지하지 못하며, 그 대신 요청 객체가 `.user` 또는 `.auth` 속성을 가지고 있지 않다고 추정할 것이다. 이러한 오류는 authenticator에 의해 수정되거나 다른 방식으로 다루어져야 한다.
+
+## Example
+
+다음은 'X-USERNAME'이라는 사용자 정의 요청 헤더 안의 사용자명에 의해 주어진 사용자로 들어오는 요청을 인증하는 예시이다.
+
+```python
+from django.contrib.auth.models import User
+from rest_framework import authentication
+from rest_framework import exceptions
+
+class ExampleAuthentication(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        username = request.META.get('HTTP_X_USERNAME')
+        if not username:
+            return None
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise exceptions.AuthenticationFailed('No such user')
+
+        return (user, None)
+```
+
+# Third party packages
+다음의 서드파티 패키지를 사용할 수 있다.
+
+## django-rest-knox
+[Django-rest-knox](https://github.com/James1345/django-rest-knox) 라이브러리는 싱글 페이지 애플리케이션과 모바일 클라이언트를 염두에 두고 토큰 기반 인증을 빌트인 TokenAuthentication 스킴보다 더 안전하고 확장 가능한 방식으로 다루기 위한 모델과 뷰를 제공한다. 클라이언트당 토큰과 다른 인증(주로 기본 인증)이 제공되었을 때 토큰을 생성하고, 토큰을 삭제(서버에 의한 강제 로그아웃 제공)하고, 모든 토큰을 삭제(사용자가 로그인한 모든 클라이언트에서 로그아웃)하기 위한 뷰를 제공한다.
+
+## Django OAuth Toolkit
+[Django OAuth Toolkit](https://github.com/evonove/django-oauth-toolkit) 패키지는 OAuth 2.0 지원을 제공하며 파이썬 3.4 이상에서 사용 가능하다. 이 패키지는 [jazzband](https://github.com/jazzband/)가 관리하며 훌륭한 [OAuthLib](https://github.com/idan/oauthlib)를 사용한다. 문서화가 잘 되어 있고, 잘 지원되며 현재 REST framework에서 **OAuth 2.0 지원을 위한 추천하는 패키지**이다.
+
+### Installation & configuration
+`pip`을 사용해 설치한다.
+
+```bash
+pip install django-oauth-toolkit
+```
+
+`INSTALLED_APPS`에 패키지를 추가하고 REST framework 설정을 수정한다.
+
+```python
+INSTALLED_APPS = [
+    ...
+    'oauth2_provider',
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ]
+}
+```
+
+자세한 사항은 [Django REST framework - 시작하기](https://django-oauth-toolkit.readthedocs.io/en/latest/rest-framework/getting_started.html) 문서에서 확인할 수 있다.
+
+## Django REST framework OAuth
+[Django REST framework OAuth](https://jpadilla.github.io/django-rest-framework-oauth/) 패키지는 REST framework를 위한 OAuth1과 OAuth2 지원을 모두 제공한다.
+
+이 패키지는 이전에는 REST framework에 직접 포함되어 있었으나 현재는 서드파티 패키지로 지원되고 유지된다.
+
+### Installation & configuration
+`pip`을 사용해 패키지를 설치한다.
+
+```bash
+pip install djangorestframework-oauth
+```
+
+설정과 사용에 관한 자세한 사항은 [인증](https://jpadilla.github.io/django-rest-framework-oauth/authentication/)과 [권한](https://jpadilla.github.io/django-rest-framework-oauth/permissions/)에 관한 Django REST framework OAuth 문서를 확인한다.
+
+## JSON Web Token Authentication
+JSON Web Token은 토큰 기반 인증에 사용될 수 있는 상당히 최근의 표준이다. 빌트인 TokenAuthentication 스킴과는 다르게, JWT 인증은 토큰의 유효성을 검증하기 위해 데이터베이스를 사용할 필요가 없다. JWT 인증을 위한 패키지로는 탈착식 토큰 블랙리스트 앱 같은 몇 가지 기능을 제공하는 [djangorestframework-simplejwt](https://github.com/davesque/django-rest-framework-simplejwt)가 있다.
+
+## Hawk HTTP Authentication
+[HawkREST](https://hawkrest.readthedocs.io/en/latest/) 라이브러리는 API에서 [Hawk](https://github.com/hueniverse/hawk)로 서명된 요청과 응답을 다룰 수 있게 하기 위해 [Mohawk](https://mohawk.readthedocs.io/en/latest/) 라이브러리 위에 빌드된다. Hawk는 공유된 키에 의해 서명된 메시지를 사용하여 두 집단이 안전하게 소통할 수 있게 한다. 이는 ([OAuth 1.0](https://oauth.net/core/1.0a/)의 일부에 기반했던)[HTTP MAC access authentication](https://tools.ietf.org/html/draft-hammer-oauth-v2-mac-token-05)에 기반한다.
+
+## HTTP Signature Authentication
+HTTP Signature (현재는 [IETF draft](https://datatracker.ietf.org/doc/draft-cavage-http-signatures/))는 HTTP 메시지를 위한 출처 인증과 메시지 무결성을 얻기 위한 방법을 제공한다. 많은 아마존 서비스에서 사용하는 [Amazon's HTTP Signature scheme](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html)과 유사하게 무상태의, 요청당 인증을 허용한다. [Elvio Toccalino](https://github.com/etoccalino/)가 HTTP Signature 인증 메커니즘을 사용하는 쉬운 방법을 제공하는 [djangorestframework-httpsignature](https://github.com/etoccalino/django-rest-framework-httpsignature) (오래됨) 패키지를 관리한다. [drf-httpsig](https://github.com/ahknight/drf-httpsig)라는 갱신된 포크 버전을 사용할 수도 있다.
+
+## Djoser
+[Djoser](https://github.com/sunscrapers/djoser) 라이브러리는 등록, 로그인, 로그아웃, 비밀번호 초기화와 계정 활성화 같은 기본 동작을 다루기 위한 뷰의 모음을 제공한다. 이 패키지는 사용자 정의 사용자 모델과 함께 사용할 수 있으며, 토큰 기반 인증을 사용한다. 이것은 Django 인증 시스템의 REST 구현을 사용할 준비가 되었다.
+
+## django-rest-auth / dj-rest-auth
+이 라이브러리는 등록, (소셜 미디어 인증을 포함한) 인증, 비밀번호 초기화, 사용자 정보 검색과 갱신을 위한 REST API 엔드포인트 모음을 제공한다. 이 API 엔드포인트를 가지는 것으로 AngularJS, iOS, Android와 같은 클라이언트 앱이 사용자 관리를 위해 REST API를 경유하여 독립적으로 Django 백엔드 사이트와 통신할 수 있다.
+
+현재 이 프로젝트의 두 개의 포크가 있다.
+
+- [Django-rest-auth](https://github.com/Tivix/django-rest-auth)는 원 프로젝트이지만 [현재 갱신되고 있지 않다](https://github.com/Tivix/django-rest-auth/issues/568).
+- [Dj-rest-auth](https://github.com/jazzband/dj-rest-auth)는 프로젝트의 더 새로운 포크이다.
+
+## drf-social-oauth2
+[Drf-social-oauth2](https://github.com/wagnerdelima/drf-social-oauth2)는 페이스북, 구글, 트위터, Orcid와 같은 유명 소셜 oauth2 벤더로 인증하는 것을 돕는 프레임워크이다. 설치가 쉽고 JWT 방식으로 토큰을 생성한다.
+
+## drfpasswordless
+[drefpasswordless](https://github.com/aaronn/django-rest-framework-passwordless)는 (Medium, Square Cash에서 영감을 얻어) Django REST Framework의 TokenAuthentication 스킴에 비밀번호 없는 지원을 추가한다. 사용자는 이메일 주소나 전화번호 같은 연락 지점에 보내진 토큰으로 로그인을 하거나 가입한다.
+
+## django-rest-authemail
+[django-rest-authemail](https://github.com/celiao/django-rest-authemail)는 사용자 가입과 인증을 위한 RESTful API 인터페이스를 제공한다. 사용자명 대신 이메일 주소가 인증에 사용된다. API 엔드포인트는 가입, 가입 이메일 검증, 로그인, 로그아웃, 비밀번호 초기화, 비밀번호 초기화 검증, 이메일 변경, 이메일 변경 검증, 비밀번호 변경 그리고 사용자 정보를 위해 사용 가능하다. 완전히 동작하는 예시 프로젝트와 자세한 설명을 포함한다.
+
+## Django-Rest-Durin
+[Django-Rest-Durin](https://github.com/eshaan7/django-rest-durin)는 하나의 라이브러리가 하나의 인터페이스를 통해 복수의 웹/CLI/모바일 API 클라이언트를 위한 토큰 인증을 하지만 API를 사용하는 각 API 클라이언트를 위한 다른 토큰 설정을 허용하는 아이디어에서 구축되었다. Django-Rest-Framework에서 사용가능한 사용자 정의 모델, 뷰, 권한을 통한 유저 당 복수의 토큰을 지원한다. 토큰 민료 시간은 API 클라이언트에 따라 다를 수 있으며 Django 관리자 인터페이스를 통해 변경할 수 있다.
+
+더 많은 정보는 [문서](https://django-rest-durin.readthedocs.io/en/latest/index.html)에서 확인할 수 있다.
