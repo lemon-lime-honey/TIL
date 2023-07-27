@@ -15,6 +15,7 @@
 - [Serializer relations](serializer_relations.md)
 - [Validators](validators.md)
 - [Authentication](authentication.md)
+- [Permissions](permissions.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
