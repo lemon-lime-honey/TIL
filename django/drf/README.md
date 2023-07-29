@@ -16,6 +16,8 @@
 - [Validators](validators.md)
 - [Authentication](authentication.md)
 - [Permissions](permissions.md)
+- [Caching](caching.md)
+- [Throttling](throttling.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
