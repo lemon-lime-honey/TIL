@@ -18,6 +18,7 @@
 - [Permissions](permissions.md)
 - [Caching](caching.md)
 - [Throttling](throttling.md)
+- [Filtering](filtering.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
