@@ -5,3 +5,6 @@
 
 # Silver 3
 - [17626: Four Squares](17626.py)
+
+# Silver 4
+- [10994: 별 찍기 - 19](10994.py)
