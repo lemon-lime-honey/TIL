@@ -19,6 +19,7 @@
 - [Caching](caching.md)
 - [Throttling](throttling.md)
 - [Filtering](filtering.md)
+- [Pagination](pagination.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
