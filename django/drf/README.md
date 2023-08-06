@@ -20,6 +20,7 @@
 - [Throttling](throttling.md)
 - [Filtering](filtering.md)
 - [Pagination](pagination.md)
+- [Versioning](versioning.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
