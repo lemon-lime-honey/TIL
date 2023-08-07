@@ -21,6 +21,8 @@
 - [Filtering](filtering.md)
 - [Pagination](pagination.md)
 - [Versioning](versioning.md)
+- [Content negotiation](content_negotiation.md)
+- [Metadata](metadata.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
