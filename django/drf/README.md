@@ -23,6 +23,7 @@
 - [Versioning](versioning.md)
 - [Content negotiation](content_negotiation.md)
 - [Metadata](metadata.md)
+- [Schema](schema.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
