@@ -24,6 +24,8 @@
 - [Content negotiation](content_negotiation.md)
 - [Metadata](metadata.md)
 - [Schema](schema.md)
+- [Format suffixes](format_suffixes.md)
+- [Returning URLs](returning_urls.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
