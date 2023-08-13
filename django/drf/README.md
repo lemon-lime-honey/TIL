@@ -26,6 +26,7 @@
 - [Schema](schema.md)
 - [Format suffixes](format_suffixes.md)
 - [Returning URLs](returning_urls.md)
+- [Exceptions](exceptions.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
