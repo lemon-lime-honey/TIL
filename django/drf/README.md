@@ -27,6 +27,7 @@
 - [Format suffixes](format_suffixes.md)
 - [Returning URLs](returning_urls.md)
 - [Exceptions](exceptions.md)
+- [Status Codes](status_codes.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
