@@ -28,6 +28,7 @@
 - [Returning URLs](returning_urls.md)
 - [Exceptions](exceptions.md)
 - [Status Codes](status_codes.md)
+- [Testing](testing.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
