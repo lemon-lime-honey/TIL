@@ -112,3 +112,85 @@ factory = APIRequestFactory(enforce_csrf_checks=True)
 ```
 
 **Note**: Django의 표준 `RequestFactory`는 이 옵션을 포함할 필요가 없다는 점에 주목할 만한데, 이는 일반적인 Django를 사용할 때 CSRF 검증이 뷰를 직접 테스트할 때 실행되지 않는 미들웨어에서 수행되기 때문이다. REST framework를 사용할 때에는 CSRF 검증이 뷰 안에서 수행되기 때문에 요청 팩토리는 뷰 수준 CSRF 검사 비활성을 필요로 한다.
+
+# APIClient
+Django의 [`Client` 클래스](https://docs.djangoproject.com/en/stable/topics/testing/tools/#the-test-client)를 확장한다.
+
+## Making requests
+`APIClient` 클래스는 Django의 표준 `Client` 클래스와 같은 요청 인터페이스를 제공한다. 이는 표준 `.get()`, `.post()`, `.put()`, `.patch()`, `.delete()`, `.head()`, `.options()` 메서드를 모두 사용할 수 있다는 것을 의미한다. 예를 들어:
+
+```python
+from rest_framework.test import APIClient
+
+client = APIClient()
+client.post('/notes/', {'title': 'new idea'}, format='json')
+```
+
+더 다양한 요청 포맷 모음을 지원하거나 기본 포맷을 변경하려면 [설정 섹션](#configuration)을 확인한다.
+
+## Authenticating
+### .login(**kwargs)
+`login` 메서드는 Django의 `Client` 클래스에서와 동일하게 동작한다. 이는 `SessionAuthentication`을 포함하는 뷰에 대한 요청을 인증할 수 있게 한다.
+
+```python
+# Make all requests in the context of a logged in session.
+client = APIClient()
+client.login(username='lauren', password='secret')
+```
+
+로그아웃하려면 통상적인 방법으로 `logout` 메서드를 호출한다.
+
+```python
+# Log out
+client.logout()
+```
+
+`login` 메서드는 API와의 AJAX 상호작용을 포함하는 웹사이트와 같은 세션 인증을 사용하는 API를 테스트하기에 적합하다.
+
+### .credentials(**kwargs)
+`credentials` 메서드는 테스트 클라이언트에 의해 다음 요청에 포함될 헤더를 설정하는데 사용된다.
+
+```python
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+
+# Include an appropriate `Authorization:` header on all requests.
+token = Token.objects.get(user__username='lauren')
+client = APIClient()
+client.credentials(HTTP_AUTHENTICATION='Token ' + token.key)
+```
+
+두 번째로 `credentials`를 호출하면 존재하는 모든 자격 증명을 덮어쓴다는 점에 유의한다. 인자 없이 메서드를 호출해 존재하는 자격 증명을 모두 해제할 수도 있다.
+
+```python
+# Stop including any credentials
+client.credentials()
+```
+
+`credentials` 메서드는 기본 인증, OAuth1a, OAuth2 인증, 단순한 토큰 인증 스킴과 같은 인증 헤더를 필요로 하는 API를 테스트하기에 적합하다.
+
+### .force_authentication(user=None, token=None)
+인증 전체를 건너뛰고 모든 테스트 클라이언트에 의한 요청이 자동으로 인증된 것으로 취급되도록 강제해야 할 때가 있다.
+
+API를 테스트하는 중이지만 테스트 요청을 생성하기 위해 유효한 인증 자격 증명을 구축할 필요는 없는 경우, 이는 유용하게 사용할 수 있는 손쉬운 방법이 될 수 있다.
+
+```python
+user = User.objects.get(username='lauren')
+client = APIClient()
+client.force_authenticate(user=user)
+```
+
+후속 요청의 인증을 해제하려면 user 그리고/또는 token이 `None`으로 설정된 `force_authenticate`를 호출한다.
+
+```python
+client.force_authentication(user=None)
+```
+
+## CSRF validation
+기본적으로 `APIClient`를 사용할 때 CSRF 검증이 적용되지는 않는다. 명시적으로 CSRF 검증을 사용하려면 클라이언트를 인스턴스화할 때 `enforce_csrf_checks` 플래그를 설정한다.
+
+```python
+client = APIClient(enforce_csrf_checks=True)
+```
+
+통상적인 경우와 마찬가지로 CSRF 인증은 세션 인증된 뷰에만 적용된다. 이는 클라이언트가 `login()`을 호출하여 로그인한 경우에만 CSRF 인증이 발생한다는 것을 의미한다.
