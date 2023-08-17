@@ -194,3 +194,173 @@ client = APIClient(enforce_csrf_checks=True)
 ```
 
 통상적인 경우와 마찬가지로 CSRF 인증은 세션 인증된 뷰에만 적용된다. 이는 클라이언트가 `login()`을 호출하여 로그인한 경우에만 CSRF 인증이 발생한다는 것을 의미한다.
+
+# RequestsClient
+REST framework는 인기 있는 파이썬 라이브러리, `requests`를 사용하는 애플리케이션과 상호작용하는 클라이언트 또한 포함한다. 이는 이러한 경우 유용하다:
+
+- 다른 파이썬 서비스의 API와 먼저 소통하고 클라이언트가 보는 것과 같은 수준에서 서비스를 테스트하고 싶은 경우
+- 스테이징 또는 실시간 환경에서도 동작할 수 있는 방식으로 테스트를 작성하려는 경우 (아래의 "Live test"를 확인한다.)
+
+이는 요청 세션을 직접 사용하는 것과 정확히 같은 인터페이스를 노출한다.
+
+```python
+from rest_framework.test import RequestsClient
+
+client = RequestsClient()
+response = client.get('http://testserver/users/')
+assert response.status_code == 200
+```
+
+요청 클라이언트가 정규화된 URL를 요구한다는 점에 유의한다.
+
+## RequestsClient and working with the database
+`RequestsClient` 클래스는 서비스 인터페이스와 단독으로 상호작용하는 테스트를 작성할 때 유용하다. 모든 상호작용이 API를 통해야 하므로 표준 Django 테스트 클라이언트를 사용하는 것보다 좀 더 엄격하다.
+
+`RequestsClient`를 사용한다면 테스트 설정과 결과 판정이 데이터베이스 모델과 직접 상호작용하는 대신 일반적인 API 호출 시 동작하기를 원할 것이다. 예를 들어, `Customer.objects.count() == 3`를 확인하는 것 대신 고객 엔드포인트의 리스트를 만들고 그것이 세 개의 레코드를 가지고 있음을 확인할 것이다.
+
+## Headers & Authentication
+사용자 정의 헤더와 인증 자격 증명은 [표준 `requests.Session` 인스턴스를 사용할 때](https://requests.readthedocs.io/en/master/user/advanced/#session-objects)와 같은 방식으로 제공될 수 있다.
+
+```python
+from requests.auth import HTTPBasicAuth
+
+client.auth = HTTPBasicAuth('user', 'pass')
+client.headers.update({'x-test': 'true'})
+```
+
+## CSRF
+`SessionAuthentication`을 사용한다면 `POST`, `PUT`, `PATCH`, `DELETE` 요청에 대해 CSRF 토큰을 포함해야 한다.
+
+자바스크립트 기반 클라이언트가 사용하는 것과 같은 플로우를 따라하면 그렇게 할 수 있다. 먼저 CSRF 토큰을 얻기 위해 `GET` 요청을 생성하고, 그 다음 요청에서 그 토큰을 사용한다.
+
+예를 들어...
+
+```python
+client = RequestsClient()
+
+# Obtain a CSRF token.
+response = client.get('http://testserver/homepage/')
+assert response.status_code == 200
+csrftoken = response.cookies['csrftoken']
+
+# Interact with the API
+response = client.post('http://testserver/organisations/', json={
+    'name': 'MegaCorp',
+    'status': 'active'
+}, headers={'X-CSRFToken': csrftoken})
+assert response.status_code == 200
+```
+
+## Live tests
+주의깊게 사용한다면, `RequestsClient`와 `CoreAPIClient`는 개발 중 또는 스테이징 서버나 운영 환경에서 동작할 수 있는 테스트 케이스를 작성할 수 있는 능력을 제공한다.
+
+약간의 중심 기능을 위한 기본 테스트를 생성하는데 이 스타일을 사용하는 것은 라이브 서비스의 유효성을 검증하기 위한 강력한 방식이다. 이렇게 하는 것은 동작하는 테스트가 고객 데이터에 직접 영향을 주지 않도록 설정 및 해체에 세심한 주의를 필요로 한다.
+
+# API Test cases
+REST framework는 [Django의 테스트 케이스 클래스](https://docs.djangoproject.com/en/stable/topics/testing/tools/#provided-test-case-classes)를 따라하지만 Django의 기본 `Client` 대신 `APIClient`를 사용하는 다음의 테스트 케이스 클래스를 포함한다.
+
+- `APISimpleTestCase`
+- `APITransactionTestCase`
+- `APITestCase`
+- `APILiveServerTestCase`
+
+## Example
+Django의 표준 테스트 케이스 클래스처럼 REST framework의 테스트 케이스 클래스를 사용할 수 있다. `self.client` 속성은 `APIClient` 인스턴스가 된다.
+
+```python
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from myproject.apps.core.models import Account
+
+class AccountTests(APITestCase):
+    def test_create_account(self):
+        """
+        Ensure we can create a new account object.
+        """
+        url = reverse('account-list')
+        data = {'name': 'DabApps'}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Account.objects.count(), 1)
+        self.assertEqual(Account.objects.get().name, 'DabApps')
+```
+
+# URLPatternsTestCase
+REST framework는 클래스당 기반의 `urlpatterns`를 격리하기 위한 테스트 케이스 클래스 또한 제공한다. 이것이 Django의 `SimpleTestCase`를 상속하며 대개 다른 테스트 케이스 클래스와 혼합되어야 한다는 점에 유의한다.
+
+## Example
+```python
+from django.urls import include, path, reverse
+from rest_framework.test import APITestCase, URLPatternsTestCase
+
+
+class AccountTests(APITestCase, URLPatternsTestCase):
+    urlpatterns = [
+        path('api/', include('api.urls')),
+    ]
+
+    def test_create_account(self):
+        """
+        Ensure we can create a new account object.
+        """
+        url = reverse('account-list')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+```
+
+# Testing responses
+## Checking the response data
+테스트 응답의 유효성을 확인할 때 완전히 렌더링된 응답을 확인하는 대신 응답을 생성하는데 사용된 데이터를 확인하는 것이 더 편리하다.
+
+예를 들어, `response.data`를 확인하는 것이 더 쉽다:
+
+```python
+response = self.client.get('/users/4/')
+self.assertEqual(response.data, {'id': 4, 'username': 'lauren'})
+```
+
+`response.content`의 파싱된 결과를 확인하는 것보다:
+```python
+response = self.client.get('/users/4/')
+self.assertEqual(json.loads(response.content), {'id': 4, 'username': 'lauren'})
+```
+
+## Rendering responses
+직접 `APIRequestFactory`를 사용하여 뷰를 테스트한다면, 템플릿 응답 렌더링이 Django의 내부 요청-응답 사이클에 의해 수행되므로 반환될 응답이 아직 렌더링 되지 않는다. `response.content`에 접근하기 위해 먼저 응답을 렌더링할 필요가 있다.
+
+```python
+view = UserDetail.as_view()
+request = factory.get('/users/4')
+response = view(request, pk='4')
+response.render()  # Cannot access `response.content` without this.
+self.assertEqual(response.content, '{"username": "lauren", "id": 4}')
+```
+
+# Configuration
+## Setting the default format
+테스트 요청을 만드는데 사용되는 기본 포맷은 `TEST_REQUEST_DEFAULT_FORMAT` 설정 키를 사용해 설정할 수 있다. 예를 들어, 표준 multipart 폼 요청 대신 기본으로 항상 테스트 요청에서 JSON을 사용하게 하려면 `settings.py`에서 다음과 같이 설정한다:
+
+```python
+REST_FRAMEWORK = {
+    ...
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
+}
+```
+
+## Setting the available formats
+multipart나 json 요청이 아닌 요청을 테스트해야 한다면 `TEST_REQUEST_RENDERER_CLASSES` 설정을 설정하면 된다.
+
+예를 들어 테스트 요청에서 `format='html'` 사용 지원을 추가하려면 `settings.py`에서 다음과 같이 설정한다:
+
+```python
+REST_FRAMEWORK = {
+    ...
+    'TEST_REQUEST_RENDERER_CLASSES': [
+        'rest_framework.renderers.MultiPartRenderer',
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.TemplateHTMLRenderer'
+    ]
+}
+```
