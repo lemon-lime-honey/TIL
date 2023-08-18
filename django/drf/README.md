@@ -29,6 +29,7 @@
 - [Exceptions](exceptions.md)
 - [Status Codes](status_codes.md)
 - [Testing](testing.md)
+- [Settings](settings.md)
 
 ## Topics
 - [AJAX, CSRF & CORS](acc.md)
