@@ -189,3 +189,114 @@ Queryset 페이지 매김에 사용되는 기본 클래스. `None`으로 설정�
 설정된다면, 내부 viewset 메서드 이름을 스키마 생성에서 사용되는 외부 동작 이름으로 매핑한다. 이는 코드베이스에서 내부적으로 사용하는 것보다 외부 표현에 더 적합한 이름을 생성하게 해준다.
 
 기본: `{'retrieve': 'read', 'destroy': 'delete'}`
+
+## Content type controls
+### URL_FORMAT_OVERRIDE
+요청 URL의 `format=...` 쿼리 파라미터를 사용하여 기본 컨텐츠 협상 `Accept` 헤더의 동작을 override하는데 사용되는 URL 파라미터의 이름
+
+예: `http://example.com/organizations/?format=csv`
+
+이 설정의 값이 `None`이라면 URL 포맷 override가 비활성화된다.
+
+기본: `'format'`
+
+### FORMAT_SUFFIX_KWARG
+포맷 접미사를 제공하는데 사용되는 URL 설정의 파라미터 이름. 이 설정은 접미사가 붙은 URL 패턴을 포함시키기 위해 `format_suffix_patterns`를 사용할 때 적용된다
+
+예: `http://example.com/organizations.csv`
+
+기본: `'format`
+
+## Date and time formatting
+다음의 설정은 날짜와 시간 표현이 어떻게 파싱되고 렌더링되어야 하는지를 제어하는데 사용된다.
+
+### DATETIME_FORMAT
+`DateTimeField` 시리얼라이저 필드의 출력을 렌더링할 때 기본으로 사용되는 포맷 문자열. `None`이라면 `DateTimeField` 시리얼라이저 필드는 파이썬 `datetime` 객체를 반환하며, 렌더러에 의해 datetime 인코딩이 결정된다.
+
+`None`, `'iso-8601'` 또는 파이썬 [strftime 포맷](https://docs.python.org/3/library/time.html#time.strftime) 문자열이어야 한다.
+
+기본: `'iso-8601'`
+
+### DATETIME_INPUT_FORMATS
+입력을 `DateTimeField` 시리얼라이저 필드로 파싱할 때 기본으로 사용되는 포맷 문자열의 리스트.
+
+문자열 `'iso-8601'`을 포함하는 리스트 또는 파이썬 [strftime 포맷](https://docs.python.org/3/library/time.html#time.strftime) 문자열이어야 한다.
+
+기본: `['iso-8601']`
+
+### DATE_FORMAT
+`DateField` 시리얼라이저 필드의 출력을 렌더링할 때 기본으로 사용되는 포맷 문자열. `None`이면 `DateField` 시리얼라이저 필드는 파이썬 `date` 객체를 반환하며, 렌더러에 의해 날짜 인코딩이 결정된다.
+
+`None`, `'iso-8601'` 또는 파이썬 [strftime 포맷](https://docs.python.org/3/library/time.html#time.strftime) 문자열이어야 한다.
+
+기본: `'iso-8601'`
+
+### DATE_INPUT_FORMATS
+입력을 `DateField` 시리얼라이저 필드로 파싱할 때 기본으로 사용되는 포맷 문자열의 리스트.
+
+문자열 `'iso-8601'`을 포함하는 리스트 또는 파이썬 [strftime 포맷](https://docs.python.org/3/library/time.html#time.strftime) 문자열이어야 한다.
+
+기본: `['iso-8601']`
+
+### TIME_FORMAT
+`TimeField` 시리얼라이저 필드의 출력을 렌더링할 때 기본으로 사용되는 포맷 문자열. `None`이면 `TimeField` 시리얼라이저 필드는 파이썬 `time` 객체를 반환하며, 렌더러에 의해 시간 인코딩이 결정된다.
+
+`None`, `'iso-8601'` 또는 파이썬 [strftime 포맷](https://docs.python.org/3/library/time.html#time.strftime) 문자열이어야 한다.
+
+기본: `'iso-8601'`
+
+### TIME_INPUT_FORMATS
+입력을 `TimeField` 시리얼라이저 필드로 파싱할 때 기본으로 사용되는 포맷 문자열의 리스트.
+
+문자열 `'iso-8601'`을 포함하는 리스트 또는 파이썬 [strftime 포맷](https://docs.python.org/3/library/time.html#time.strftime) 문자열이어야 한다.
+
+기본: `['iso-8601']`
+
+## Encodings
+### UNICODE_JSON
+`True`로 설정되면 JSON 응답이 응답에 유니코드 문자를 허용한다. 예를 들어:
+
+```python
+{"unicode black star":"★"}
+```
+
+`False`로 설정되면 JSON 응답은 아스키가 아닌 문자를 다음과 같이 이스케이프 문자로 표기한다:
+
+```python
+{"unicode black star":"\u2605"}
+```
+
+두 형식 모두 [RFC 4627](https://www.ietf.org/rfc/rfc4627.txt)을 따르며, 구문적으로 유효한 JSON이다. 유니코드 형식은 API 응답을 조회할 때 더 사용자 친화적이므로 선호된다.
+
+기본: `True`
+
+### COMPACT_JSON
+`True`로 설정되면 JSON 응답이 `':'`와 `','` 문자 다음에 공백이 없는 압축된 표현을 반환한다. 예를 들어:
+
+```python
+{"is_admin":false,"email":"jane@example"}
+```
+
+`False`로 설정되면 JSON 응답은 다음과 같이 약간 더 긴 표현을 반환한다:
+
+```python
+{"is_admin": false, "email": "jane@example"}
+```
+
+기본 형식은 [Heroku의 API 디자인 가이드라인](https://github.com/interagent/http-api-design#keep-json-minified-in-all-responses)에 따라 최소화된 응답을 반환하는 것이다.
+
+기본: `True`
+
+### STRICT_JSON
+`True`로 설정되었을 때, JSON 렌더링과 파싱은 오직 구문적으로 유효한 JSON만을 확인하며 파이썬의 `json` 모듈에 의해 허용되는 확장된 부동소수점 값(`nan`, `inf`, `-inf`)에 대해서는 예외를 발생시킨다. 이러한 값은 보통은 지원되지 않으므로 권장되는 설정이다. 예를 들어, 자바스크립트의 `JSON.Parse`나 PostgreSQL의 JSON 데이터 파입은 이러한 값을 허용하지 않는다.
+
+`False`로 설정되었을 때 JSON 렌더링과 파싱이 허용된다. 그러나 이런 값들은 여전히 유효하지 않은 값이며, 코드에서 특별히 다루어질 필요가 있다.
+
+기본: `True`
+
+### COERCE_DECIMAL_TO_STRING
+네이티브 decimal 타입을 지원하지 않는 API 표현에서 decimal 객체를 반환할 때, 보통은 값을 문자열로 반환하는 것이 최선이다. 그렇게 하면 이진 부동소수점 구현에서 발생하는 정밀성 손실을 피할 수 있다.
+
+`True`로 설정되면, 시리얼라이저 `DecimalField` 클래스는 `Decimal` 객체 대신 문자열을 반환한다. `False`로 설정되면, 시리얼라이저는 기본 JSON 인코더가 float로 반환하는 `Decimal` 객체를 반환한다.
+
+기본: `True`
