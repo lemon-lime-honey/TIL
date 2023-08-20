@@ -300,3 +300,89 @@ Queryset 페이지 매김에 사용되는 기본 클래스. `None`으로 설정�
 `True`로 설정되면, 시리얼라이저 `DecimalField` 클래스는 `Decimal` 객체 대신 문자열을 반환한다. `False`로 설정되면, 시리얼라이저는 기본 JSON 인코더가 float로 반환하는 `Decimal` 객체를 반환한다.
 
 기본: `True`
+
+## View names and descriptions
+**다음의 설정은 `OPTIONS` 요청에 대한 응답과 브라우징 가능한 API에서 사용되는 뷰 이름과 설명을 생성하기 위해 사용된다.**
+
+### VIEW_NAME_FUNCTION
+뷰 이름을 생성할 때 사용되는 함수를 나타내는 문자열
+
+다음의 시그니처를 가지는 함수여야 한다:
+
+```python
+view_name(self)
+```
+
+- `self`: 뷰 인스턴스. 보통 name 함수는 설명적 이름을 생성할 때 `self.__class__.__name__`이 접근하는 클래스의 이름을 조회한다.
+
+뷰 인스턴스가 `ViewSet`을 상속한다면 여러 선택 인자를 가지고 초기화될 수 있다:
+
+- `name`: Viewset 안의 뷰에 명시적으로 제공되는 이름. 보통 이 값은 제공된 그대로 사용되어야 한다.
+- `suffix`: Viewset 안 각각의 뷰를 구분할 때 사용되는 텍스트. 이 인자는 `name`과 상호 배타적이다.
+- `detail`: Viewset 안 각각의 뷰를 'list' 또는 'detail'로 구분하는 불리언.
+
+기본: `'rest_framework.views.get_view_name'`
+
+### VIEW_DESCRIPTION_FUNCTION
+뷰 설명을 생성할 때 사용되는 함수를 나타내는 문자열.
+
+이 설정은 기본 마크다운이 아닌 마크업 형식을 지원하기 위해 변경될 수 있다. 예를 들어, 브라우징 가능한 API에서 출력되는 뷰 문서 문자열에 `rst` 마크입을 지원하기 위해 사용할 수 있다.
+
+다음 시그니처를 가지는 함수여야 한다:
+
+```python
+view_description(self, html=False)
+```
+
+- `self`: 뷰 인스턴스. 보통 description 함수는 설명을 생성할 때 `self.__class__.__doc__`이 접근하는 클래스의 문서 문자열을 조회한다.
+- `html`: HTML 출력을 필요로하는지 지시하는 불리언. 브라우징 가능한 API에서 사용될 때에는 `True`, `OPTIONS` 응답을 생성할 때에는 `False`.
+
+뷰 인스턴스가 `ViewSet`을 상속한다면 여러 선택 인자를 가지고 초기화될 수 있다:
+
+- `description`: Viewset 안 뷰에 명시적으로 제공되는 설명. 보통 추가적인 viewset `action` 집합이며, 제공된 대로 사용되어야 한다.
+
+기본: `'rest_framework.views.get_view_description'`
+
+## HTML Select Field cutoffs
+브라우징 가능한 API에서 [관계 필드를 렌더링할 때 필드 컷오프를 선택](serializer_relations.md/#select-field-cutoffs)하기 위한 전역 설정.
+
+### HTML_SELECT_CUTOFF
+`html_cutoff` 값의 전역 설정. 정수여야 한다.
+
+기본: `1000`
+
+### HTML_SELECT_CUTOFF_TEXT
+`html_cutoff_text`의 전역 설정을 나타내는 문자열.
+
+기본: `"More than {count} items..."`
+
+## Miscellaneous settings
+### EXCEPTION_HANDLER
+주어진 예외에 대한 응답을 반환할 때 사용되어야 하는 함수를 표현하는 문자열. 함수가 `None`을 반환하면 500 오류가 발생한다.
+
+이 설정은 기본 `{"detail": "Failure..."}` 응답 이외의 오류 응답을 지원하기 위해 변경될 수 있다. 예를 들어, `{"errors": [{"message": "Failure...", "code": ""} ...]}`와 같은 API 응답을 제공하기 위해 사용할 수 있다.
+
+다음 시그니처를 가지는 함수여야 한다:
+
+```
+exception_handler(exc, context)
+```
+
+- `exc`: 예외
+
+기본: `'rest_framework.views.exception_handler'`
+
+### NON_FIELD_ERRORS_KEY
+특정 필드를 참조하지 않지만 일반적인 오류인 시리얼라이저 오류에 사용되는 키를 표현하는 문자열.
+
+기본: `'non_field_errors'`
+
+### URL_FIELD_NAME
+`HyperlinkedModelSerializer`가 생성하는 URL 필드에 사용되는 키를 표현하는 문자열.
+
+기본: `'url'`
+
+### NUM_PROXIES
+API가 실행되는 애플리케이션 프록시의 수를 명시하는데 사용되는 0 이상의 정수. 스로틀링이 클라이언트 IP 주소를 더 정확하게 식별하게 한다. `None`으로 설정되면 스로틀 클래스가 덜 엄격한 IP 일치가 사용된다.
+
+기본: `None`
