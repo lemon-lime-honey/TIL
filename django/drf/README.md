@@ -32,6 +32,7 @@
 - [Settings](settings.md)
 
 ## Topics
+- [Documenting your API](documenting.md)
 - [AJAX, CSRF & CORS](acc.md)
 - [HTML & Forms](htmlform.md)
 - [REST, Hypermedia & HATEOAS](rhh.md)
