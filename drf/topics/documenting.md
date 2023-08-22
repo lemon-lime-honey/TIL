@@ -16,7 +16,7 @@ OpenAPI 스키마로부터 HTML 문서 페이지를 생성할 수 있게 해주�
 둘 모두 정적 스키마 파일이나 동적 `SchemaView` 엔드포인트의 위치 정도만 필요로 한다.
 
 ### A minimal example with Swagger UI
-동적 `SchemaView` 라우팅을 위해 [schema](schema.md) 문서의 예시를 따른다고 할 때, Swagger UI 사용을 위한 최소한의 Django 템플릿은 다음과 같다:
+동적 `SchemaView` 라우팅을 위해 [schema](../api-guide/schema.md) 문서의 예시를 따른다고 할 때, Swagger UI 사용을 위한 최소한의 Django 템플릿은 다음과 같다:
 
 ```html
 <!DOCTYPE html>
@@ -68,7 +68,7 @@ urlpatterns = [
 자세한 사용법은 [Swagger UI 문서](https://swagger.io/tools/swagger-ui/)에서 확인할 수 있다.
 
 ### A minimal example with ReDoc.
-동적 `SchemaView` 라우팅을 위해 [schema](schema.md) 문서의 예시를 따른다고 할 때, ReDoc 사용을 위한 최소한의 Django 템플릿은 다음과 같다:
+동적 `SchemaView` 라우팅을 위해 [schema](../api-guide/schema.md) 문서의 예시를 따른다고 할 때, ReDoc 사용을 위한 최소한의 Django 템플릿은 다음과 같다:
 
 ```html
 <!DOCTYPE html>
@@ -157,7 +157,7 @@ class AccountListView(views.APIView):
     """
 ```
 
-Viewset을 사용할 때 모든 생성된 뷰에 기본 문서 문자열이 사용된다는 점에 유의한다. list와 retrieve 뷰와 같이 각 뷰에 설명을 제공하려면 [스키마 문서의 예시들](schema.md)에서 설명된 문서 문자열 섹션을 사용한다.
+Viewset을 사용할 때 모든 생성된 뷰에 기본 문서 문자열이 사용된다는 점에 유의한다. list와 retrieve 뷰와 같이 각 뷰에 설명을 제공하려면 [스키마 문서의 예시들](../api-guide/schema.md)에서 설명된 문서 문자열 섹션을 사용한다.
 
 ### The `OPTIONS` method
 REST framework API는 `OPTIONS` HTTP 메서드를 사용하는 프로그램적으로 접근할 수 있는 설명 또한 지원한다. 뷰는 `OPTIONS` 요청을 이름, 설명, 그리고 허용하며 응답하는 여러 미디어 타입을 포함한 메타데이터로 응답한다.
@@ -177,7 +177,7 @@ def options(self, request, *args, **kwargs):
     return Response(data=data, status=status.HTTP_200_OK)
 ```
 
-자세한 사항은 [메타데이터 문서](metadata.md)에서 확인할 수 있다.
+자세한 사항은 [메타데이터 문서](../api-guide/metadata.md)에서 확인할 수 있다.
 
 ## The hypermedia approach
 완전히 RESTful하려면 API는 발신하는 응답에서 사용 가능한 동작을 하이퍼미디어 컨트롤로 표현해야 한다.

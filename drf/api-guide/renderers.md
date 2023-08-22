@@ -12,7 +12,7 @@ REST framework는 다양한 미디어 유형을 가지는 응답을 반환할 �
 
 컨텐츠 협상의 기본 프로세스는 응답에 어떤 미디어 유형이 있어야 하는지 결정하기 위해 요청의 `Accept`헤더를 검사하는 것이 포함된다. 선택사항으로 특정 표현을 명시적으로 요청하기 위해 URL에서 포맷 접미사를 사용할 수도 있다. 예를 들어 URL `http://example.com/api/users_count.json`은 언제나 JSON 데이터를 반환하는 엔드포인트이다.
 
-더 많은 정보는 [content negotiation](https://www.django-rest-framework.org/api-guide/content-negotiation/) 문서에서 확인할 수 있다.
+더 많은 정보는 [content negotiation](content_negotiation.md) 문서에서 확인할 수 있다.
 
 ## Setting the renderers
 Renderer 기본 설정은 `DEFAULT_RENDERER_CLASSES` 설정을 사용해 전역적으로 설정될 수 있다. 예를 들어 다음 설정은 `JSON`을 주된 미디어 유형으로 사용하고 self describing API를 포함한다.
@@ -126,7 +126,7 @@ REST framework를 사용하는 일반적인 HTML 페이지를 반환하거나 �
 
 만약 다른 renderer 클래스와 함께 `TemplateHTMLRenderer`를 사용하는 웹사이트를 작성 중이라면 `TemplateHTMLRenderer`를 `renderer_classes` 리스트의 가장 첫 클래스로 입력해 형편없이 생성된 `ACCEPT:` 헤더를 보내는 브라우저에서도 `TemplateHTMLRenderer`가 가장 처음으로 선택되게 하는 것을 고려해야 한다.
 
-`TemplateHTMLRenderer` 사용의 다른 예시는 [HTML & Forms Topic Page](https://www.django-rest-framework.org/topics/html-and-forms/)에서 확인할 수 있다.
+`TemplateHTMLRenderer` 사용의 다른 예시는 [HTML & Forms Topic Page](../topics/htmlform.md)에서 확인할 수 있다.
 
 **.media_type**: `text/html`<br>
 **.format**: `'html'`<br>
@@ -215,7 +215,7 @@ class AccountSerializer(serializers.ModelSerializer):
 </form>
 ```
 
-더 많은 정보는 [HTML & Forms](https://www.django-rest-framework.org/topics/html-and-forms/) 문서에서 확인할 수 있다.
+더 많은 정보는 [HTML & Forms](../topics/htmlform.md) 문서에서 확인할 수 있다.
 
 **.media_type**: `text/html`<br>
 **.format**: `'form'`<br>
@@ -223,7 +223,7 @@ class AccountSerializer(serializers.ModelSerializer):
 **.template**: `'rest_framework/horizontal/form.html`
 
 ## MultiPartRenderer
-HTML multipart 폼 데이터를 렌더링할 때 사용하는 renderer. **응답 renderer로는 적합하지 않지만** REST framework의 [테스트 클라이언트와 테스트 요청 팩토리](https://www.django-rest-framework.org/api-guide/testing/)를 사용해 테스트 요청을 생성하는데 사용된다.
+HTML multipart 폼 데이터를 렌더링할 때 사용하는 renderer. **응답 renderer로는 적합하지 않지만** REST framework의 [테스트 클라이언트와 테스트 요청 팩토리](testing.md)를 사용해 테스트 요청을 생성하는데 사용된다.
 
 **.media_type**: `multipart/form-data; boundary=BoUnDaRyStRiNg`<br>
 **.format**: `'multipart'`<br>
@@ -402,7 +402,7 @@ REST_FRAMEWORK = {
 ## JSONP
 [REST framework JSONP](https://jpadilla.github.io/django-rest-framework-jsonp/)는 JSONP 렌더링 지원을 제공한다. 이전에는 REST framework 패키지에 직접 포함되어 있었지만, 지금은 서드파티 패키지로 지원된다.
 
-**주의**: 만약 교차 도메인 AJAX 요청을 필요로 한다면, `JSONP` 대신 좀 더 현대적인 [CORS](https://www.w3.org/TR/cors/) 접근법을 사용해야 한다. 자세한 사항은 [CORS 문서](https://www.django-rest-framework.org/topics/ajax-csrf-cors/)에서 확인할 수 있다.
+**주의**: 만약 교차 도메인 AJAX 요청을 필요로 한다면, `JSONP` 대신 좀 더 현대적인 [CORS](https://www.w3.org/TR/cors/) 접근법을 사용해야 한다. 자세한 사항은 [CORS 문서](../topics/acc.md)에서 확인할 수 있다.
 
 `jsonp` 접근법은 근본적으로 브라우저 핵이며, `GET` 요청이 인증되지 않고 어떠한 사용자 권한도 필요로 하지 않는 [전역적으로 읽기 가능한 API 엔드포인트에서만 적절하다.](https://stackoverflow.com/questions/613962/is-jsonp-safe-to-use)
 

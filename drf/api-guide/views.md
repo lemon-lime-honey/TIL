@@ -114,7 +114,7 @@ def hello_world(request):
     return Response({"message": "Hello, world!"})
 ```
 
-이 뷰는 [settings](https://www.django-rest-framework.org/api-guide/settings/)에서 명시된 기본 렌더러, parser, 인증 클래스 등을 사용할 것이다.
+이 뷰는 [settings](settings.md)에서 명시된 기본 렌더러, parser, 인증 클래스 등을 사용할 것이다.
 
 기본으로는 오직 `GET` 메서드만이 허용된다. 다른 메서드는 "405 Method Not Allowed"라고 응답할 것이다. 이를 바꾸려면 아래와 같이 뷰가 허용할 메서드를 명시한다.
 
@@ -127,7 +127,7 @@ def hello_world(request):
 ```
 
 ## API policy decorators
-기본 설정을 override하기 위해 REST framework는 뷰에 추가할 수 있는 추가적인 데코레이터 세트를 제공한다. 이는 반드시 `@api_view` 데코레이터 *다음*(아래)에 와야 한다. 예를 들어, 특정 사용자에게 오직 하루에 한 번만 호출될 수 있게 [throttle](https://www.django-rest-framework.org/api-guide/throttling/)을 사용하는 뷰를 작성하려면 throttle 클래스 리스트를 전달하는 `@throttle_classes` 데코레이터를 사용한다.
+기본 설정을 override하기 위해 REST framework는 뷰에 추가할 수 있는 추가적인 데코레이터 세트를 제공한다. 이는 반드시 `@api_view` 데코레이터 *다음*(아래)에 와야 한다. 예를 들어, 특정 사용자에게 오직 하루에 한 번만 호출될 수 있게 [throttle](throttling.md)을 사용하는 뷰를 작성하려면 throttle 클래스 리스트를 전달하는 `@throttle_classes` 데코레이터를 사용한다.
 
 ```python
 from rest_framework.decorators import api_view, throttle_classes
@@ -173,7 +173,7 @@ def view(request):
     return Response({"message": "Hello for today! See you tomorrow!"})
 ```
 
-이 데코레이터는 [Schemas documentation](https://www.django-rest-framework.org/api-guide/schemas/)에서 설명하는 대로 `AutoSchema` 서브클래스 인스턴스 혹은 `ManualSchema` 인스턴스인 `AutoSchema` 인스턴스 하나를 가진다. 뷰를 스키마 생성에서 제외하고 싶다면 `None`을 전달한다.
+이 데코레이터는 [Schemas documentation](schema.md)에서 설명하는 대로 `AutoSchema` 서브클래스 인스턴스 혹은 `ManualSchema` 인스턴스인 `AutoSchema` 인스턴스 하나를 가진다. 뷰를 스키마 생성에서 제외하고 싶다면 `None`을 전달한다.
 
 ```python
 @api_view(['GET'])

@@ -4,7 +4,7 @@ Auth는 착탈식일 필요가 있다.
 - Jacob Kaplan-Moss, "REST worst practices"
 ```
 
-인증은 들어오는 요청을 요청을 보내는 사용자나 서명된 토큰과 같은 식별 자격 세트와 연관짓는 매커니즘이다. 그 다음에 [권한](https://www.django-rest-framework.org/api-guide/permissions/)과 [스로틀링](https://www.django-rest-framework.org/api-guide/throttling/)은 요청이 허가되어야 하는지를 결정하기 위해 그러한 자격을 이용한다.
+인증은 들어오는 요청을 요청을 보내는 사용자나 서명된 토큰과 같은 식별 자격 세트와 연관짓는 매커니즘이다. 그 다음에 [권한](permissions.md)과 [스로틀링](throttling.md)은 요청이 허가되어야 하는지를 결정하기 위해 그러한 자격을 이용한다.
 
 REST framework는 바로 사용할 수 있는 여러 인증 스킴을 제공하며, 사용자 정의 스킴을 구현할 수 있게 허용한다.
 
@@ -17,7 +17,7 @@ REST framework는 바로 사용할 수 있는 여러 인증 스킴을 제공하�
 - **Note**:<br>
   **인증 그 자체는 들어오는 요청을 허용하거나 불허하지 않는다**는 점에 유의한다. 인증은 단순히 요청이 자격을 가지고 있는지를 식별한다.
 
-  API를 위한 인증 정책을 설정하는 방법은 [인증](https://www.django-rest-framework.org/api-guide/permissions/) 문서에서 확인한다.
+  API를 위한 인증 정책을 설정하는 방법은 [인증](permissions.md) 문서에서 확인한다.
 
 ## How authentication is determined
 인증 스킴은 언제나 클래스 리스트로 정의된다. REST framework는 리스트의 각 클래스를 이용해 인증을 시도할 것이며, 첫번째로 인증에 성공하는 클래스의 반환 값을 사용해 `request.user`와 `request.auth`를 설정할 것이다.

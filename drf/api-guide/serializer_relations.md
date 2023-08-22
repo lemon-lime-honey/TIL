@@ -192,11 +192,11 @@ class AlbumSerializer(serializers.ModelSerializer):
 
   URL의 일부로 하나의 기본키 또는 슬러그 인자를 포함하는 URL에 적합하다.
 
-  만약 더 복잡한 하이퍼링크 표현을 필요로 한다면 아래의 [custom hyperlinked fields](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/serializer_relations.md#custom-hyperlinked-fields) 섹션에서 설명되어 있듯이 필드를 커스터마이즈해야 한다.
+  만약 더 복잡한 하이퍼링크 표현을 필요로 한다면 아래의 [custom hyperlinked fields](serializer_relations.md/#custom-hyperlinked-fields) 섹션에서 설명되어 있듯이 필드를 커스터마이즈해야 한다.
 
 **Arguments**:
 - `view_name`<br>
-  관계 타겟으로 사용되는 뷰의 이름. [표준 라우터 클래스](https://www.django-rest-framework.org/api-guide/routers#defaultrouter)를 사용하고 있다면 `<modelname>-detail` 형식의 문자열이 된다. **필수**.
+  관계 타겟으로 사용되는 뷰의 이름. [표준 라우터 클래스](routers.md/#defaultrouter)를 사용하고 있다면 `<modelname>-detail` 형식의 문자열이 된다. **필수**.
 - `queryset`<br>
   필드 입력의 유효성을 검사할 때 모델 인스턴스 검색을 위해 사용되는 queryset. 관계는 queryset을 명시적으로 설정하거나 `read_only=True`를 설정해야 한다.
 - `many`<br>
@@ -283,7 +283,7 @@ class AlbumSerializer(serializers.HyperlinkedModelSerializer):
 
 **Arguments**:
 - `view_name`<br>
-  관계 타겟으로 사용되는 뷰의 이름. [표준 라우터 클래스](https://www.django-rest-framework.org/api-guide/routers#defaultrouter)를 사용하고 있다면 `<modelname>-detail` 형식의 문자열이 된다. **필수**.
+  관계 타겟으로 사용되는 뷰의 이름. [표준 라우터 클래스](routers.md/#defaultrouter)를 사용하고 있다면 `<modelname>-detail` 형식의 문자열이 된다. **필수**.
 - `lookup_field`<br>
   검색에 사용되어야 할 타겟이 있는 필드. 참조된 뷰의 URL 키워드 인자에 대응되어야 한다. 기본값은 `pk`.
 - `lookup_url_kwarg`<br>
@@ -383,7 +383,7 @@ True
 
 사용자 정의 필드를 구현하기 위해서는 `RelatedField`를 override해야 하고, `.to_representation(self, value)` 메서드를 구현해야 한다. 이 메서드는 필드의 타겟을 `value` 인자로 가지고, 타겟을 serialize하기 위해 사용되어야 할 표현을 반환한다. `value` 인자는 보통 모델 인스턴스이다.
 
-읽기-쓰기 관계 필드를 구현해야 한다면 [`.to_internal_value(self, data)` 메서드](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/serializers.md#to_internal_valueself-data)를 구현해야 한다.
+읽기-쓰기 관계 필드를 구현해야 한다면 [`.to_internal_value(self, data)` 메서드](serializers.md/#to_internal_valueself-data)를 구현해야 한다.
 
 `context`에 기반한 동적 queryset을 제공하려면 클래스에서 혹은 필드를 초기화할 때 `.queryset`을 구체화하는 대신 `.get_queryset(self)`를 override하면 된다.
 
@@ -634,7 +634,7 @@ def to_representation(self, value):
 
 through 모델을 사용한 `ManyToManyField`를 가리키는 관계 필드를 명시적으로 구체화하고 싶다면 `read_only`를 `True`로 설정해야 한다.
 
-[through 모델인 추가 필드](https://docs.djangoproject.com/en/stable/topics/db/models/#intermediary-manytomany)를 표현하고 싶다면 through 모델을 [중첩된 객체](https://www.django-rest-framework.org/api-guide/serializers/#dealing-with-nested-objects)로 serialize한다.
+[through 모델인 추가 필드](https://docs.djangoproject.com/en/stable/topics/db/models/#intermediary-manytomany)를 표현하고 싶다면 through 모델을 [중첩된 객체](serializers.md/#dealing-with-nested-objects)로 serialize한다.
 
 # Third Party Packages
 다음의 서드파티 패키지를 사용할 수 있다.

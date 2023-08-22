@@ -3,9 +3,8 @@
 HTTP/1.1 420 Enhance Your Calm
 - Twitter API rate limiting response
 ```
-~~X가 된 트위터~~
 
-스로틀링은 요청이 인증되어야 하는지를 결정한다는 점에서 [권한](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/permissions.md)과 유사하다. 스로틀은 임시 상태를 지시하고 클라이언트가 API에 생성할 수 있는 요청의 속도를 제어하는데 사용된다.
+스로틀링은 요청이 인증되어야 하는지를 결정한다는 점에서 [권한](permissions.md)과 유사하다. 스로틀은 임시 상태를 지시하고 클라이언트가 API에 생성할 수 있는 요청의 속도를 제어하는데 사용된다.
 
 권한에서 그러하듯이, 복수의 스로틀을 사용할 수 있다. API가 인증되지 않은 요청에는 엄격한 스로틀을, 인증된 요청에는 덜 엄격한 스로틀을 가질 수 있다.
 

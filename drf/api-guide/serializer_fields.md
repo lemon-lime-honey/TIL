@@ -32,7 +32,7 @@
 
 기본값: `True`
 
-[모델 시리얼라이저](https://www.django-rest-framework.org/api-guide/serializers/#modelserializer)를 사용하고, `Model`의 필드에 `blank=True`, `default` 또는 `null=True`를 명시했다면 기본값은 `False`이다.
+[모델 시리얼라이저](serializers.md/#modelserializer)를 사용하고, `Model`의 필드에 `blank=True`, `default` 또는 `null=True`를 명시했다면 기본값은 `False`이다.
 
 ### `default`
 설정되었다면, 입력 값이 주어지지 않았을 때 필드에 사용될 기본값을 제공한다. 기본 동작을 설정하지 않는 것은 속성을 채우지 않는 것이다.
@@ -122,7 +122,7 @@ color_channel = serializers.ChoiceField(
 )
 ```
 
-[HTML & Forms](https://www.django-rest-framework.org/topics/html-and-forms/) 문서에서 더 많은 정보를 확인할 수 있다.
+[HTML & Forms](../topics/htmlform.md) 문서에서 더 많은 정보를 확인할 수 있다.
 
 # Boolean fields
 ## BooleanField
@@ -538,7 +538,7 @@ modified = serializers.HiddenField(default=timezone.now)
 
 `HiddenField` 클래스는 대개 미리 제공된 필드 값에 기반하여 유효성 검사를 해야하지만 최종 사용자에게 모든 필드를 노출하고 싶지 않을 때에만 필요하다.
 
-`HiddenField`에 관한 더 많은 예시는 [validators](https://www.django-rest-framework.org/api-guide/validators/) 문서에서 확인할 수 있다.
+`HiddenField`에 관한 더 많은 예시는 [validators](validators.md) 문서에서 확인할 수 있다.
 
 ## ModelField
 임의의 모델 필드에 묶일 수 있는 제네릭 필드. `ModelField` 클래스는 serialization/deserialzation 작업을 연결된 모델 필드에 위임한다. 이 필드는 새로운 사용자 정의 시리얼라이저 필드를 생성할 필요 없이 사용자 정의 모델 필드를 위해 시리얼라이저 필드를 생성하기 위해 사용될 수 있다.

@@ -89,7 +89,7 @@ Note: 만약 하이퍼링크된 serializer와 함께 namespace를 사용한다�
 자동 `view_name` 생성은 `%(model_name)-detail`과 같은 패턴을 사용한다. 모델 이름이 정말 충돌하는 것이 아니라면 하이퍼링크된 serializer를 사용할 때에는 Django REST Framework 뷰에 namespace를 사용하지 않는 게 좋다.
 
 ## Routing for extra actions
-Viewset은 `@action` 데코레이터를 사용한 메서드로 [라우팅을 위한 추가 동작 표시](https://www.django-rest-framework.org/api-guide/viewsets/#marking-extra-actions-for-routing)를 할 수 있다. 예를 들어 `UserViewSet` 클래스에 `set_password` 메서드가 주어졌다고 하자.
+Viewset은 `@action` 데코레이터를 사용한 메서드로 [라우팅을 위한 추가 동작 표시](viewsets.md/#marking-extra-actions-for-routing)를 할 수 있다. 예를 들어 `UserViewSet` 클래스에 `set_password` 메서드가 주어졌다고 하자.
 
 ```python
 from myapp.permissions import IsAdminOrIsSelf

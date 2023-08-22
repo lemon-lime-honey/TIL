@@ -10,7 +10,6 @@
 # django
 - [user guide](/django/guide.md)
 - [example](/django/example/README.md)
-- [rest framework documents](/django/drf/README.md)
 - [ajax](/django/ajax.md)
 - [authentication system](/django/auth_sys.md)
 - [class-based views](/django/cbv.md)
@@ -28,6 +27,9 @@
 - [static files](/django/static.md)
 - [template](/django/template.md)
 - [url](/django/url.md)
+
+# django rest framework
+- [about](/drf/README.md)
 
 # docker
 - [readme](/docker/README.md)

@@ -14,7 +14,7 @@ REST framework의 요청 객체는 일반적으로 폼 데이터를 다루는 �
 - `POST` 이외의 HTTP 메서드의 콘텐츠 파싱을 지원한다. 즉, `PUT`과 `PATCH` 요청의 콘텐츠에 접근할 수 있게 된다.
 - 그저 폼 데이터를 지원하는 것 대신, REST framework의 유연한 요청 파싱을 지원한다. 예를 들어 폼 데이터 입력을 다루는 것과 유사하게 JSON 데이터를 다룰 수 있게 된다.
 
-자세한 사항은 [parsers documentation](https://www.django-rest-framework.org/api-guide/parsers/)에서 확인할 수 있다.
+자세한 사항은 [parsers documentation](parsers.md)에서 확인할 수 있다.
 
 ### .query_params
 `request.query_params`는 `request.GET`의 좀 더 정확하게 작명된 유의어이다.<br>
@@ -50,14 +50,14 @@ REST framework는 다음을 할 수 있게 하는 유연한 매 응답당 인증
 
 만약 요청이 인증되지 않았다면 `request.user`의 기본값은 `django.contrib.auth.models.AnonymousUser`의 인스턴스이다.
 
-자세한 사항은 [authentication documentation](https://www.django-rest-framework.org/api-guide/authentication/)에서 확인할 수 있다.
+자세한 사항은 [authentication documentation](authentication.md)에서 확인할 수 있다.
 
 ### .auth
 `request.auth`는 추가적인 인증 컨텍스트를 반환한다. `request.auth`의 정확한 동작은 사용되는 인증 정책에 따라 다르지만 보통은 요청이 인증된 토큰의 인스턴스일 수 있다.
 
 만약 요청이 인증되지 않았거나 추가적인 컨텍스트가 없다면 `request.auth`의 기본값은 `None`이다.
 
-자세한 사항은 [authentication documentation](https://www.django-rest-framework.org/api-guide/authentication/)에서 확인할 수 있다.
+자세한 사항은 [authentication documentation](authentication.md)에서 확인할 수 있다.
 
 ### .authenticators
 `APIView` 클래스 또는 `@api_view` 데코레이터는 뷰에서 설정된 `authentication_classes` 또는 `DEFAULT_AUTHENTICATION` 설정에 기반하여 속성이 자동적으로 `Authentication` 인스턴스 리스트로 설정되게 한다.
@@ -75,7 +75,7 @@ REST framework는 브라우저 기반 `PUT`, `PATCH`, `DELETE` 폼과 같은 몇
 
 브라우저 기반 `PUT`, `PATCH`, `DELETE` 폼은 투명하게 지원된다.
 
-자세한 사항은 [browser enhancements documentation](https://www.django-rest-framework.org/topics/browser-enhancements/)에서 확인할 수 있다.
+자세한 사항은 [browser enhancements documentation](../topics/enhancements.md)에서 확인할 수 있다.
 
 ### .content_type
 `request.content_type`는 HTTP 요청의 바디의 미디어 유형을 나타내는 문자열 객체, 또는 미디어 유형이 제공되지 않은 경우 빈 문자열을 반환한다.
@@ -84,7 +84,7 @@ REST framework는 브라우저 기반 `PUT`, `PATCH`, `DELETE` 폼과 같은 몇
 
 만약 요청의 컨텐츠 유형에 접근할 필요가 있다면 `request.META.get('HTTP_CONTENT_TYPE')`을 사용하는 것보다 브라우저 기반의 폼이 아닌 콘텐츠를 투명하게 지원하는 `.content_type` 속성을 사용하는 것이 좋다.
 
-자세한 사항은 [browser enhancements documentation](https://www.django-rest-framework.org/topics/browser-enhancements/)에서 확인할 수 있다.
+자세한 사항은 [browser enhancements documentation](../topics/enhancements.md)에서 확인할 수 있다.
 
 ### .stream
 `request.stream`은 요청 바디의 콘텐츠를 나타내는 스트림을 반환한다.

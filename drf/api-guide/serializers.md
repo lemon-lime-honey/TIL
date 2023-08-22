@@ -260,7 +260,7 @@ class EventSerializer(serializers.Serializer):
         ]
 ```
 
-더 많은 정보는 [validators 문서](https://www.django-rest-framework.org/api-guide/validators/)에서 확인할 수 있다.
+더 많은 정보는 [validators 문서](validators.md)에서 확인할 수 있다.
 
 ## Accessing the initial data and instance
 초기 객체나 queryset을 시리얼라이저 인스턴스로 전달할 때 객체는 `.instance`로 사용 가능하게 된다. 초기 객체가 전달되지 않았다면 `.instance` 속성은 `None`이 된다.
@@ -381,7 +381,7 @@ def update(self, instance, validated_data):
 
 중첩된 생성과 갱신의 동작이 모호할 수 있고, 연관된 모델 사이에 복잡한 의존성이 요구될 수 있으므로 REST framework 3은 이러한 메서드를 명시적으로 작성할 것을 요구한다. 기본 `ModelSerializer`의 `.create()`와 `.update()` 메서드는 작성 가능한 중첩된 표현에 관한 지원을 포함하지 않는다.
 
-그러나 자동으로 작성 가능한 중첩된 표현을 지원하는 [DRF Writable Nested](https://www.django-rest-framework.org/api-guide/serializers/#drf-writable-nested)와 같은 서드파티 패키지를 사용할 수 있다.
+그러나 자동으로 작성 가능한 중첩된 표현을 지원하는 [DRF Writable Nested](serializers.md/#drf-writable-nested)와 같은 서드파티 패키지를 사용할 수 있다.
 
 ### Handling saving related instances in model manager classes
 시리얼라이저에서 복수의 연관된 인스턴스를 저장하는 다른 방법은 정확한 인스턴스 생성을 다루는 사용자 정의 모델 매니저 클래스를 작성하는 것이다.
@@ -436,7 +436,7 @@ serializer.data
 ```
 
 ### Deseiralizing multiple objects
-복수의 개체를 deserialize하는 기본 동작은 복수의 개체 생성을 지원하지만 복수의 개체 갱신은 지원하지 않는 것이다. 이런 경우를 어떻게 지원할지, 혹은 어떻게 커스터마이즈를 할지에 관한 정보는 아래의 [ListSerializer](https://www.django-rest-framework.org/api-guide/serializers/#listserializer) 문서에서 확인할 수 있다.
+복수의 개체를 deserialize하는 기본 동작은 복수의 개체 생성을 지원하지만 복수의 개체 갱신은 지원하지 않는 것이다. 이런 경우를 어떻게 지원할지, 혹은 어떻게 커스터마이즈를 할지에 관한 정보는 아래의 [ListSerializer](serializers.md/#listserializer) 문서에서 확인할 수 있다.
 
 ## Including extra context
 Serialize 되는 객체에 더해 추가적인 컨텍스트를 시리얼라이저에 제공해야 하는 경우가 있다. 흔한 경우 중 하나는 적절하게 온전히 작동하는 URL을 생성할 수 있도록 시리얼라이저가 현재 요청에 접근하게 하는 것을 필요로 하는 하이퍼링크된 관계를 포함하는 시리얼라이저를 사용할 때이다.
@@ -473,7 +473,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
 기본적으로 클래스 안의 모든 모델 필드는 대응되는 시리얼라이저 필드에 매핑될 것이다.
 
-외래키와 같은 모델의 관계는 `PrimaryKeyRelatedField`에 매핑될 것이다. 역관계는 [시리얼라이저 관계](https://www.django-rest-framework.org/api-guide/relations/) 문서에서 기술된 것처럼 명시적으로 포함된 것이 아니라면 기본으로 포함되지는 않는다.
+외래키와 같은 모델의 관계는 `PrimaryKeyRelatedField`에 매핑될 것이다. 역관계는 [시리얼라이저 관계](serializer_relations.md) 문서에서 기술된 것처럼 명시적으로 포함된 것이 아니라면 기본으로 포함되지는 않는다.
 
 ### Inspecting a `ModelSerializer`
 시리얼라이저 클래스는 필드 상태를 온전히 점검할 수 있게 해주는 도움말 문자열을 생성한다. 이는 어떤 필드와 유효성 검사기 세트가 자동으로 생성되는지 결정하기 위해 `ModelSerializers`를 다룰 때 특히 유용하다.
@@ -588,7 +588,7 @@ class AccountSerializer(serializers.ModelSerializer):
   user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
   ```
 
-  [UniqueTogetherValidator](https://www.django-rest-framework.org/api-guide/validators/#uniquetogethervalidator)와 [CurrentUserDefault](https://www.django-rest-framework.org/api-guide/validators/#currentuserdefault) 클래스에 관한 자세한 내용은 [Validators 문서](https://www.django-rest-framework.org/api-guide/validators/)에서 확인할 수 있다.
+  [UniqueTogetherValidator](validators.md/#uniquetogethervalidator)와 [CurrentUserDefault](validators.md/#currentuserdefault) 클래스에 관한 자세한 내용은 [Validators 문서](validators.md)에서 확인할 수 있다.
 
 ## Additional keyword arguments
 `extra_kwargs` 옵션을 사용해 필드의 임의의 키워드 인자를 명시할 수 있는 방법이 있다. `read_only_fields`의 경우처럼 이는 시리얼라이저에 필드를 명시적으로 선언하지 않아도 된다는 것을 의미한다.
@@ -619,7 +619,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
 다른 표현 방식에는 하이퍼링크를 이용한 serialize, 중첩된 표현을 온전히 serialize하는 것 또는 사용자 정의 표현을 serialize하는 것이 있다.
 
-[serializer relations](https://www.django-rest-framework.org/api-guide/relations/)문서에서 더 많은 정보를 확인할 수 있다.
+[serializer relations](serializer_relations.md)문서에서 더 많은 정보를 확인할 수 있다.
 
 ## Customizing field mappings
 ModelSerializer 클래스는 시리얼라이저를 초기화할 때 어떻게 자동으로 시리얼라이저 필드가 결정되리 정하기 위해 override할 수 있는 API를 노출시킨다.
@@ -1098,7 +1098,7 @@ class AccountSerializer(MyBaseSerializer):
   class MySerializer(MyBaseSerializer):
       my_field = None
   ```
-  그러나 이 방법은 부모 클래스에 의해 선언하듯이 정의된 필드를 없앨 때에만 사용할 수 있다. 이것은 `ModelSerializer`가 기본 필드를 생성하는 것을 방지하지 못한다. 기본 필드를 사용하지 않으려면 [어느 필드를 포함할지 구체화하기](https://www.django-rest-framework.org/api-guide/serializers/#specifying-which-fields-to-include) 문서를 확인한다.
+  그러나 이 방법은 부모 클래스에 의해 선언하듯이 정의된 필드를 없앨 때에만 사용할 수 있다. 이것은 `ModelSerializer`가 기본 필드를 생성하는 것을 방지하지 못한다. 기본 필드를 사용하지 않으려면 [어느 필드를 포함할지 구체화하기](serializers.md/#specifying-which-fields-to-include) 문서를 확인한다.
 
 ## Dynamically modifying fields
 일단 시리얼라이저가 초기화되면, `.fields` 속성을 사용해 시리얼라이저에 설정된 필드 딕셔너리에 접근할 수 있다. 이 속성에 접근하는 것과 이 속성을 수정하는 것은 시리얼라이저를 동적으로 수정할 수 있게 한다.

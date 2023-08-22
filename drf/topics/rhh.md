@@ -26,7 +26,7 @@ REST framework는 독립적인 웹 API 툴킷이다. 이는 잘 연결이 된 AP
 ## What REST framework provides.
 REST framework가 하이퍼미디어 API를 구축할 수 있게 하는 것은 명백하다. 제공하는 탐색 가능한 API는 웹의 하이퍼미디어 언어인 HTML로 생성된다.
 
-REST framework는 적절한 미디어 유형을 개발하는 것을 쉽게 하는 `serialization`과 `parser`/`renderer` 요소, 잘 연결된 시스템을 개발하기 위한 [하이퍼 링크 관계](https://www.django-rest-framework.org/api-guide/fields/), [컨텐츠 협상](https://www.django-rest-framework.org/api-guide/content-negotiation/)을 위한 많은 지원 또한 포함한다.
+REST framework는 적절한 미디어 유형을 개발하는 것을 쉽게 하는 `serialization`과 `parser`/`renderer` 요소, 잘 연결된 시스템을 개발하기 위한 [하이퍼 링크 관계](../api-guide/serializer_fields.md), [컨텐츠 협상](../api-guide/content_negotiation.md)을 위한 많은 지원 또한 포함한다.
 
 ## What REST framework doesn't provide.
 REST framework는 [HAL](http://stateless.co/hal_specification.html), [Collection+JSON](http://www.amundsen.com/media-types/collection/), [JSON API](http://jsonapi.org/) 또는 HTML [microformats](http://microformats.org/wiki/Main_Page)와 같은 기계 판독이 가능한 하이퍼미디어 포맷 기본 제공이나 하이퍼미디어 기반의 폼 설명과 의미적으로 라벨링된 하이퍼링크를 포함하는 온전한 HATEOAS 스타일 API를 자동으로 생성하게 하지 않는다.

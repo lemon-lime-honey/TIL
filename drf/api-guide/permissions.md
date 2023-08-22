@@ -6,7 +6,7 @@
 - 애플 개발자 문서
 ```
 
-[인증](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/authentication.md), [스로틀링](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/throttling.md)과 함께, 권한은 요청의 접근을 허용할지 거부할지를 결정한다.
+[인증](authentication.md), [스로틀링](throttling.md)과 함께, 권한은 요청의 접근을 허용할지 거부할지를 결정한다.
 
 권한 확인은 언제나 다른 코드가 진행되도록 허용되기 전, 뷰의 가장 시작점에서 실행된다. 권한 확인은 보통 들어오는 요청의 허가 여부를 결정하기 위해 `request.user`와 `request.auth` 속성 내의 인증 정보를 사용한다.
 
@@ -51,12 +51,12 @@ def get_object(self):
 - **Note**: <br>
   `DjangoOjbectPermissions`의 예외와 함께, `rest_framework.permissions` 에서 제공된 권한 클래스는 객체 권한을 체크하기 위해 필요한 메서드를 **구현하지 않는다**.
 
-  객체 권한을 체크하기 위해 제공된 권한 클래스를 사용한다면 **반드시** 서브클래스를 생성하고 아래의 [Custom permissions](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/permissions.md#custom-permissions) 섹션에서 설명된 `has_object_permission()` 메서드를 구현해야 한다.
+  객체 권한을 체크하기 위해 제공된 권한 클래스를 사용한다면 **반드시** 서브클래스를 생성하고 아래의 [Custom permissions](permissions.md#custom-permissions) 섹션에서 설명된 `has_object_permission()` 메서드를 구현해야 한다.
 
 ### Limitations of object level permissions
 성능 상의 이유로 제네릭 뷰는 객체 리스트를 반환할 때 queryset의 각 인스턴스에 객체 수준 권한을 자동으로 적용하지 않는다.
 
-때로 객체 수준 권한을 사용할 때 사용자가 볼 수 있도록 허용된 인스턴스만 볼 수 있도록 하기 위해 [queryset을 적절히 필터링](https://www.django-rest-framework.org/api-guide/filtering/)할 수 있다.
+때로 객체 수준 권한을 사용할 때 사용자가 볼 수 있도록 허용된 인스턴스만 볼 수 있도록 하기 위해 [queryset을 적절히 필터링](filtering.md)할 수 있다.
 
 `get_object()` 메서드가 호출되지 않기 때문에, `has_object_permission()` 메서드에서 기인하는 객체 수준 권한은 객체를 생성할 때에는 **적용되지 않는다**. 객체 생성을 제한하기 위해서, 시리얼라이저 클래스에 권한 체크를 구현하거나 ViewSet 클래스의 `perform_create()` 메서드를 override해야 한다.
 
@@ -267,7 +267,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 제네릭 뷰가 적절한 객체 수준 권한을 체크하지만 사용자 정의 뷰를 작성한다면 객체 수준 권한 체크를 직접 확인해야 한다는 점에 유의한다. 객체 인스턴스를 가져오면 뷰에서 `self.check_object_permissions(request, obj)`를 호출하면 이 작업을 수행할 수 있다. 이 호출은 객체 수준 권한 체크에 실패한다면 적절한 `APIException`을 발생시키고, 그렇지 않다면 단순히 반환한다.
 
-제네릭 뷰가 하나의 모델 인스턴스를 가져오는 뷰를 위한 객체 수준 권한만을 체크한다는 점에 유의한다. 객체 수준에서 리스트 뷰를 필터링 해야 한다면 queryset을 별도로 필터링해야 한다. 자세한 사항은 [필터링 문서](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/authentication.md)에서 확인할 수 있다.
+제네릭 뷰가 하나의 모델 인스턴스를 가져오는 뷰를 위한 객체 수준 권한만을 체크한다는 점에 유의한다. 객체 수준에서 리스트 뷰를 필터링 해야 한다면 queryset을 별도로 필터링해야 한다. 자세한 사항은 [필터링 문서](filtering.md)에서 확인할 수 있다.
 
 # Overview of access restriction methods
 REST framework는 케이스 기반의 접근 제한을 커스터마이즈하기 위한 세 개의 다른 메서드를 제공한다. 메서드는 서로 다른 상황에 적용되고, 다른 효과화 제한을 가진다.

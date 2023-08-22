@@ -290,7 +290,7 @@ OpenAPI 모음은 태그에 의해 동작한다. 기본적으로 태그는 라�
 `get_components()`와 함께, 이것은 뷰 조회의 주 엔트리 포인트이다.
 
 #### `get_operation_id()`
-각 작업마다 고유한 [operationid](https://www.django-rest-framework.org/api-guide/schemas/openapi-operationid)가 있다. 기본적으로 `operationId`는 모델의 이름, 시리얼라이저의 이름 또는 뷰의 이름으로부터 추론된다. operationid는 "listItems", "retrieveItem", "updateItem"과 같다. `operationId`는 관습적으로 camelCase이다.
+각 작업마다 고유한 operationid가 있다. 기본적으로 `operationId`는 모델의 이름, 시리얼라이저의 이름 또는 뷰의 이름으로부터 추론된다. operationid는 "listItems", "retrieveItem", "updateItem"과 같다. `operationId`는 관습적으로 camelCase이다.
 
 #### `get_operation_id_base()`
 같은 모델 이름을 가진 여러 뷰를 가진다면 중복되는 operationId를 보게 된다.

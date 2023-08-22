@@ -251,7 +251,7 @@ def even_number(value):
 ```
 
 ### Field-level validation
-`Serializer` 서브클래스에 `.validate_<field_name>`  메서드를 추가해 사용자 정의 필드 수준 유효성 검사를 명시할 수 있다. [시리얼라이저 문서](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/serializers.md#field-level-validation)에 기술되어 있다.
+`Serializer` 서브클래스에 `.validate_<field_name>`  메서드를 추가해 사용자 정의 필드 수준 유효성 검사를 명시할 수 있다. [시리얼라이저 문서](serializers.md/#field-level-validation)에 기술되어 있다.
 
 ## Class-based
 클래스 기반 유효성 검사기를 작성하려면 `__call__` 메서드를 사용한다. 클래스 기반 유효성 검사기는 매개변수화와 재사용 동작을 허용하기 때문에 유용하다.

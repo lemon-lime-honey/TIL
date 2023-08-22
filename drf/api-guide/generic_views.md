@@ -245,63 +245,62 @@ Queryset이 채워졌다면 queryset의 직렬화된 표현을 응답 바디로 
 
 `post` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [CreateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#createmodelmixin)
-
+확장: [GenericAPIView](generic_views.md/#genericapiview), [CreateModelMixin](generic_views.md/#createmodelmixin)
 ### `ListAPIView`
 **모델 인스턴스의 모음**을 나타내기 위해 **읽기** 엔드포인트에 사용된다.
 
 `get` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [ListModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#listmodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [ListModelMixin](generic_views.md/#listmodelmixin)
 
 ### `RetrieveAPIView`
 **개별 모델 인스턴스**를 나타내기 위해 **읽기** 엔드포인트에 사용된다.
 
 `get` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [RetrieveModelMixin](generic_views.md/#retrievemodelmixin)
 
 ### `DestroyAPIView`
 **개별 모델 인스턴스**를 위한 **삭제** 엔드포인트에 사용된다.
 
 `delete` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [DestroyModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#destroymodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [DestroyModelMixin](generic_views.md/#destroymodelmixin)
 
 ### `UpdateAPIView`
 **개별 모델 인스턴스**를 위한 **갱신** 엔드포인트에 사용된다.
 
 `put`과 `patch` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [UpdateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#updatemodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [UpdateModelMixin](generic_views.md/#updatemodelmixin)
 
 ### `ListCreateAPIView`
 **모델 인스턴스의 모음**을 나타내기 위한 **읽기 및 쓰기** 엔드포인트에 사용된다.
 
 `get`과 `post` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [ListModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#listmodelmixin), [CreateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#createmodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [ListModelMixin](generic_views.md/#listmodelmixin), [CreateModelMixin](generic_views.md/#createmodelmixin)
 
 ### `RetrieveUpdateAPIView`
 **개별 모델 인스턴스**를 위한 **읽기 또는 갱신*** 엔드포인트에 사용된다.
 
 `get`, `put`, `patch` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin), [UpdateModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#updatemodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [RetrieveModelMixin](generic_views.md/#retrievemodelmixin), [UpdateModelMixin](generic_views.md/#updatemodelmixin)
 
 ### `RetrieveDestroyAPIView`
 **개별 모델 인스턴스**를 나타내기 위한 **읽기 또는 삭제** 엔드포인트에 사용된다.
 
 `get`과 `delete` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin), [DestroyModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#destroymodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [RetrieveModelMixin](generic_views.md/#retrievemodelmixin), [DestroyModelMixin](generic_views.md/#destroymodelmixin)
 
 ### `RetrieveUpdateDestroyAPIView`
 **개별 모델 인스턴스**를 나타내기 위한 **읽기, 쓰기, 삭제** 엔드포인트에 사용한다.
 
 `get`, `put`, `patch`, `delete` 메서드 핸들러를 제공한다.
 
-확장: [GenericAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#genericapiview), [RetrieveModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#retrievemodelmixin), [DestroyModelMixin](https://www.django-rest-framework.org/api-guide/generic-views/#destroymodelmixin)
+확장: [GenericAPIView](generic_views.md/#genericapiview), [RetrieveModelMixin](generic_views.md/#retrievemodelmixin), [DestroyModelMixin](generic_views.md/#destroymodelmixin)
 
 ## Customizing the generic views
 때로 존재하는 제네릭 뷰를 사용하고 싶지만 약간의 사용자 정의 동작을 사용하고 싶을 수 있다. 만약 여러 위치에서 사용자 정의 동작을 재사용한다면 필요에 따라 뷰 또는 뷰셋에 적용할 수 있도록 동작을 공통 클래스로 리팩토링할 수 있다.

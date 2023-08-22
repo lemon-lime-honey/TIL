@@ -162,14 +162,14 @@ permission_denied
 
 들어오는 요청이 부정확한 인증을 포함할 때 발생한다.
 
-기본적으로 이 예외는 HTTP 상태 코드 "401 Unauthenticated"를 가지는 응답을 결과로 가지지만, 사용하는 인증 스킴에 따라 "403 Forbidden" 응답이 되기도 한다. 자세한 사항은 [인증 문서](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/authentication.md)에서 확인할 수 있다.
+기본적으로 이 예외는 HTTP 상태 코드 "401 Unauthenticated"를 가지는 응답을 결과로 가지지만, 사용하는 인증 스킴에 따라 "403 Forbidden" 응답이 되기도 한다. 자세한 사항은 [인증 문서](authentication.md)에서 확인할 수 있다.
 
 ## NotAuthenticated
 **Signature**: `NotAuthenticated(detail=None, code=None)`
 
 인증되지 않은 요청이 권한 확인에 실패했을 때 발생한다.
 
-기본적으로 이 예외는 HTTP 상태 코드 "401 Unauthenticated"를 가지는 응답을 결과로 가지지만, 사용하는 인증 스킴에 따라 "403 Forbidden" 응답이 되기도 한다. 자세한 사항은 [인증 문서](https://github.com/lemon-lime-honey/TIL/blob/main/django/drf/authentication.md)에서 확인할 수 있다.
+기본적으로 이 예외는 HTTP 상태 코드 "401 Unauthenticated"를 가지는 응답을 결과로 가지지만, 사용하는 인증 스킴에 따라 "403 Forbidden" 응답이 되기도 한다. 자세한 사항은 [인증 문서](authentication.md)에서 확인할 수 있다.
 
 ## PermissionDenied
 **Signature**: `PermissionDenied(detail=None, code=None)`
