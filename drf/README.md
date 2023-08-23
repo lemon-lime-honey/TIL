@@ -33,6 +33,7 @@
 
 ## Topics
 - [Documenting your API](./topics/documenting.md)
+- [API Clients](./topics/clients.md)
 - [AJAX, CSRF & CORS](./topics/acc.md)
 - [HTML & Forms](./topics/htmlform.md)
 - [REST, Hypermedia & HATEOAS](./topics/rhh.md)
