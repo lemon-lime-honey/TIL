@@ -110,3 +110,47 @@ $ coreapi action users create --param username=example
 ```bash
 $ coreapi action users edit --string username=lime --date is_admin=true
 ```
+
+## Authentication & headers
+요청의 `Authentication:` 헤더를 관리하기 위해 `credentials` 명령어가 사용된다. 추가된 모든 자격은 언제나 특정 도메인에 연결되어 서로 다른 API 사이에 그 자격이 유출되지 않도록 한다.
+
+새 자격을 추가하기 위한 포맷은 다음과 같다:
+
+```bash
+$ coreapi credentials add <domain> <credentials string>
+```
+
+예시:
+
+```bash
+$ coreapi credentials add api.example.org "Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+```
+
+옵션으로 사용할 수 있는 `--auth` 플래그는 인증의 종류를 특정하여 추가해 인코딩을 처리할 수 있게 한다. 현재 사용 가능한 유일한 옵션은 `"basic"`이다. 예를 들어:
+
+```bash
+$ coreapi credentials add api.example.org tomchristie:foobar --auth basic
+```
+
+`headers` 명령어를 사용하여 요청 헤더를 구체적으로 추가할 수 있다:
+
+```bash
+$ coreapi headers add api.example.org x-api-version 2
+```
+
+`coreapi credentials --help` 또는 `coreapi headers --help`를 사용하면 더 많은 정보와 사용 가능한 하위 명령 리스트를 확인할 수 있다.
+
+## Codecs
+기본적으로 명령줄 클라이언트는 Core JSON 스키마를 읽기 위한 지원만을 포함하지만 추가적인 코덱을 설치하기 위한 플러그인 시스템 또한 포함하고 있다.
+
+```bash
+$ pip install openapi-codec jsonhyperschema-codec hal-codec
+$ coreapi codecs show
+Codecs
+corejson        application/vnd.coreapi+json encoding, decoding
+hal             application/hal+json         encoding, decoding
+openapi         application/openapi+json     encoding, decoding
+jsonhyperschema application/schema+json      decoding
+json            application/json             data
+text            text/*                       data
+```
