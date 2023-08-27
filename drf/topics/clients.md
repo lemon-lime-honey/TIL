@@ -154,3 +154,50 @@ jsonhyperschema application/schema+json      decoding
 json            application/json             data
 text            text/*                       data
 ```
+
+## Utilities
+명령줄 클라이언트는 기억할 수 있는 이름에 API URL을 북마크하는 기능을 가지고 있다. 예를 들어, 다음과 같이 존재하는 API를 북마크할 수 있다:
+
+```bash
+$ coreapi bookmarks add accountmanagement
+```
+
+API URL이 접근된 기록을 통해 이전 혹은 이후를 탐색하는 기능도 있다.
+
+```bash
+$ coreapi history show
+$ coreapi history back
+```
+
+`coreapi bookmarks --help` 또는 `coreapi history --help`를 사용하면 더 많은 정보와 사용 가능한 하위 명령 리스트를 확인할 수 있다.
+
+## Other commands
+현재 `Document`를 표시하려면:
+
+```bash
+$ coreapi show
+```
+
+네트워크에서 현재 `Documment`를 다시 로드하려면:
+
+```bash
+$ coreapi reload
+```
+
+디스크에서 스키마 파일을 로드하려면:
+
+```bash
+$ coreapi load my-api-schema.json --format corejson
+```
+
+콘솔에 주어진 포맷으로 현재 `Document`를 덤프하려면:
+
+```bash
+$ coreapi dump --format openapi
+```
+
+저장된 모든 기록과 자격, 헤더, 북마크와 함께 현재 `Document`를 삭제하려면:
+
+```bash
+$ coreapi clear
+```
