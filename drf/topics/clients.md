@@ -201,3 +201,74 @@ $ coreapi dump --format openapi
 ```bash
 $ coreapi clear
 ```
+
+# Python client library
+`coreapi` 파이썬 패키지는 지원되는 스키마 포맷을 노출하는 모든 API와 programmatically하게 상호작용할 수 있게 한다.
+
+## Getting started
+시작하기 전에 `pip`을 사용해 `coreapi` 패키지를 설치한다.
+
+```bash
+$ pip install coreapi
+```
+
+API 작업을 시작하려면 먼저 `Client` 인스턴스가 필요하다. 클라이언트는 API와 상호할 때 어떤 코덱과 전송이 지원되는지에 관한 설정을 가지고 있어 더 발전된 유형의 동작을 제공할 수 있게 한다.
+
+```python
+import coreapi
+client = coreapi.Client()
+```
+
+일단 `Client` 인스턴스를 가지게 되면 네트워크에서 API 스키마를 불러올 수 있다.
+
+```python
+schema = client.get('https://api.example.org/')
+```
+
+이 호출에서 반환되는 객체는 API 스키마를 나타내는 `Document` 인스턴스가 된다.
+
+## Authentication
+클라이언트를 인스턴스화할 때 인증 자격을 제공할 수 있다.
+
+### Token authentication
+`TokenAuthentication` 클래스는 Oauth와 JWT 스킴 뿐만이 아니라 REST framework의 빌트인 `TokenAuthentication`을 지원하기 위해 사용될 수 있다.
+
+```python
+auth = coreapi.auth.TokenAuthentication(
+    scheme='JWT',
+    token='<token>'
+)
+client = coreapi.Client(auth=auth)
+```
+
+TokenAuthentication을 사용할 때 CoreAPI 클라이언트를 사용하는 로그인 플로우를 구현할 수도 있다.
+
+이를 위해 제안되는 패턴으로는 초기에 "토큰 가져오기" 엔드포인트에 인증되지 않은 클라이언트 요청을 생성하는 것이 있다.
+
+예를 들어, "Django REST framework JWT" 패키지를 사용하는 경우:
+
+```python
+client = coreapi.Client()
+schema = client.get('https://api.example.org/')
+
+action = ['api-token-auth', 'create']
+params = {"username": "example", "password": "secret"}
+result = client.action(schema, action, params)
+
+auth = coreapi.auth.TokenAuthentication(
+    scheme='JWT',
+    token=result['token']
+)
+client = coreapi.Client(auth=auth)
+```
+
+### Basic authentication
+`BasicAuthentication` 클래스는 HTTP 기본 인증을 지원하기 위해 사용될 수 있다.
+
+```python
+auth = coreapi.auth.BasicAuthentication(
+    username='<username>',
+    password='<password>'
+)
+client = coreapi.Client(auth=auth)
+```
