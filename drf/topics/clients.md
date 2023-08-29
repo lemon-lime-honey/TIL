@@ -272,3 +272,74 @@ auth = coreapi.auth.BasicAuthentication(
 )
 client = coreapi.Client(auth=auth)
 ```
+
+## Interacting
+클라이언트가 있고, 스키마 `Document`를 불러왔으므로 API와의 상호작용을 시작할 수 있다:
+
+```python
+users = client.action(schema, ['users', 'list'])
+```
+
+어떤 엔드포인트는 선택 또는 필수 사항이 될 수 있는 명명된 파라미터를 가질 수 있다:
+
+```python
+new_user = client.action(schema, ['users', 'create'], params={"username": "max"})
+```
+
+## Codecs
+코덱은 문서 인코딩과 디코딩을 수행한다.
+
+디코딩 프로세스는 API 스키마 정의의 bytestring을 가져와 인터페이스를 나타내는 Core API 문서를 반환하는데 사용된다.
+
+코덱은 `'application/coreapi+json'`과 같이 특정 미디어 타입과 연관되어야 한다.
+
+이 미디어 타입은 응답에서 어떤 종류의 데이터가 반환되는지를 지시하기 위해 응답의 `Content-Type` 헤더의 서버에서 사용한다.
+
+### Configuring codecs
+사용할 수 있는 코덱은 클라이언트를 인스턴스화할 때 구성될 수 있다. 클라이언트의 맥락에서 코덱은 응답을 *디코딩*하기 위해서만 사용되기 때문에 여기서 사용되는 키워드 인자는 `decoders`이다.
+
+다음의 예시에서는 클라이언트가 오직 `Core JSON`과 `JSON` 응답만을 받도록 설정한다. 이는 Core JSON 스키마를 받고 디코딩할 수 있게 하며, 그 다음에 API에 대해 생성된 JSON 응답을 받을 수 있게 한다.
+
+```python
+from coreapi import codecs, Client
+
+decoders = [codecs.CoreJSONCodec(), codecs.JSONCodec()]
+client = Client(decoders=decoders)
+```
+
+### Loading and saving schemas
+존재하는 스키마 정의를 불러오고 결과 `Document`를 반환하기 위해 직접 코덱을 사용할 수 있다.
+
+```python
+input_file = open('my-api-schema.json', 'rb')
+schema_definition = input_file.read()
+codec = codecs.CoreJSONCodec()
+schema = codec.load(schema_definition)
+```
+
+`Document` 인스턴스가 주어졌을 때  스키마 정의를 생성하기 위해 직접 코덱을 사용할 수도 있다:
+
+```python
+schema_definition = codec.dump(schema)
+output_file = open('my-api-schema.json', 'rb')
+output_file.write(schema_definition)
+```
+
+## Transports
+전송은 네트워크 요청 생성을 수행한다. 클라이언트가 설치한 전송 집합은 어떤 네트워크 프로토콜이 지원 가능한지를 결정한다.
+
+현재 `coreapi` 라이브러리는 오직 HTTP/HTTPS 전송 만을 포함하지만 다른 프로토콜 또한 지원할 수 있다.
+
+### Configuring transports
+클라이언트가 인스턴스화될 때 사용되는 전송을 설정하여 네트워크 계층의 동작을 커스터마이즈 할 수 있다.
+
+```python
+import requests
+from coreapi import transports, Client
+
+credentials = {'api.example.org': 'Token 3bd44a009d16ff'}
+transports = transports.HTTPTransport(credentials=credentials)
+client = Client(transports=transports)
+```
+
+기본 `requests.Session` 인스턴스를 수정하여 나가는 요청을 수정하는 [전송 어댑터를 연결](http://docs.python-requests.org/en/master/user/advanced/#transport-adapters)하는 것과 같은 더 복잡한 커스터마이즈 또한 수행할 수 있다.
