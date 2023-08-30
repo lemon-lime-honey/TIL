@@ -343,3 +343,41 @@ client = Client(transports=transports)
 ```
 
 기본 `requests.Session` 인스턴스를 수정하여 나가는 요청을 수정하는 [전송 어댑터를 연결](http://docs.python-requests.org/en/master/user/advanced/#transport-adapters)하는 것과 같은 더 복잡한 커스터마이즈 또한 수행할 수 있다.
+
+# JavaScript Client Library
+자바스크립트 클라이언트 라이브러리를 통해 브라우저, 또는 노드를 사용하여 API와 상호작용할 수 있다.
+
+## Installing the JavaScript client
+자바스크립트 클라이언트 라이브러리를 사용하기 위해 두 개의 분리된 자바스크립트 리소스를 HTML 페이지에 포함해야 한다. 동적 클라이언트 라이브러리를 위한 코드를 포함하는 정적 `coreapi.js` 파일과 API 스키마를 노출시키는 템플릿화된 `schema.js` 리소스이다.
+
+먼저 API 문서 뷰를 설치한다. 이는 비동기 AJAX 호출을 할 필요 없이 스키마를 HTML 페이지에서 직접 불러올 수 있게 해주는 스키마 리소스를 포함한다.
+
+```python
+from rest_framework.documentation import include_docs_urls
+
+urlpatterns = [
+    ...
+    path('docs/', include_docs_urls(title='My API service'), name='api-docs')
+]
+```
+
+API 문서 URL이 설치되면 요구되는 자바스크립트 리소스를 둘 다 포함할 수 있게 된다. 스키마 불러오기가 `CoreAPI` 설치를 요구하기 때문에 이 두 줄의 순서가 중요하다.
+
+```html
+<!--
+  Load the CoreAPI library and the API schema.
+
+  /static/rest_framework/js/coreapi-0.1.1.js
+  /docs/schema.js
+-->
+{% load static %}
+<script src="{% static 'rest_framework/js/coreapi-0.1.1.js' %}"></script>
+<script src="{% url 'api-docs:schema-js' %}"></script>
+```
+
+`coreapi` 라이브러리와 `schema` 객체 둘 다 `window` 인스턴스에서 사용할 수 있게 된다.
+
+```javascript
+const coreapi = window.coreapi;
+const schema = window.schema;
+```
