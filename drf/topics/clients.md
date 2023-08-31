@@ -381,3 +381,123 @@ API 문서 URL이 설치되면 요구되는 자바스크립트 리소스를 둘 
 const coreapi = window.coreapi;
 const schema = window.schema;
 ```
+
+## Instantiating a client
+API와 상호작용하려면 클라이언트 인스턴스가 필요하다.
+
+```javascript
+var client = new coreapi.Client();
+```
+
+보통 클라이언트를 인스턴스화할 때 인증 자격을 부여한다.
+
+### Session authentication
+`SessionAuthentication` 클래스는 사용자 인증을 제공하기 위해 세션 쿠키를 허용한다. 사용자 로그인을 허용하고 세션 인증을 사용해 클라이언트를 인스턴스화하기 위해 표준 HTML 로그인 플로우를 제공할 수 있다.
+
+```javascript
+let auth = new coreapi.auth.SessionAuthentication({
+  csrfCookieName: 'csrftoken',
+  csrfHeaderName: 'X-CSRFToken',
+});
+let client = new coreapi.Client({auth: auth});
+```
+
+인증 스킴은 안전하지 않은 HTTP 메서드에 대한 나가는 요청에 CSRF 헤더를 포함하는 작업을 처리한다.
+
+### Token authentication
+`TokenAuthentication` 클래스는 OAuth와 JWT 스킴 뿐만이 아니라 REST framework의 빌트인 `TokenAuthentication`을 지원하기 위해 사용된다.
+
+```javascript
+let auth = new coreapi.auth.TokenAuthentication({
+  scheme: 'JWT',
+  token: '<token>',
+});
+let client = new coreapi.Client({auth: auth});
+```
+
+TokenAuthentication을 사용할 때 CoreAPI 클라이언트를 사용하는 로그인 플로우를 구현해야 할 수 있다.
+
+이를 위해 제안되는 패턴으로는 초기에 "토큰 가져오기" 엔드포인트에 인증되지 않은 클라이언트 요청을 생성하는 것이 있다.
+
+다음 예시에서는 "Django REST framework JWT" 패키지를 사용한다.
+
+```javascript
+// Setup some globally accessible state
+window.client = new coreapi.Client();
+window.loggedIn = false;
+
+function loginUser(username, password) {
+  let action = ["api-token-auth", "obtain-token"];
+  let params = {username: username, password: password};
+  client.action(schema, action, params).then(function(result) {
+    // On success, instantiate an authenticated client.
+    let auth = window.coreapi.auth.TokenAuthentication({
+      scheme: 'JWT',
+      token: result['token'],
+    })
+    window.client = coreapi.Client({auth: auth});
+    window.loggedIn = true;
+  }).catch(function (error) {
+    // Handle error case where eg. user provides incorrect credentials.
+  })
+}
+```
+
+### Basic authentication
+`BasicAuthentication` 클래스는 HTTP 기본 인증을 지원하기 위해 사용된다.
+
+```javascript
+let auth = new coreapi.auth.BasicAuthentication({
+  username: '<username>',
+  password: '<password>',
+})
+let client = new coreapi.Client({auth: auth});
+```
+
+## Using the client
+요청 생성:
+```javascript
+let action = ["users", "list"];
+client.action(schema, action).then(function(result) {
+  // Return value is in 'result'
+})
+```
+
+파라미터 포함:
+```javascript
+let action = ["users", "create"];
+let params = {username: "example", email: "example@example.com"};
+client.action(schema, action, params).then(function(result) {
+  // Return value is in 'result'
+})
+```
+
+오류 처리:
+```javascript
+client.action(schema, action, params).then(function(result) {
+  // Return value is in 'result'
+}).catch(function (error) {
+  // Error value is in 'error'
+})
+```
+
+## Installation with node
+NPM으로 coreapi 패키지를 설치할 수 있다.
+
+```bash
+$ npm install coreapi
+$ node
+const coreapi = require('coreapi')
+```
+
+`schema.js` 리소스에서 복사해 코드베이스에 직접 API 스키마를 포함시키거나 비동기로 스키마를 불러올 수 있다. 예를 들어:
+
+```javascript
+let client = new coreapi.Client();
+let schema = null;
+client.get("https://api.example.org/").then(funciton(data) {
+  // Load a CoreJSON API schema.
+  schema = data;
+  console.log('schema loaded');
+})
+```
