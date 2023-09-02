@@ -37,4 +37,5 @@
 - [Internationalization](./topics/internationalization.md)
 - [AJAX, CSRF & CORS](./topics/acc.md)
 - [HTML & Forms](./topics/htmlform.md)
+- [Browser Enhancements](./topics/enhancements.md)
 - [REST, Hypermedia & HATEOAS](./topics/rhh.md)
