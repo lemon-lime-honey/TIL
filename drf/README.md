@@ -38,4 +38,5 @@
 - [AJAX, CSRF & CORS](./topics/acc.md)
 - [HTML & Forms](./topics/htmlform.md)
 - [Browser Enhancements](./topics/enhancements.md)
+- [The Browsable API](./topics/browsable.md)
 - [REST, Hypermedia & HATEOAS](./topics/rhh.md)
