@@ -87,7 +87,7 @@ urlpatterns = [
 ]
 ```
 
-자세한 내용은 Django의 [URL namespaces 문ㅅ허](https://docs.djangoproject.com/en/4.0/topics/http/urls/#url-namespaces)와 [`include` API 레퍼런스](https://docs.djangoproject.com/en/4.0/ref/urls/#include)를 참조한다.
+자세한 내용은 Django의 [URL namespaces 문서](https://docs.djangoproject.com/en/4.0/topics/http/urls/#url-namespaces)와 [`include` API 레퍼런스](https://docs.djangoproject.com/en/4.0/ref/urls/#include)를 참조한다.
 
 ---
 
