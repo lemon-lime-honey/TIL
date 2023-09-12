@@ -12,3 +12,4 @@
 
 ## LeetCode
 - [Medium](leetcode/medium/README.md)
+- [Hard](leetcode/hard/README.md)
