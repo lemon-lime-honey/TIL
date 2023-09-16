@@ -40,3 +40,6 @@
 - [Browser Enhancements](./topics/enhancements.md)
 - [The Browsable API](./topics/browsable.md)
 - [REST, Hypermedia & HATEOAS](./topics/rhh.md)
+
+## Tutorial
+- [Quickstart](./tutorial/quickstart.md)
