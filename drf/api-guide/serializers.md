@@ -1,16 +1,17 @@
 # [Serializers](https://www.django-rest-framework.org/api-guide/serializers/)
 ```
-우리는 시리얼라이저의 유용함을 확장하는 것에 관해 다루고자 한다.
-하지만 이것은 사소한 문제가 아니며, 심도 있는 디자인 작업을 필요로 한다.
+시리얼라이저의 유용함을 확장하는 것에 관해 다루고자 한다.
+그런데 이것은 쉬운 문제가 아니며, 심도 깊은 설계 작업을 요구한다.
+
 - Russell Keith-Magee, Django users group
 ```
 
-시리얼라이저는 queryset과 모델 인스턴스와 같은 복잡한 데이터를 `JSON`이나 `XML` 또는 다른 컨텐츠 유형으로 쉽게 렌더링할 수 있는 네이티브 파이썬 자료형으로 변환할 수 있게 한다. 시리얼라이저는 들어오는 데이터가 처음 유효성 검증이 된 후 파싱된 데이터를 다시 복잡한 유형으로 변환하게 해주는 deserialization 또한 제공한다.
+시리얼라이저는 queryset과 모델 인스턴스와 같은 복잡한 데이터를 `JSON`이나 `XML` 또는 다른 컨텐츠 타입으로 쉽게 렌더링할 수 있는 파이썬 네이티브 자료형으로 변환할 수 있게 한다. 시리얼라이저는 들어오는 데이터가 처음으로 유효성 검증이 된 후 파싱된 데이터를 다시 복잡한 유형으로 변환하게 해주는 역직렬화 또한 제공한다.
 
-REST framework의 시리얼라이저는 Django의 `Form`과 `ModelForm` 클래스와 매우 유사하게 동작한다. 모델 인스턴스와 queryset을 다루는 시리얼라이저를 생성하는 유용한 지름길을 제공하는 `ModelSerializer` 뿐만 아니라 응답 결과를 제어하는 강력하고 generic한 방법을 제공하는 `Serializer` 클래스가 제공된다.
+REST framework의 시리얼라이저는 Django의 `Form`과 `ModelForm` 클래스와 매우 유사하게 동작한다. 모델 인스턴스와 queryset을 다루는 시리얼라이저를 생성하는 유용하지만 쉽고 빠른 방법을 제공하는 `ModelSerializer` 뿐만 아니라 응답 결과물을 제어하는 강력하고 제네릭한 방법을 제공하는 `Serializer` 클래스가 제공된다.
 
 ## Declaring Serializers
-예시 목적으로 사용할 만한 단순한 객체를 만드는 것부터 시작한다.
+예시 목적으로 사용할 만한 단순한 객체를 만드는 것부터 시작한다:
 
 ```python
 from datetime import datetime
@@ -19,14 +20,14 @@ class Comment:
     def __init__(self, email, content, created=None):
         self.email = email
         self.content = content
-        self.created = created of datetime.now()
+        self.created = created or datetime.now()
 
 comment = Comment(email='example@example.com', content='foo bar')
 ```
 
-`Comment` 객체에 대응하는 데이터를 serialize하고 deserialize 할 때 사용할 수 있는 시리얼라이저를 선언한다.
+`Comment` 객체에 대응하는 데이터를 직렬화, 역직렬화 할 때 사용할 수 있는 시리얼라이저를 선언한다.
 
-시리얼라이저 선언은 폼 선언과 매우 유사하다.
+시리얼라이저 선언은 폼 선언과 매우 유사하다:
 
 ```python
 from rest_framework import serializers
@@ -38,7 +39,7 @@ class CommentSerializer(serializers.Serializer):
 ```
 
 ## Serializing objects
-이제 댓글이나 댓글 목록을 serialize하기 위해 `CommentSerializer`를 사용할 수 있다. 다시 언급하지만, `Serializer` 클래스를 사용하는 것은 `Form` 클래스를 사용하는 것과 많이 유사하다.
+이제 댓글이나 댓글 목록을 직렬화하기 위해 `CommentSerializer`를 사용할 수 있다. 다시 언급하지만, `Serializer` 클래스를 사용하는 것은 `Form` 클래스를 사용하는 것과 많이 유사하다.
 
 ```python
 serializer = CommentSerializer(comment)
@@ -46,7 +47,7 @@ serializer.data
 # {'email': 'example@example.com', 'content': 'foo bar', 'created': '2023-06-29 20:11:22.458258'}
 ```
 
-이 지점에서 모델 인스턴스를 파이썬 네이티브 자료형으로 번역했다. Serialization 과정을 마치려면 데이터를 `json`으로 렌더링 해야 한다.
+이 지점에서 모델 인스턴스를 파이썬 네이티브 자료형으로 변환했다. 직렬화 과정을 마치려면 데이터를 `json`으로 렌더링 해야 한다.
 
 ```python
 from rest_framework.renderers import JSONRenderer
@@ -57,7 +58,7 @@ json
 ```
 
 ## Deserializing objects
-Deserialization 또한 유사하다. 먼저 스트림을 파이썬 네이티브 자료형으로 파싱한다.
+역직렬화 또한 유사하다. 먼저 스트림을 파이썬 네이티브 자료형으로 파싱한다.
 
 ```python
 import io
@@ -67,7 +68,7 @@ stream = io.BytesIO(json)
 data = JSONParser().parse(stream)
 ```
 
-그 다음 네이티브 자료형을 유효성 검사된 데이터의 딕셔너리로 복구한다.
+그 다음 네이티브 자료형을 유효성을 검증한 데이터의 딕셔너리로 복구한다.
 
 ```python
 serializer = CommentSerializer(data=data)
@@ -109,39 +110,39 @@ def update(self, instance, validated_data):
     return instance
 ```
 
-이제 데이터를 deserialize할 때 유효성이 검증된 데이터에 기반한 객체 인스턴스를 반환하기 위해 `.save()`를 호출할 수 있다.
+이제 데이터를 역직렬화할 때 유효성을 검증한 데이터에 기반한 객체 인스턴스를 반환하기 위해 `.save()`를 호출할 수 있다.
 
 ```python
 comment = serializer.save()
 ```
 
-`.save()`를 호출하면 시리얼라이저 클래스를 초기화할 때 존재하는 인스턴스를 전달했는지의 여부에 따라 새로운 인스턴스를 생성하거나 이미 존재하는 인스턴스를 갱신한다.
+`.save()`를 호출하면 시리얼라이저 클래스를 초기화할 때 존재하는 인스턴스를 전달했는지 여부에 따라 새로운 인스턴스를 생성하거나 이미 존재하는 인스턴스를 갱신한다.
 
 ```python
-# .save() will create a new instance.
+# .save()가 새 인스턴스를 생성한다.
 serializer = CommentSerializer(data=data)
 
-# .save() will update the existing `comment` instance.
+# .save()가 존재하는 `comment` 인스턴스를 생신한다.
 serializer = CommentSerializer(comment, data=data)
 ```
 
-`.create()` 와 `.update()`는 모두 선택적인 메서드이다. 시리얼라이저 클래스의 용도에 따라 전부 다, 혹은 하나만 구현하거나 아무것도 구현하지 않을 수 있다.
+`.create()` 와 `.update()`는 모두 선택 메서드이다. 시리얼라이저 클래스의 용도에 따라 전부 다, 혹은 하나만 구현하거나 아무것도 구현하지 않을 수 있다.
 
 ### Passing additional attributes to `.save()`
-인스턴스를 저장하는 시점에 추가 데이터를 삽입할 수 있도록 뷰 코드를 작성할 수 있다. 이 추가 데이터는 현재 사용자, 현재 시각, 또는 요청 데이터에 포함되지 않은 어떤 내용과 같은 정보를 포함할 수 있다.
+인스턴스를 저장하는 시점에 추가 데이터를 삽입할 수 있도록 뷰 코드를 작성할 수 있다. 이 추가 데이터는 현재 사용자, 현재 시각, 또는 요청 데이터에 포함되지 않은 어떤 내용 같은 정보를 포함할 수 있다.
 
-`.save()`를 호출할 때 추가적인 키워드 인자를 포함하면 그렇게 할 수 있다. 예를 들면:
+`.save()`를 호출할 때 추가 키워드 인자를 포함하면 그렇게 할 수 있다. 예를 들면:
 
 ```python
 serializer.save(owner=request.user)`
 ```
 
-모든 추가적인 키워드 인자는 `.create()` 혹은 `.update()`가 호출되었을 때 `validated_data` 인자에 포함된다.
+모든 추가 키워드 인자는 `.create()` 혹은 `.update()`가 호출되었을 때 `validated_data` 인자에 포함된다.
 
 ### Overriding `.save()` directly.
-`.create()`와 `.update()`라는 이름이 의미있지 않은 경우가 있다. 예를 들어 연락 폼으로 새 인스턴스를 생성하는 대신 이메일이나 다른 메시지를 송신할 것이다.
+`.create()`와 `.update()`라는 이름이 의미 없는 경우가 있다. 예를 들어 연락 폼에서 새로운 인스턴스를 생성하지 않는 대신 이메일이나 다른 메시지를 보낼 수 있다.
 
-이런 경우 좀 더 가독성 있고 의미를 가지도록 `.save()`를 직접 override할 수 있다.
+이런 경우 좀 더 가독성이 좋고 의미를 가지도록 `.save()`를 직접 재정의할 수 있다.
 
 예를 들면:
 
@@ -159,7 +160,7 @@ class ContactForm(serializers.Serializer):
 위의 경우 시리얼라이저의 `.validated_data` 속성에 직접 접근해야 한다는 점에 유의한다.
 
 ## Validation
-데이터를 deserialize할 때, 유효성이 검증된 데이터에 접근하려 하거나 객체 인스턴스를 저장하기 전에 꼭 `is_calid()`를 호출해야 한다. 유효성 오류가 발생하면 `.errors` 속성이 에러 메시지를 표현하는 딕셔너리를 포함하게 된다. 예를 들어:
+데이터를 역직렬화할 때, 유효성을 검증한 데이터에 접근하려 하거나 객체 인스턴스를 저장하기 전에 꼭 `is_valid()`를 호출해야 한다. 유효성 오류가 발생하면 `.errors` 속성이 에러 메시지를 표현하는 딕셔너리를 포함하게 된다. 예를 들어:
 
 ```python
 serializer = CommentSerializer(data={'email': 'foobar', 'content': 'baz'})
@@ -171,15 +172,15 @@ serializer.errors
 
 딕셔너리 안의 각각의 키는 필드명이 되고, 그 값은 해당하는 필드에 대응하는 에러 메시지 문자열의 리스트가 된다. `non_field_errors` 키 또한 존재할 수 있으며, 일반적인 유효성 오류를 나열할 것이다. REST framework 설정에서 `NON_FIELD_ERRORS_KEY`를 사용해 `non_field_errors` 키의 이름을 변경할 수 있다.
 
-아이템 리스트를 deserialize할 때에는 각각의 deserialize된 아이템을 나타내는 딕셔너리의 리스트로 에러가 반환된다.
+아이템 리스트를 역직렬화할 때에는 각각의 역직렬화된 아이템을 나타내는 딕셔너리의 리스트로 에러가 반환된다.
 
 ### Raising an exception on invalid data
 `.is_valid()` 메서드는 유효성 오류가 있을 때 `serializers.ValidationError` 예외를 발생시키기 위한 선택적인 `raise_exception` 플래그를 가진다.
 
-이러한 예외들은 REST framework가 제공하는 기본 예외 핸들러에 의해 자동으로 다루어지며, 기본으로 `HTTP 400 Bad Request` 응답을 반환한다.
+이러한 예외들은 REST framework가 제공하는 기본 예외 처리기에 의해 자동으로 다루어지며, 기본적으로 `HTTP 400 Bad Request` 응답을 반환한다.
 
 ```python
-# Return a 400 response if the data was invalid.
+# 데이터가 유효하지 않은 경우 400 응답을 반환한다.
 serializer.is_valid(raise_exception=True)
 ```
 
@@ -199,18 +200,21 @@ class BlogPostSerializer(serializers.Serializer):
 
     def validate_title(self, value):
         """
-        Check that the blog post is about Django.
+        블로그 게시글이 Django에 관한 것인지 확인한다.
         """
         if 'django' not in value.lower():
             raise serializers.ValidationError("Blog post is not about Django")
         return value
 ```
 
-- **Note**<br>
-  만약 `<field_name>`이 `required=False` 인자와 함께 시리얼라이저에서 선언되었다면 해당 필드가 포함되지 않았을 때 이 유효성 검증 단계는 생략될 것이다.
+---
+
+**Note**: 만약 `<field_name>`이 `required=False` 인자가 있는 상태로 시리얼라이저에서 선언되었다면 해당 필드가 포함되지 않았을 때 이 유효성 검증 단계는 생략될 것이다.
+
+---
 
 ### Object-level validation
-유효성 검사가 복수의 필드에 접근하는 것을 요구한다면, `Serializer` 서브클래스에 `.validate()` 메서드를 추가한다. 이 메서드는 필드 값의 딕셔너리인 하나의 인자를 가진다. 필요하다면 `serializers.ValidationError`를 발생시키거나 유효성이 검증된 값을 반환한다. 예를 들면:
+유효성 검사가 복수의 필드에 접근해야 한다면 `Serializer` 서브클래스에 `.validate()` 메서드를 추가한다. 이 메서드는 필드 값의 딕셔너리인 하나의 인자를 가진다. 필요하다면 `serializers.ValidationError`를 발생시키거나 유효한 값을 반환한다. 예를 들어:
 
 ```python
 from rest_framework import serializers
@@ -222,7 +226,7 @@ class EventSerializer(serializers.Serializer):
 
     def validate(self, data):
         """
-        Check that start is before finish.
+        `start`가 `finish` 이전인지 확인한다.
         """
         if data['start'] > data['finish']:
             raise serializers.ValidationError("finish must occur after start")
@@ -230,7 +234,7 @@ class EventSerializer(serializers.Serializer):
 ```
 
 ### Validators
-시리얼라이저에 있는 각각의 필드는 다음과 같이 필드 인스턴스에서 validator를 선언해 포함할 수 있다.
+시리얼라이저에 있는 각각의 필드는 다음과 같이 필드 인스턴스에서 유효성 검사기를 선언해 포함할 수 있다.
 
 ```python
 def multiple_of_ten(value):
@@ -242,7 +246,7 @@ class GameRecord(serializers.Serializer):
     ...
 ```
 
-시리얼라이저 클래스는 필드 테이터의 온전한 세트에 적용되는 재사용 가능한 validator를 포함할 수 있다. 이러한 validator는 다음과 같이 내부의 `Meta` 클래스에서 선언하여 포함될 수 있다.
+시리얼라이저 클래스는 필드 테이터의 완전한 집합에 적용되는 재사용 가능한 유효성 검사기를 포함할 수 있다. 이러한 유효성 검사기는 다음과 같이 내부의 `Meta` 클래스에서 선언하여 포함될 수 있다.
 
 ```python
 class EventSerializer(serializers.Serializer):
@@ -251,7 +255,7 @@ class EventSerializer(serializers.Serializer):
     date = serializers.DateField()
 
     class Meta:
-        # Each room only has one event per day.
+        # 각 방은 하루에 단 하나의 이벤트를 가질 수 있다.
         validators = [
             UniqueTogetherValidator(
                 queryset=Event.objects.all(),
@@ -260,7 +264,7 @@ class EventSerializer(serializers.Serializer):
         ]
 ```
 
-더 많은 정보는 [validators 문서](validators.md)에서 확인할 수 있다.
+더 많은 정보는 [유효성 검사기 문서](validators.md)에서 확인할 수 있다.
 
 ## Accessing the initial data and instance
 초기 객체나 queryset을 시리얼라이저 인스턴스로 전달할 때 객체는 `.instance`로 사용 가능하게 된다. 초기 객체가 전달되지 않았다면 `.instance` 속성은 `None`이 된다.
@@ -272,14 +276,14 @@ class EventSerializer(serializers.Serializer):
 기본적으로 시리얼라이저에는 모든 필수 필드를 위한 값이 전달되어야 하며, 그렇지 않을 경우 유효성 검사 오류가 발생한다. 부분 갱신을 하려면 `partial` 인자를 사용하면 된다.
 
 ```python
-# Update `comment` with partial data
+# 일부 데이터로 `comment` 갱신하기
 serializer = CommentSerializer(comment, data={'content': 'foo bar'}, partial=True)
 ```
 
 ## Dealing with nested objects
 이전 예시는 단순한 데이터 타입만을 가지는 객체를 다루는 데에는 괜찮았지만 때로 객체의 속성이 문자열, 날짜 또는 정수와 같은 단순한 데이터 타입이 아닌 좀 더 복잡한 객체를 나타낼 수 있어야 한다.
 
-`Serializer` 클래스는 그 스스로 `Field`의 유형이며, 하나의 객체 유형이 다른 객체 안에 중첩된 관계를 나타내는데 사용될 수 있다.
+`Serializer` 클래스는 그 스스로 `Field`의 유형이며, 하나의 객체 타입이 다른 객체 안에 중첩된 관계를 나타내는데 사용될 수 있다.
 
 ```python
 class UserSerializer(serializers.Serializer):
@@ -296,7 +300,7 @@ class CommentSerializer(serializers.Serializer):
 
 ```python
 class CommentSerializer(serializers.Serializer):
-    user = UserSerializer(required=False) # May be an anonymous user.
+    user = UserSerializer(required=False) # 익명의 사용자일 수도 있다.
     content = serializers.CharField(max_length=200)
     created = serializers.DateTimeField()
 ```
@@ -306,13 +310,13 @@ class CommentSerializer(serializers.Serializer):
 ```python
 class CommentSerializer(serializers.Serializer):
     user = UserSerializer(required=False)
-    edits = EditItemSerializer(many=True) # A nested list of 'edit' items.
+    edits = EditItemSerializer(many=True) # 'edit' 항목의 중첩된 리스트
     content = serializers.CharField(max_length=200)
     created = serializers.DateTimeField()
 ```
 
 ## Writable nested representations
-데이터 deserialize를 지원하는 중첩된 표현을 다룰 때, 중첩된 객체에 관한 어느 오류라도 중첩된 객체의 필드명 아래 중첩될 것이다.
+데이터 역직렬화를 지원하는 중첩된 표현을 다룰 때, 중첩된 객체에 관한 모든 오류는 중첩된 객체의 필드명 아래 중첩된다.
 
 ```python
 serializer = CommentSerializer(data={'user': {'email': 'foobar', 'username': 'doe'}, 'content': 'baz'})
@@ -322,7 +326,7 @@ serializer.errors
 # {'user': {'email': ['Enter a valid e-mail address']}, 'created': ['This field is required.']}
 ```
 
-이와 유사하게, `.validated_data`속성이 중첩된 자료 구조에 포함될 것이다.
+이와 유사하게, `.validated_data`속성이 중첩된 자료 구조에 포함된다.
 
 ### Writing `.create()` methods for nested representations
 작성 가능한 중첩된 표현을 지원해야 한다면, 복수 객체 저장을 다루는 `.create()` 혹은 `.update()` 메서드를 작성해야 한다.
@@ -358,8 +362,8 @@ class UserSerializer(serializers.ModelSerializer):
 ```python
 def update(self, instance, validated_data):
     profile_data = validated_data.pop('profile')
-    # Unless the application properly enforces that this field is
-    # always set, the following could raise a `DoesNotExist`, which would need to be handled.
+    # 애플리케이션이 이 필드가 언제나 설정되어 있다는 것을 적절히 보장하지 않는다면
+    # 다음은 `DoesNotExist`를 발생시켜야 하며, 이는 처리될 필요가 있다.
     profile = instance.profile
 
     instance.username = validated_data.get('username', instance.username)
@@ -384,7 +388,7 @@ def update(self, instance, validated_data):
 그러나 자동으로 작성 가능한 중첩된 표현을 지원하는 [DRF Writable Nested](serializers.md/#drf-writable-nested)와 같은 서드파티 패키지를 사용할 수 있다.
 
 ### Handling saving related instances in model manager classes
-시리얼라이저에서 복수의 연관된 인스턴스를 저장하는 다른 방법은 정확한 인스턴스 생성을 다루는 사용자 정의 모델 매니저 클래스를 작성하는 것이다.
+시리얼라이저에서 복수의 연관된 인스턴스를 저장하는 다른 방법은 올바른 인스턴스 생성을 다루는 사용자 정의 모델 매니저 클래스를 작성하는 것이다.
 
 예를 들어 `User` 인스턴스와 `Profile` 인스턴스가 언제나 한 쌍으로 같이 생성되게 해야 한다고 해보자. 다음과 같은 사용자 정의 클래스를 작성할 수 있다.
 
@@ -404,7 +408,7 @@ class UserManager(models.Manager):
         return user
 ```
 
-이제 매니저 클래스는 사용자 인스턴스와 프로필 인스턴스가 언제나 같은 시간에 생성하는 것을 더 멋지게 캡슐화한다. 이제 새 매니저 메서드를 사용하기 위해 시리얼라이저의 `.create()` 메서드를 재작성한다.
+이제 매니저 클래스는 사용자 인스턴스와 프로필 인스턴스가 항상 같이 생성되는 것을 더 좋게 캡슐화한다. 이제 새 매니저 메서드를 사용하기 위해 시리얼라이저의 `.create()` 메서드를 재작성한다.
 
 ```python
 def create(self, validated_data):
