@@ -423,10 +423,10 @@ def create(self, validated_data):
 이 접근에 관한 자세한 사항은 [모델 매니저에 관한 Django 문서](https://docs.djangoproject.com/en/stable/topics/db/managers/)와 [모델과 매니저 클래스를 사용하는 법에 관한 블로그](https://www.dabapps.com/blog/django-models-and-encapsulation/)에서 확인할 수 있다.
 
 ## Dealing with multiple objects
-`Serializer` 클래스는 객체 리스트의 serialization이나 deserialization 또한 다룰 수 있다.
+`Serializer` 클래스는 객체 리스트의 직렬화나 역직렬화 또한 다룰 수 있다.
 
 ### Serializing multiple objects
-하나의 객체 인스턴스 대신 queryset이나 객체 리스트를 serialize하려면 시리얼라이저를 초기화할 때 `many=True` 플래그를 전달해야 한다. 그 다음 serialize 되어야 할 queryset이나 객체 리스트를 전달할 수 있다.
+하나의 객체 인스턴스 대신 queryset이나 객체 리스트를 직렬화하려면 시리얼라이저를 초기화할 때 `many=True` 플래그를 전달해야 한다. 그러면 직렬화 되어야 할 queryset이나 객체 리스트를 전달할 수 있다.
 
 ```python
 queryset = Book.objects.all()
@@ -440,10 +440,10 @@ serializer.data
 ```
 
 ### Deseiralizing multiple objects
-복수의 개체를 deserialize하는 기본 동작은 복수의 개체 생성을 지원하지만 복수의 개체 갱신은 지원하지 않는 것이다. 이런 경우를 어떻게 지원할지, 혹은 어떻게 커스터마이즈를 할지에 관한 정보는 아래의 [ListSerializer](serializers.md/#listserializer) 문서에서 확인할 수 있다.
+복수의 개체를 역직렬화하는 기본 동작은 복수의 개체 생성을 지원하지만 복수의 개체 갱신은 지원하지 않는 것이다. 이런 경우를 어떻게 지원할지, 혹은 어떻게 커스터마이즈를 할지에 관한 정보는 아래의 [ListSerializer](#listserializer) 문서에서 확인할 수 있다.
 
 ## Including extra context
-Serialize 되는 객체에 더해 추가적인 컨텍스트를 시리얼라이저에 제공해야 하는 경우가 있다. 흔한 경우 중 하나는 적절하게 온전히 작동하는 URL을 생성할 수 있도록 시리얼라이저가 현재 요청에 접근하게 하는 것을 필요로 하는 하이퍼링크된 관계를 포함하는 시리얼라이저를 사용할 때이다.
+직렬화 되는 객체에 더해 추가적인 컨텍스트를 시리얼라이저에 제공해야 하는 경우가 있다. 흔한 경우 중 하나는 적절하게 온전히 작동하는 URL을 생성할 수 있도록 시리얼라이저가 현재 요청에 접근하게 하는 것을 필요로 하는 하이퍼링크된 관계를 포함하는 시리얼라이저를 사용할 때이다.
 
 시리얼라이저를 초기화할 때 `context` 인자를 전달해 임의의 추가적인 컨텍스트를 제공할 수 있다. 예를 들면:
 
@@ -453,7 +453,7 @@ serializer.data
 # {'id': 6, 'owner': 'lemon-lime-honey', 'created': datetime.datetime(2023, 7, 3, 21, 35, 47, 413287), 'details': 'https://github.com/lemon-lime-honey'}
 ```
 
-컨텍스트 딕셔너리는 `self.context` 속성에 접근해 사용자 정의 `.to_representation()` 메서드와 같은 어느 시리얼라이저 필드 로직에서도 사용될 수 있다.
+컨텍스트 딕셔너리는 `self.context` 속성에 접근해 사용자 정의 `.to_representation()` 메서드와 같은 모든 시리얼라이저 필드 로직에서도 사용될 수 있다.
 
 # ModelSerializer
 Django 모델 정의와 유사한 시리얼라이저 클래스를 작성할 수도 있다.
@@ -466,7 +466,7 @@ Django 모델 정의와 유사한 시리얼라이저 클래스를 작성할 수�
 - unique_together 유효성 검사기와 같은 시리얼라이저를 위한 유효성 검사기를 자동으로 생성한다.
 - 기본으로 `.create()`와 `.update()`의 단순한 구현을 포함한다.
 
-`ModelSerializer`를 선언하는 것은 이렇다.
+`ModelSerializer`를 선언하는 것은 다음과 같다:
 
 ```python
 class AccountSerializer(serializers.ModelSerializer):
@@ -495,7 +495,7 @@ AccountSerializer():
 ```
 
 ## Specifying which fields to include
-모델 시리얼라이저에 사용될 기본 필드의 일부 만을 사용하고 싶다면, `ModelForm`에서 했던 것처럼 `fields`나 `exclude` 옵션을 사용하면 된다. `fields` 속성을 사용해 serialize되어야 할 모든 필드를 명시적으로 설정하는 것을 강력히 권고한다. 이는 모델이 변경되었을 때 의도치 않게 데이터가 노출될 확률을 줄일 수 있다.
+모델 시리얼라이저에 사용될 기본 필드의 일부 만을 사용하고 싶다면, `ModelForm`에서 했던 것처럼 `fields`나 `exclude` 옵션을 사용하면 된다. `fields` 속성을 사용해 직렬화되어야 할 모든 필드를 명시적으로 설정하는 것을 강력히 권고한다. 이는 모델이 변경되었을 때 의도치 않게 데이터가 노출될 확률을 줄일 수 있다.
 
 예를 들면:
 
@@ -506,7 +506,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = ['id', 'account_name', 'users', 'created']
 ```
 
-`fields` 속성에 모델의 모든 필드가 사용되어야 한다는 것을 표시하기 위한 특별 값 `'__all__'`을 설정해도 된다.
+`fields` 속성에 모델의 모든 필드가 사용되어야 한다는 것을 표시하기 위한 특수 값 `'__all__'`을 설정해도 된다.
 
 예를 들면:
 
@@ -528,7 +528,7 @@ class AccountSerializer(serializers.ModelSerializer):
         exclude = ['users']
 ```
 
-위의 예시에서 `Account` 모델이 `account_name`, `users`, `created`라는 세 개의 필드를 가진다면 필드 `account_name`과 `created`가 serialize되는 결과가 나올 것이다.
+위의 예시에서 `Account` 모델이 `account_name`, `users`, `created`라는 세 개의 필드를 가진다면 필드 `account_name`과 `created`가 직렬화되는 결과가 나올 것이다.
 
 `fields`와 `excludes` 속성 안의 이름은 보통 모델 클래스의 모델 필드에 매핑된다.
 
@@ -547,12 +547,12 @@ class AccountSerializer(serializers.ModelSerialzer):
         depth = 1
 ```
 
-`depth` 옵션은 납작한 표현으로 되돌아 가기 전에 지나야 할 관계의 깊이를 나타내는 정수 값으로 설정되어야 한다.
+`depth` 옵션은 평평한 표현으로 되돌아 가기 전에 지나야 할 관계의 깊이를 나타내는 정수 값으로 설정되어야 한다.
 
-Serialization이 되는 방식을 커스터마이즈하고 싶다 해도 필드를 직접 정의할 필요는 없다.
+직렬화 되는 방식을 수정하고 싶다 해도 필드를 직접 정의할 필요는 없다.
 
 ## Specifying fields explicitly
-`ModelSerializer`에 추가 필드를 더하거나, `Serializer` 클래스에서처럼 클래스 내의 필드를 선언해 기본 필드를 override할 수 있다.
+`ModelSerializer`에 추가 필드를 더하거나, `Serializer` 클래스에서처럼 클래스 내의 필드를 선언해 기본 필드를 재정의할 수 있다.
 
 ```python
 class AccountSerializer(serializers.ModelSerializer):
@@ -581,18 +581,21 @@ class AccountSerializer(serializers.ModelSerializer):
 
 `editable=False` 설정을 가진 모델 필드나 `AutoField` 필드는 기본적으로 읽기 전용으로 설정될 것이며, `read_only_fields` 옵션에 추가될 필요가 없다.
 
-- **Note**: <br>
-  읽기 전용 필드가 모델 수준에서 `unique_together` 제한의 일부인 특수한 경우가 있다. 이 경우, 제한 조건을 충족시키기 위해 해당 필드가 시리얼라이저 클래스에서 요구되지만, 동시에 사용자에 의해 수정되어서는 안 된다.
+---
 
-  이를 다루는 방법은 시리얼라이저에서 `read_only=True`와 `default=...` 키워드 인자를 제공하며 필드를 명시하는 것이다.
+**Note**: 읽기 전용 필드가 모델 수준에서 `unique_together` 제한의 일부인 특수한 경우가 있다. 이 경우, 제한 조건을 충족시키기 위해 해당 필드가 시리얼라이저 클래스에서 요구되지만, 동시에 사용자에 의해 수정되어서는 안 된다.
 
-  한 가지 예시는 다른 식별자와 `unique_together`인 현재 인증된 `User`의 읽기 전용 관계이다. 이 경우 사용자 필드를 다음과 같이 선언한다.
+이를 다루는 방법은 시리얼라이저에서 `read_only=True`와 `default=...` 키워드 인자를 제공하며 필드를 명시하는 것이다.
 
-  ```python
-  user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-  ```
+한 가지 예시는 다른 식별자와 `unique_together`인 현재 인증된 `User`의 읽기 전용 관계이다. 이 경우 사용자 필드를 다음과 같이 선언한다.
 
-  [UniqueTogetherValidator](validators.md/#uniquetogethervalidator)와 [CurrentUserDefault](validators.md/#currentuserdefault) 클래스에 관한 자세한 내용은 [Validators 문서](validators.md)에서 확인할 수 있다.
+```python
+user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+```
+
+[UniqueTogetherValidator](validators.md/#uniquetogethervalidator)와 [CurrentUserDefault](validators.md/#currentuserdefault) 클래스에 관한 자세한 내용은 [유효성 검사기 문서](validators.md)에서 확인할 수 있다.
+
+---
 
 ## Additional keyword arguments
 `extra_kwargs` 옵션을 사용해 필드의 임의의 키워드 인자를 명시할 수 있는 방법이 있다. `read_only_fields`의 경우처럼 이는 시리얼라이저에 필드를 명시적으로 선언하지 않아도 된다는 것을 의미한다.
