@@ -116,7 +116,7 @@ def update(self, instance, validated_data):
 comment = serializer.save()
 ```
 
-`.save()`를 호출하면 시리얼라이저 클래스를 초기화할 때 존재하는 인스턴스를 전달했는지 여부에 따라 새로운 인스턴스를 생성하거나 이미 존재하는 인스턴스를 갱신한다.
+`.save()`를 호출하면 시리얼라이저 클래스를 인스턴스화할 때 존재하는 인스턴스를 전달했는지 여부에 따라 새로운 인스턴스를 생성하거나 이미 존재하는 인스턴스를 갱신한다.
 
 ```python
 # .save()가 새 인스턴스를 생성한다.
@@ -426,7 +426,7 @@ def create(self, validated_data):
 `Serializer` 클래스는 객체 리스트의 직렬화나 역직렬화 또한 다룰 수 있다.
 
 ### Serializing multiple objects
-하나의 객체 인스턴스 대신 queryset이나 객체 리스트를 직렬화하려면 시리얼라이저를 초기화할 때 `many=True` 플래그를 전달해야 한다. 그러면 직렬화 되어야 할 queryset이나 객체 리스트를 전달할 수 있다.
+하나의 객체 인스턴스 대신 queryset이나 객체 리스트를 직렬화하려면 시리얼라이저를 인스턴스화할 때 `many=True` 플래그를 전달해야 한다. 그러면 직렬화 되어야 할 queryset이나 객체 리스트를 전달할 수 있다.
 
 ```python
 queryset = Book.objects.all()
@@ -445,7 +445,7 @@ serializer.data
 ## Including extra context
 직렬화 되는 객체에 더해 추가적인 컨텍스트를 시리얼라이저에 제공해야 하는 경우가 있다. 흔한 경우 중 하나는 적절하게 온전히 작동하는 URL을 생성할 수 있도록 시리얼라이저가 현재 요청에 접근하게 하는 것을 필요로 하는 하이퍼링크된 관계를 포함하는 시리얼라이저를 사용할 때이다.
 
-시리얼라이저를 초기화할 때 `context` 인자를 전달해 임의의 추가적인 컨텍스트를 제공할 수 있다. 예를 들면:
+시리얼라이저를 인스턴스화할 때 `context` 인자를 전달해 임의의 추가적인 컨텍스트를 제공할 수 있다. 예를 들면:
 
 ```python
 serializer = AccountSerializer(account, context={'request': request})
@@ -482,7 +482,7 @@ class AccountSerializer(serializers.ModelSerializer):
 ### Inspecting a `ModelSerializer`
 시리얼라이저 클래스는 필드 상태를 온전히 점검할 수 있게 해주는 도움말 문자열을 생성한다. 이는 어떤 필드와 유효성 검사기 세트가 자동으로 생성되는지 결정하기 위해 `ModelSerializers`를 다룰 때 특히 유용하다.
 
-그렇게 하려면 `python manage.py shell`을 사용해 Django 셸을 열고 시리얼라이저 클래스를 불러온 다음 초기화를 시킨 후 객체 표현을 출력한다.
+그렇게 하려면 `python manage.py shell`을 사용해 Django 셸을 열고 시리얼라이저 클래스를 불러온 다음 인스턴스화하고 객체 표현을 출력한다.
 
 ```python
 >>> from myapp.serializers import AccountSerializer
@@ -598,7 +598,7 @@ user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.Cu
 ---
 
 ## Additional keyword arguments
-`extra_kwargs` 옵션을 사용해 필드의 임의의 키워드 인자를 명시할 수 있는 방법이 있다. `read_only_fields`의 경우처럼 이는 시리얼라이저에 필드를 명시적으로 선언하지 않아도 된다는 것을 의미한다.
+`extra_kwargs` 옵션을 사용해 필드의 임의의 추가 키워드 인자를 명시할 수 있는 방법이 있다. `read_only_fields`의 경우처럼 이는 시리얼라이저에 필드를 명시적으로 선언하지 않아도 된다는 것을 의미한다.
 
 이 옵션은 필드 이름을 키워드 인자의 딕셔너리로 매핑하는 딕셔너리이다. 예를 들면:
 
@@ -608,6 +608,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email', 'username', 'password']
         extra_kwargs = {'password': {'write_only': True}}
+
 
     def create(self, validated_data):
         user = User(
@@ -619,25 +620,25 @@ class CreateUserSerializer(serializers.ModelSerializer):
         return user
 ```
 
-필드가 이미 시리얼라이저 클래스에서 명시적으로 선언되었다면 `extra_kwargs` 옵션이 무시된다는 점을 유의한다.
+필드가 이미 시리얼라이저 클래스에서 명시적으로 선언되었다면 `extra_kwargs` 옵션이 무시된다는 점에 유의한다.
 
 ## Relational fields
-모델 인스턴스를 serialize할 때 관계를 나타내는 여러 다른 방법이 있다. `ModelSerializer`의 기본 표현은 연관된 인스턴스의 기본키를 사용하는 것이다.
+모델 인스턴스를 직렬화할 때 관계를 표현할 수 있는 여러가지 방법이 있다. `ModelSerializer`의 기본 표현은 연관된 인스턴스의 기본키를 사용하는 것이다.
 
-다른 표현 방식에는 하이퍼링크를 이용한 serialize, 중첩된 표현을 온전히 serialize하는 것 또는 사용자 정의 표현을 serialize하는 것이 있다.
+다른 방법으로는 하이퍼링크를 이용한 직렬화, 완전히 중첩된 표현을 직렬화하는 것 또는 사용자 정의 표현으로 직렬화하는 것이 있다.
 
-[serializer relations](serializer_relations.md)문서에서 더 많은 정보를 확인할 수 있다.
+[시리얼라이저 관계](serializer_relations.md)문서에서 더 많은 정보를 확인할 수 있다.
 
 ## Customizing field mappings
-ModelSerializer 클래스는 시리얼라이저를 초기화할 때 어떻게 자동으로 시리얼라이저 필드가 결정되리 정하기 위해 override할 수 있는 API를 노출시킨다.
+ModelSerializer 클래스는 시리얼라이저를 인스턴스화할 때 어떻게 자동으로 시리얼라이저 필드가 결정될지 정하기 위해 재정의할 수 있는 API를 노출시킨다.
 
-보통 `ModelSerializer`는 필요로 하는 필드를 기본으로 생성하지는 않기 때문에 클래스에 필드를 명시적으로 추가하거나 대신 일반적인 `Serializer` 클래스를 사용해야 한다. 한편, 주어진 모델을 위해 시리얼라이저 필드가 어떻게 생성되어야 할지를 정의하는 새로운 베이스 클래스를 작성할 수 있다.
+보통 `ModelSerializer`는 필요로 하는 필드를 기본으로 생성하지 않기 때문에 클래스에 필드를 명시적으로 추가하거나 일반적인 `Serializer` 클래스를 사용해야 한다. 한편, 주어진 모델을 위해 시리얼라이저 필드가 어떻게 생성되어야 할지를 정의하는 새로운 베이스 클래스를 작성할 수도 있다.
 
 #### `.serializer_field_mapping`
-Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는 것. 이 매핑을 각 모델 필드에 사용할 기본 시리얼라이저 필드로 바꾸기 위해 override할 수 있다.
+Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는 것. 각 모델 필드에 사용할 기본 시리얼라이저 필드를 바꾸기 위해 이 매핑을 재정의할 수 있다.
 
 #### `.serializer_related_field`
-이 속성은 기본적으로 과계 필드에 사용되는 시리얼라이저 필드 클래스가 되어야 한다.
+이 속성은 기본적으로 관계 필드에 사용되는 시리얼라이저 필드 클래스가 되어야 한다.
 
 `ModelSerializer`의 경우 기본 값은 `serializers.PrimaryKeyRelatedField`<br>
 `HyperlinkedModelSerializer`의 경우 기본 값은 `serializers.HyperlinkedRelatedField`
@@ -665,7 +666,7 @@ Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는
 
 기본 구현은 `serializer_related_field` 속성에 기반한 시리얼라이저 클래스를 반환한다.
 
-`related_info` 인자는 속성 `model_field`, `related_model`, `to_many`, `has_through_model`을 포함하는 named 튜플이다.
+`related_info` 인자는 속성 `model_field`, `related_model`, `to_many`, `has_through_model`을 포함하는 명명된 튜플이다.
 
 #### `.build_nested_field(self, field_name, relation_info, nested_depth)`
 `depth` 옵션이 설정되었을 때, 관계 모델 필드로 매핑되는 시리얼라이저 필드를 생성하기 위해 호출된다.
@@ -674,7 +675,7 @@ Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는
 
 `nested_depth`는 `depth` 옵션의 값에서 1을 뺀 값이다.
 
-`relation_info` 인자는 속성 `model_field`, `related_model`, `to_many`, `has_through_model`을 포함하는 named 튜플이다.
+`relation_info` 인자는 속성 `model_field`, `related_model`, `to_many`, `has_through_model`을 포함하는 명명된 튜플이다.
 
 #### `.build_property_field(self, field_name, model_class)`
 모델 클래스의 속성이나 인자 없는 메서드로 매핑되는 시리얼라이저 필드를 생성하기 위해 호출된다.
@@ -685,7 +686,7 @@ Django 모델 필드를 REST framework 시리얼라이저 필드로 매핑하는
 시리얼라이저 자체 `url` 필드를 위한 시리얼라이저 필드를 생성하기 위해 호출된다. 기본 구현은 `HyperlinkedIdentityField` 클래스를 반환한다.
 
 #### `.build_unknown_field(self, field_name, model_class)`
-필드 이름이 어느 모델 필드나 모델 속성에도 매핑되지 않을 때 호출된다. 기본 구현은 서브클래스가 이런 동작을 커스터마이즈할 수 있지만 에러를 발생시킨다.
+필드 이름이 어느 모델 필드나 모델 속성에도 매핑되지 않을 때 호출된다. 서브클래스로 동작을 수정할 수 있지만, 기본 구현은 기본 구현은 오류를 발생시킨다.
 
 # HyperlinkedModelSerializer
 `HyperlinkedModelSerializer` 클래스는 관계를 표현하기 위해 기본키가 아닌 하이퍼링크를 사용한다는 점을 제외하면 `ModelSerializer` 클래스와 유사하다.
@@ -704,9 +705,9 @@ class AccountSerializer(serializers.HyperlinkedModelSerializer):
 ```
 
 ## Absolute and relative URLs
-다음과 같이 `HyperlinkedModelSerializer`를 초기화할 때에는 시리얼라이저 컨텍스트에 현재 `request`를 포함시켜야 한다.
+다음과 같이 `HyperlinkedModelSerializer`를 인스턴스화할 때에는 시리얼라이저 컨텍스트에 현재 `request`를 포함시켜야 한다.
 
-```
+```python
 serializer = AccountSerializer(queryset, context={'request': request})
 ```
 
@@ -729,7 +730,7 @@ http://api.example.com/accounts/1
 
 기본적으로 하이퍼링크는 `'{model_name}-detail'` 형식의 이름을 가지는 뷰에 대응되고, `pk` 키워드 인자로 인스턴스를 찾는다.
 
-다음과 같이 `extra_kwargs` 설정에서 `view_name`과 `lookup_field` 옵션 중 하나 혹은 둘 모두를 사용해 URL 필드 뷰 이름과 탐색 필드를 override할 수 있다.
+다음과 같이 `extra_kwargs` 설정에서 `view_name`과 `lookup_field` 옵션 중 하나 혹은 둘 모두를 사용해 URL 필드 뷰 이름과 탐색 필드를 재정의할 수 있다.
 
 ```python
 class AccountSerializer(serializers.HyperlinkedModelSerializer):
@@ -762,16 +763,19 @@ class AccountSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'account_name', 'users', 'created']
 ```
 
-- **Tip**:<br>
-  하이퍼링크된 표현과 URL 설정을 적절하게 일치시키는 것은 간혹 성가시다. `HyperlinkedModelSerializer` 인스턴스의 `repr`를 출력하는 것이 관계를 매핑하기 위해 어느 뷰 이름과 검색 필드를 찾을 때에도 특히 유용한 방법이다.
+---
+
+**Tip**: 하이퍼링크된 표현과 URL 구성을 적절히 매칭하는 것은 간혹 성가시기도 하다. 매핑될 관계를 위한 뷰 이름과 검색 필드를 찾을 때에도 `HyperlinkedModelSerializer`의 `repr`를 출력하는 것은 유용한 방법이다.
+
+---
 
 ## Changing the URL field name
-URL 필드의 기본 이름은 `url`이다. `URL_FIELD_NAME` 설정을 사용해 전역적으로 override할 수 있다.
+URL 필드의 기본 이름은 `url`이다. `URL_FIELD_NAME` 설정을 사용해 전역적으로 재정의할 수 있다.
 
 # ListSerializer
-`ListSerializer` 클래스는 복수의 개체를 한 번에 serialize하고 유효성을 확인하기 위한 동작을 제공한다. 보통은 `ListSerializer`를 직접 사용할 일이 없고, 대신 단순히 시리얼라이저를 초기화할 때 `many=True`를 전달한다.
+`ListSerializer` 클래스는 복수의 개체를 한 번에 직렬화하고 유효성을 확인하기 위한 동작을 제공한다. 보통은 `ListSerializer`를 직접 사용할 일이 없고, 대신 시리얼라이저를 인스턴스화할 때 간단히 `many=True`를 전달한다.
 
-시리얼라이저가 초기화되고 `many=True`가 전달될 때, `ListSerializer` 인스턴스가 생성된다. 시리얼라이저 클래스는 그 다음에 부모 `ListSerializer`의 자신이 된다.
+시리얼라이저가 인스턴스화되고 `many=True`가 전달될 때 `ListSerializer` 인스턴스가 생성된다. 시리얼라이저 클래스는 그 다음에 부모 `ListSerializer`의 자식이 된다.
 
 다음의 인자는 `ListSerializer` 필드나 `many=True`가 전달된 시리얼라이저에 전달될 수 있다.
 
@@ -787,7 +791,7 @@ URL 필드의 기본 이름은 `url`이다. `URL_FIELD_NAME` 설정을 사용해
 ## Customizing `ListSerializer` behavior
 `ListSerializer`의 동작을 수정하게 되는 몇 가지 경우가 있다. 예를 들면:
 
-- 리스트 내의 한 원소가 다른 원소와 충돌을 일으키지 않는지 확인하는 등의 리스트에 특정한 유효성 검사를 제공하는 경우
+- 리스트 내의 한 원소가 다른 원소와 충돌을 일으키지 않는지 확인하는 것과 같이 리스트에 특정한 유효성 검사를 제공하는 경우
 - 복수의 객체를 생성하거나 갱신하는 동작을 수정하는 경우
 
 이러한 경우, 시리얼라이저의 `Meta` 클래스의 `list_serializer_class` 옵션을 사용해 `many=True`가 전달되었을 때 사용될 클래스를 수정한다.
@@ -824,7 +828,7 @@ class BookSerializer(serializers.Serializer):
 ```
 
 ### Customizing multiple update
-`ListSerializer` 클래스는 기본적으로 다중 갱신을 지원하지 않는다. 왜냐하면 삽입과 삭제에 관해 예상되는 동작이 모호하기 때문이다.
+`ListSerializer` 클래스는 기본적으로 다중 갱신을 지원하지 않는다. 삽입과 삭제에 관해 예상되는 동작이 모호하기 때문이다.
 
 다중 갱신을 지원하려면 명시적으로 해야 한다. 다음을 염두에 두고 다중 갱신 코드를 작성해야 한다.
 
@@ -840,11 +844,11 @@ class BookSerializer(serializers.Serializer):
 ```python
 class BookListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
-        # Maps for id -> instance and id -> data item.
+        # id -> 인스턴스, id -> 데이터 항목을 위한 매핑
         book_mapping = {book.id: book for book in instance}
         data_mapping = {item['id']: item for item in validated_data}
 
-        # Perform creations and updates.
+        # 생성과 갱신을 수행한다.
         ret = []
         for book_id, data in data_mapping.items():
             book = book_mapping.get(book_id, None)
@@ -853,7 +857,7 @@ class BookListSerializer(serializers.ListSerializer):
             else:
                 ret.append(self.child.update(book, data))
 
-        # Perform deletions.
+        # 삭제를 수행한다.
         for book_id, book in book_mapping.items():
             if book_id not in data_mapping:
                 book.delete()
@@ -862,8 +866,8 @@ class BookListSerializer(serializers.ListSerializer):
 
 
 class BookSerializer(serializers.Serializer):
-    # We need to identify elements in the list using their primay key,
-    # so use a writable field here, rather than the default which would be read-only.
+    # 기본키를 사용해 리스트의 원소를 식별할 필요가 있으므로
+    # 읽기 전용인 기본값 대신 여기 있는 쓰기 가능한 필드를 사용한다.
     id = serializers.IntegerField()
     ...
 
@@ -883,9 +887,9 @@ REST framework 2에 존재했던 `allow_add_remove` 동작과 유사한, 다중 
 ```python
 @classmethod
 def many_init(cls, *args, **kwargs):
-    # Instantiate the child serializer.
+    # 자식 시리얼라이저를 인스턴스화한다.
     kwargs['child'] = cls()
-    # Instantiate the parent list serializer.
+    # 부모 리스트 시리얼라이저를 인스턴스화한다.
     return CustomListSerializer(*args, **kwargs)
 ```
 
