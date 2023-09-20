@@ -209,7 +209,7 @@ class BlogPostSerializer(serializers.Serializer):
 
 ---
 
-**Note**: 만약 `<field_name>`이 `required=False` 인자가 있는 상태로 시리얼라이저에서 선언되었다면 해당 필드가 포함되지 않았을 때 이 유효성 검증 단계는 생략될 것이다.
+**Note**: 만약 `<field_name>`이 `required=False` 파라미터가 있는 상태로 시리얼라이저에서 선언되었다면 해당 필드가 포함되지 않았을 때 이 유효성 검증 단계는 생략될 것이다.
 
 ---
 
@@ -894,28 +894,28 @@ def many_init(cls, *args, **kwargs):
 ```
 
 # BaseSerializer
-`BaseSerializer` 클래스는 또 다른 serialization과 deserialization 방식을 쉽게 지원하기 위해 사용된다.
+`BaseSerializer` 클래스는 또 다른 직렬화와 역직렬화 방식을 쉽게 지원하기 위해 사용된다.
 
-이 클래스는 `Serializer` 클래스와 같은 기본 API를 구현한다.
+이 클래스는 `Serializer` 클래스와 같은 기본 API를 구현한다:
 
 - `.data`: 가공되지 않은 출력 표현을 반환한다.
-- `.is_valid()`: 들어오는 데이터를 deserialize하고 그 유효성을 검사한다.
-- `.validated_data`: 들어온 유효한 데이터를 반환한다.
-- `.errors`: 유효성 검사 중 발생한 에러를 반환한다.
--`.save()`: 유효한 데이터를 객체 인스턴스로 남긴다.
+- `.is_valid()`: 들어오는 데이터를 역직렬화하고 유효성을 검사한다.
+- `.validated_data`: 유효성이 검증된 데이터를 반환한다.
+- `.errors`: 유효성 검사 중 발생한 오류를 반환한다.
+-`.save()`: 유효성이 검증된 데이터를 객체 인스턴스로 남긴다.
 
-시리얼라이저 클래스가 지원하기를 바라는 기능에 따라 override될 수 있는 네 개의 메서드가 있다.
+시리얼라이저가 지원해야 할 기능에 따라 재정의될 수 있는 네 개의 메서드가 있다:
 
-- `.to_representation()`: 읽기 연산에 serialization을 지원하기 위해 override한다.
-- `.to_internal_value()`: 쓰기 연산에 deserialization을 지원하기 위해 override한다.
-- `.create`, `.update()`: 인스턴스 저장을 지원하기 위해 둘 중 하나 이상을 override한다.
+- `.to_representation()`: 읽기 연산에 직렬화를 지원하기 위해 재정의한다.
+- `.to_internal_value()`: 쓰기 연산에 역직렬화를 지원하기 위해 재정의한다.
+- `.create`, `.update()`: 인스턴스 저장을 지원하기 위해 둘 중 하나 이상을 재정의한다.
 
-이 클래스가 `Serializer` 클래스와 동일한 인터페이스를 제공하기 때문에 일반적인 `Serializer`나 `ModelSerializer`의 경우에서 그러하듯이 존재하는 generic 클래스 기반 뷰와 함께 사용할 수 있다.
+이 클래스가 `Serializer` 클래스와 동일한 인터페이스를 제공하기 때문에 일반적인 `Serializer`나 `ModelSerializer`의 경우에서 그러하듯이 이미 존재하는 제네릭 클래스 기반 뷰와 함께 사용할 수 있다.
 
-그럴 때의 유일한 차이점은 `BaseSerializer` 클래스가 브라우징 가능한 API를 HTML 폼으로 생성하지 않을 것이라는 점이다. 왜냐하면 반환하는 데이터가 각 필드를 적절한 HTML 입력으로 렌더링할 수 있도록 해주는 필드 정보를 포함하고 있지 않기 때문이다.
+`BaseSerializer` 클래스가 탐색 가능한 API에서는 HTML 폼을 생성하지 않는다는 것이 그렇게 했을 때의 유일한 차이점이다. 이는 반환하는 데이터가 각 필드가 적절한 HTML 입력으로 렌더링될 수 있게 해주는 모든 필드 정보를 포함하지 않기 때문이다.
 
 ## Read-only `BaseSerializer` classes
-`BaseSerializer`를 사용해 읽기 전용 시리얼라이저를 구현하려면 `.to_representation()` 메서드를 override한다. 다음은 간단한 Django 모델을 사용한 예시이다.
+`BaseSerializer`를 사용해 읽기 전용 시리얼라이저를 구현하려면 `.to_representation()` 메서드를 재정의한다. 다음은 간단한 Django 모델을 사용한 예시이다.
 
 ```python
 class HighScore(models.Model):
@@ -924,7 +924,7 @@ class HighScore(models.Model):
     score = models.IntegerField()
 ```
 
-`HighScore` 인스턴스를 원시 데이터형으로 변환하는 읽기 전용 시리얼라이저를 생성하는 것은 간단하다.
+`HighScore` 인스턴스를 원시 데이터 타입으로 변환하는 읽기 전용 시리얼라이저를 간단하게 생성할 수 있다.
 
 ```python
 class HighScoreSerializer(serializers.BaseSerializer):
@@ -935,7 +935,7 @@ class HighScoreSerializer(serializers.BaseSerializer):
         }
 ```
 
-이제 이 클래스를 하나의 `HighScore` 인스턴스를 serialize하는데 사용할 수 있다.
+이제 이 클래스를 하나의 `HighScore` 인스턴스를 직렬화하기 위해 사용할 수 있다:
 
 ```python
 @api_view(['GET'])
@@ -945,7 +945,7 @@ def high_score(request, pk):
     return Response(serializer.data)
 ```
 
-혹은 복수의 인스턴스를 serialize하기 위해 사용할 수 있다.
+혹은 복수의 인스턴스를 직렬화하기 위해 사용할 수 있다.
 
 ```python
 @api_view(['GET'])
@@ -956,7 +956,7 @@ def all_high_scores(request):
 ```
 
 ## Read-write `BaseSerializer` classes
-읽기-쓰기 시리얼라이저를 생성하려면 우선 `.to_internal_value` 메서드를 구현할 필요가 있다. 이 메서드는 객체 인스턴스를 생성하기 위해 사용되는 유효한 값을 반환하며, 제공된 데이터가 정확하지 않은 형식이라면 `serializers.ValidationError`를 발생시킨다.
+읽기-쓰기 시리얼라이저를 생성하려면 우선 `.to_internal_value` 메서드를 구현한다. 이 메서드는 객체 인스턴스를 생성하기 위해 사용되는 유효한 값을 반환하며, 제공된 데이터가 정확하지 않은 형식이라면 `serializers.ValidationError`를 발생시킨다.
 
 `.to_internal_value()`를 구현하면 시리얼라이저에서 기본 유효성 검사 API를 사용할 수 있게 되며 `.is_valid()`, `.validated_data`, `.errors`를 사용할 수 있게 된다.
 
@@ -970,7 +970,7 @@ class HighScoreSerializer(serializers.BaseSerializer):
         score = data.get('score')
         player_name = data.get('player_name')
 
-        # Perform the data validation.
+        # 데이터 유효성 검사를 수행한다.
         if not score:
             raise serializers.ValidationError({
                 'score': 'This field is required.'
@@ -984,12 +984,12 @@ class HighScoreSerializer(serializers.BaseSerializer):
                 'player_name': 'May not be more than 10 characters.'
             })
 
-        # Return the validation values. This will be available as
-        # the `.validated_data` property.
+        # 유효한 값을 반환한다. 이것은 `.validated_data` 속성으로 사용가능하다.
         return {
             'score': int(score),
             'player_name': player_name
         }
+
 
     def to_representation(self, instance):
         return {
@@ -997,71 +997,71 @@ class HighScoreSerializer(serializers.BaseSerializer):
             'player_name': instance.player_name
         }
 
+
     def create(self, validated_data):
         return HighScore.objects.create(**validated_data)
 ```
 
 ## Creating new base classes
-`BaseSerializer` 클래스는 특정한 serialization 형식을 다루기 위해, 혹은 대체 스토리지 백엔드와 통합하기 위해 새로운 generic 시리얼라이저 클래스를 구현할 때에도 유용하다.
+`BaseSerializer` 클래스는 특정한 직렬화 방식을 다루기 위해, 또는 대체 스토리지 백엔드와 통합하기 위해 새로운 제네릭 시리얼라이저 클래스를 구현할 때에도 유용하다.
 
-다음의 클래스는 임의의 복잡한 객체를 원시 표현으로 강제하는 것을 다루는 generic 시리얼라이저의 예시이다.
+다음의 클래스는 임의의 복잡한 객체를 원시 표현으로 강제하는 것을 다루는 제네릭 시리얼라이저의 예시이다.
 
 ```python
 class ObjectSerializer(serializers.BaseSerializer):
     """
-    A read-only serializer that coerces arbitrary complex objects
-    into primitive representations.
+    임의의 복잡한 객체를 원시 표현으로 강제하는 읽기 전용 시리얼라이저
     """
     def to_representation(self, instance):
         output = {}
         for attribute_name in dir(instance):
             attribute = getattr(instance, attribute_name)
             if attribute_name.startswith('_'):
-                # Ignore private attributes.
+                # 비공개 속성은 무시한다.
                 pass
             elif hasattr(attribute, '__call__'):
-                # Ignore methods and other callables.
+                # 메서드와 다른 호출 가능한 것은 무시한다.
                 pass
             elif isinstance(attribute, (str, int, bool, float, type(None))):
-                # Primitive types can be passed through unmodified.
+                # 원시 타입은 수정되지 않고 전달될 수 있다.
                 output[attribute_name] = attribute
             elif isinstance(attribute, list):
-                # Recursively deal with items in lists.
+                # 리스트 내의 항목을 재귀적으로 다룬다.
                 output[attribute_name] = [
                     self.to_representation(item) for item in attribute
                 ]
             elif isinstance(attribute, dict):
-                # Recursively deal with items in dictionaries.
+                # 딕셔너리 내의 항목을 재귀적으로 다룬다.
                 output[attribute_name] = {
                   str(key): self.to_representation(value)
                   for key, value in attribute.items()
                 }
             else:
-                # Force anything else to its string representation.
+                # 그 외의 경우 문자열 표현으로 강제한다.
                 output[attribute_name] = str(attribute)
         return output
 ```
 
 # Advanced serializer usage
 ## Overriding serialization and deserialization behavior
-시리얼라이저 클래스의 serialize나 deserialize 동작을 변경해야 한다면 `.to_representation()`이나 `.to_internal_value()` 메서드를 override하면 된다.
+시리얼라이저 클래스의 직렬화 또는 역직렬화 동작을 변경해야 한다면 `.to_representation()`이나 `.to_internal_value()` 메서드를 재정의하면 된다.
 
 이것이 유용한 이유는...
 
 - 새로운 시리얼라이저 베이스 클래스를 위한 새로운 동작을 추가한다.
 - 이미 존재하는 클래스의 동작을 약간 변경한다.
-- 많은 데이터를 반환하는 접근이 잦은 API 엔드포인트의 serialization 퍼포먼스를 향상시킨다.
+- 많은 데이터를 반환하는 접근이 잦은 API 엔드포인트의 직렬화 퍼포먼스를 향상시킨다.
 
 이 메서드의 특징은 다음과 같다.
 
 ### `.to_representation(self, instance)`
-Serialize가 필요한 객체 인스턴스를 전달받아 원시적인 표현을 반환한다. 보통 이는 빌트인 파이썬 데이터형 구조로 반환하는 것을 의미한다. 다루게 되는 정확한 데이터형은 API를 위해 설정된 렌더 클래스에 따라 다르다.
+직렬화가 필요한 객체 인스턴스를 전달받아 원시 표현을 반환한다. 보통 이는 빌트인 파이썬 데이터 타입 구조로 반환하는 것을 의미한다. 처리할 정확한 타입은 API를 위해 구성한 렌더러 클래스에 따라 다르다.
 
-표현 양식을 변경하기 위해 override될 수 있다. 예를 들면:
+표현 양식을 변경하기 위해 재정의 될 수 있다. 예를 들면:
 
 ```python
 def to_representation(self, instance):
-    # Convert `username` to lowercase.
+    # `username`을 소문자로 변환한다.
     ret = super().to_representation(instance)
     ret['username'] = ret['username'].lower()
     return ret
@@ -1070,12 +1070,12 @@ def to_representation(self, instance):
 ### `.to_internal_value(self, data)`
 유효성 검증이 되지 않은 들어오는 데이터를 입력으로 받아 `serializer.validated_data`로 사용가능하게 되는 유효한 데이터를 반환한다. 반환값은 시리얼라이저 클래스에서 `.save()`가 반환되었을 때 `.create()` 또는 `.update()` 메서드로 전달된다.
 
-유효성 검증에 실패한다면 메서드는 `serializers.ValidationError(errors)`를 발생시킨다. `errors` 인자는 필드 이름(또는 `settings.NON_FIELD_ERRORS_KEY`)을 오류 메시지의 리스트로 매핑하는 딕셔너리여야 한다. Deserialization 동작을 바꾸지 않는 대신 객체 수준의 유효성 검사를 제공하고 싶다면 `.validate()` 메서드를 override하는 것을 권장한다.
+유효성 검증에 실패하면 `serializers.ValidationError(errors)`를 발생시킨다. `errors` 인자는 필드 이름(또는 `settings.NON_FIELD_ERRORS_KEY`)을 오류 메시지의 리스트로 매핑하는 딕셔너리여야 한다. 역직렬화 동작을 바꾸지 않는 대신 객체 수준의 유효성 검사를 제공하고 싶다면 `.validate()` 메서드를 재정의하는 것을 권장한다.
 
-이 메서드로 전달되는 `data` 인자는 보통 `request.data`의 값이므로 이것이 제공하는 데이터형은 API를 위해 설정한 parser 클래스에 따라 다르다.
+이 메서드로 전달되는 `data` 인자는 보통 `request.data`의 값이므로 이것이 제공하는 데이터 타입은 API를 위해 설정한 파서 클래스에 따라 다르다.
 
 ## Serializer Inheritance
-Django 폼과 유사하게, 상속을 통해 시리얼라이저를 확장하고 재사용할 수 있다. 이는 여러 시리얼라이저에서 사용할 수 있는 필드나 메서드의 공통적인 세트를 부모 클래스에 선언할 수 있게 한다.
+Django 폼과 유사하게, 상속을 통해 시리얼라이저를 확장하고 재사용할 수 있다. 그렇게 하면 여러 시리얼라이저에서 사용할 수 있도록 부모 클래스의 필드 또는 메서드의 공통 집합을 선언할 수 있게 된다.
 
 ```python
 class MyBaseSerializer(Serializer):
@@ -1088,20 +1088,20 @@ class MySerializer(MyBaseSerializer):
     ...
 ```
 
-Django의 `Model`과 `ModelForm` 클래스처럼, 시리얼라이저 내부의 `Meta` 클래스는 부모 내부의 `Meta` 클래스를 반드시 상속받지는 않는다. 부모 클래스로부터 `Meta` 클래스를 상속받고 싶다면 명시적으로 해야 한다. 예를 들어:
+Django의 `Model`과 `ModelForm` 클래스처럼, 시리얼라이저 내부의 `Meta` 클래스는 부모 내부의 `Meta` 클래스를 반드시 상속받는 것은 아니다. 부모 클래스로부터 `Meta` 클래스를 상속받고 싶다면 명시적으로 해야 한다. 예를 들어:
 
 ```python
 class AccountSerializer(MyBaseSerializer):
     class Meta(MyBaseSerializer.Meta):
         model = Account
 ```
+보통 내부 Meta 클래스를 상속하는 *대신* 모든 옵션을 명시적으로 선언하는 것을 권장한다.
 
-보통 내부 Meta 클래스를 상속받는 것을 권장하지 *않는* 대신, 모든 옵션을 명시적으로 선언하는 것을 권장한다.
+추가적으로, 시리얼라이저 상속에 적용되는 주의사항은 다음과 같다:
 
-추가적으로, 시리얼라이저 상속에 적용되는 주의사항은 다음과 같다.
-
-- 일반적인 파이썬 이름 확인 규칙이 적용된다. 내부 `Meta` 클래스를 선언하는 복수의 베이스 클래스가 있다면 오직 첫번째 것이 사용된다. 이는 존재한다면 자식의 `Meta`, 그렇지 않다면 첫번째 부모의 `Meta`를 의미한다.
+- 일반적인 파이썬 이름 확인 규칙이 적용된다. 내부 `Meta` 클래스를 선언하는 복수의 베이스 클래스가 있다면 첫번째가 사용된다. 이는 존재한다면 자식의 `Meta`, 그렇지 않다면 첫번째 부모의 `Meta`를 의미한다.
 - 서브클래스에서 이름이 `None`이 되도록 설정해 부모 클래스에서 상속받은 `Field`를 선언하듯이 제거할 수 있다.
+
   ```python
   class MyBaseSerializer(ModelSerializer):
       my_field = serializers.CharField()
@@ -1109,39 +1109,39 @@ class AccountSerializer(MyBaseSerializer):
   class MySerializer(MyBaseSerializer):
       my_field = None
   ```
-  그러나 이 방법은 부모 클래스에 의해 선언하듯이 정의된 필드를 없앨 때에만 사용할 수 있다. 이것은 `ModelSerializer`가 기본 필드를 생성하는 것을 방지하지 못한다. 기본 필드를 사용하지 않으려면 [어느 필드를 포함할지 구체화하기](serializers.md/#specifying-which-fields-to-include) 문서를 확인한다.
+
+  그러나 이 방법은 부모 클래스에 의해 선언하듯이 정의된 필드를 없앨 때에만 사용할 수 있으며 `ModelSerializer`가 기본 필드를 생성하는 것을 방지하지 못한다. 기본 필드를 사용하지 않으려면 [어느 필드를 포함할지 명시하기](#specifying-which-fields-to-include) 문서를 확인한다.
 
 ## Dynamically modifying fields
-일단 시리얼라이저가 초기화되면, `.fields` 속성을 사용해 시리얼라이저에 설정된 필드 딕셔너리에 접근할 수 있다. 이 속성에 접근하는 것과 이 속성을 수정하는 것은 시리얼라이저를 동적으로 수정할 수 있게 한다.
+일단 시리얼라이저가 초기화되면, `.fields` 속성을 사용해 시리얼라이저에 설정된 필드 딕셔너리에 접근할 수 있다. 시리얼라이저를 동적으로 수정하려면 이 속성에 접근하거나 수정한다.
 
-`fields` 인자를 직접 수정하면 시리얼라이저를 선언하는 순간이 아니라 동작 중 시리얼라이저 필드의 인자를 변경하는 등의 흥미로운 일을 할 수 있게 된다.
+`fields` 인자를 직접 수정하면 시리얼라이저를 선언하는 순간이 아니라 동작 중 시리얼라이저 필드의 인자를 변경하는 것 등을 할 수 있다.
 
 ### Example
-예를 들어, 시리얼라이저를 초기화하는 시점에 어느 필드를 시리얼라이저에서 사용할지 정하게 하고 싶다면 시리얼라이저 클래스를 다음과 같이 작성하면 된다.
+예를 들어, 시리얼라이저를 초기화하는 시점에 어느 필드를 시리얼라이저에서 사용할지 정하려면 시리얼라이저 클래스를 다음과 같이 작성한다:
 
 ```python
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
     """
-    A ModelSerializer that takes an additional `fields` argument that
-    controls which fields should be displayed.
+    어느 필드가 표시될지 제어하는 추가적인 `fields` 인자를 가지는 ModelSerializer
     """
 
     def __init__(self, *args, **kwargs):
-        # Don't pass the 'fields' arg up to the superclass
+        # `fields` 인자를 상위 클래스로 전달하지 않는다.
         fields = kwargs.pop('fields', None)
 
-        # Instantiate the superclass normally
+        # 정상적으로 상위 클래스를 인스턴스화한다.
         super().__init__(*args, **kwargs)
 
         if fields is not None:
-            # Drop any fields that are not specified in the `fields` argument.
+            # `fields` 인자에서 명시되지 않은 필드는 제거한다.
             allowed = set(fields)
             existing = set(self.fields)
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
 ```
 
-이는 다음을 가능하게 한다.
+이는 다음을 가능하게 한다:
 
 ```python
 >>> class UserSerializer(DynamicFieldsModelSerializer):
@@ -1157,11 +1157,11 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
 ```
 
 ## Customizing the default fields
-REST framework 2는 개발자가 `ModelSerializer` 클래스가 어떻게 필드의 기본 세트를 자동으로 생성할지 override할 수 있게 해주는 API를 제공했다.
+REST framework 2는 `ModelSerializer` 클래스가 자동으로 기본 필드 집합을 생성하는 방식을 재정의할 수 있게 해주는 API를 제공했다.
 
 이 API는 `.get_field()`, `.get_pk_field()`와 다른 메서드를 포함했다.
 
-3.0에서 시리얼라이저가 근본적으로 재설계되었기 때문에 이 API는 더이상 존재하지 않는다. 여전히 생성되는 필드를 수정할 수 있지만 소스 코드를 참조해야 하며, API의 private bit에 반하는 변경사항이 발생하는 경우 이 또한 변경될 수 있다는 점에 유의해야 한다.
+3.0에서 시리얼라이저가 근본적으로 재설계되었기 때문에 이 API는 더이상 존재하지 않는다. 여전히 생성되는 필드를 수정할 수 있지만 소스 코드를 참조해야 하며, API의 비공개 부분에 반하는 변경사항이 발생하는 경우 이 또한 변경될 수 있다는 점에 유의해야 한다.
 
 # Third party packages
 다음의 서드파티 패키지를 사용할 수 있다.
@@ -1170,7 +1170,7 @@ REST framework 2는 개발자가 `ModelSerializer` 클래스가 어떻게 필드
 [django-rest-marshmallow](https://marshmallow-code.github.io/django-rest-marshmallow/) 패키지는 파이썬 [marshmallow](https://marshmallow.readthedocs.io/en/latest/) 라이브러리를 사용해 시리얼라이저의 대체 구현을 제공한다. REST framework 시리얼라이저와 같은 API를 제공하며 일부 사용 예시에서 드롭 인 대체로 사용될 수 있다.
 
 ## Serpy
-[serpy](https://github.com/clarkduvall/serpy) 패키지는 속도를 위해 빌드된 시리얼라이저를 위한 대체 구현이다. Serpy는 복잡한 데이터형을 단순한 네이티브 형으로 serialize한다. 네이티브 형은 JSON이나 다른 필요로 하는 포맷으로 쉽게 변환될 수 있다.
+[serpy](https://github.com/clarkduvall/serpy) 패키지는 속도를 위해 빌드된 시리얼라이저를 위한 대체 구현이다. Serpy는 복잡한 데이터 타입을 단순한 네이티브 형으로 직렬화한다. 네이티브 형은 JSON이나 다른 필요로 하는 포맷으로 쉽게 변환될 수 있다.
 
 ## MongoengineModelSerializer
 [django-rest-framework-mongoengine](https://github.com/umutbozkurt/django-rest-framework-mongoengine) 패키지는 Django REST framework를 위한 스토리지 레이어로 MongoDB를 사용할 수 있게 지원하는 `MongoEngineModelSerializer` 시리얼라이저 클래스를 제공한다.
@@ -1182,13 +1182,13 @@ REST framework 2는 개발자가 `ModelSerializer` 클래스가 어떻게 필드
 [django-rest-framework-hstore](https://github.com/djangonauts/django-rest-framework-hstore)는 [django-hstore](https://github.com/djangonauts/django-hstore)의 `DictionaryField` 모델 필드와 `schema-mode` 기능을 지원하는 `HStoreSerializer`를 제공한다.
 
 ## Dynamic REST
-[dynamic-rest](https://github.com/AltSchool/dynamic-rest) 패키지는 ModelSerializer와 ModelViewSet 인터페이스를 확장해 시리얼라이저에 의해 정의된 모든 필드와 관계를 필터링, 정렬, 그리고 포함/제외하는 API 쿼리 인자를 추가한다.
+[dynamic-rest](https://github.com/AltSchool/dynamic-rest) 패키지는 ModelSerializer와 ModelViewSet 인터페이스를 확장해 시리얼라이저에 의해 정의된 모든 필드와 관계를 필터링, 정렬, 그리고 포함/제외하는 API 쿼리 파라미터를 추가한다.
 
 ## Dynamic Fields Mixin
-[drf-dynamic-fields](https://github.com/dbrgn/drf-dynamic-fields) 패키지는 URL 인자에 의해 구체화된 서브셋으로 시리얼라이저 당 필드를 동적으로 제한하는 mixin을 제공한다.
+[drf-dynamic-fields](https://github.com/dbrgn/drf-dynamic-fields) 패키지는 URL 파라미터에 의해 구체화된 부분 집합으로 시리얼라이저 당 필드를 동적으로 제한하는 mixin을 제공한다.
 
 ## DRF FlexFields
-[drf-flex-fields](https://github.com/rsinger86/drf-flex-fields)는 URL 인자와 시리얼라이저 클래스 정의로부터 동적으로 정해지는 필드와 원시 필드를 중첩된 모델로 확장하는 자주 사용되는 기능을 제공하기 위해 ModelSerializer와 ModelViewSet을 확장한다.
+[drf-flex-fields](https://github.com/rsinger86/drf-flex-fields)는 URL 파라미터와 시리얼라이저 클래스 정의로부터 동적으로 정해지는 필드와 원시 필드를 중첩된 모델로 확장하는 자주 사용되는 기능을 제공하기 위해 ModelSerializer와 ModelViewSet을 확장한다.
 
 ## Serializer Extensions
 [django-rest-framework-serializer-extensions](https://github.com/evenicoulddoit/django-rest-framework-serializer-extensions) 패키지는 필드를 뷰당/요청 기준에 따라 정의되도록 허용하는 것으로 시리얼라이저를 DRY(Don't Repeat Yourself)하기 위한 도구 모음을 제공한다. 필드를 화이트리스트나 블랙리스트에 올릴 수 있고 자식 시리얼라이저는 선택적으로 확장될 수 있다.
@@ -1200,10 +1200,10 @@ REST framework 2는 개발자가 `ModelSerializer` 클래스가 어떻게 필드
 [DRF-Base64](https://bitbucket.org/levit_scs/drf_base64)는 base64 인코딩된 파일 업로드를 다루는 필드의 세트와 모델 시리얼라이저를 제공한다.
 
 ## QueryFields
-[djangorestframework-queryfields](https://djangorestframework-queryfields.readthedocs.io/)는 쿼리 인자 포함/제외를 통해 API 클라이언트가 어느 필드를 응답에 포함시킬 것인지 구체화하도록 한다.
+[djangorestframework-queryfields](https://djangorestframework-queryfields.readthedocs.io/)는 쿼리 파라미터 포함/제외를 통해 API 클라이언트가 어느 필드를 응답에 포함시킬 것인지 구체화하도록 한다.
 
 ## DRF Writable Nested
 [drf-writable-nested](https://github.com/beda-software/drf-writable-nested) 패키지는 중첩된 연관 데이터로 모델을 생성/갱신할 수 있게 해주는 쓰기 가능한 중첩된 모델 시리얼라이저를 제공한다.
 
 ## DRF Encrypt Content
-[drf-encrypt-content](https://github.com/oguzhancelikarslan/drf-encrypt-content) 패키지는 ModelSerializer를 통해 serialize된 데이터를 암호화하는 것을 도화준다. 데이터를 암호화하는데 도움을 주는 몇 가지 도우미 함수 또한 포함하고 있다.
+[drf-encrypt-content](https://github.com/oguzhancelikarslan/drf-encrypt-content) 패키지는 ModelSerializer를 통해 직렬화된 데이터를 암호화하는 것을 도화준다. 데이터를 암호화하는데 도움을 주는 몇 가지 도우미 함수 또한 포함하고 있다.
