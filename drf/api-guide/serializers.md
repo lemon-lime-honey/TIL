@@ -134,7 +134,7 @@ serializer = CommentSerializer(comment, data=data)
 `.save()`를 호출할 때 추가 키워드 인자를 포함하면 그렇게 할 수 있다. 예를 들면:
 
 ```python
-serializer.save(owner=request.user)`
+serializer.save(owner=request.user)
 ```
 
 모든 추가 키워드 인자는 `.create()` 혹은 `.update()`가 호출되었을 때 `validated_data` 인자에 포함된다.
@@ -385,7 +385,7 @@ def update(self, instance, validated_data):
 
 중첩된 생성과 갱신의 동작이 모호할 수 있고, 연관된 모델 사이에 복잡한 의존성이 요구될 수 있으므로 REST framework 3은 이러한 메서드를 명시적으로 작성할 것을 요구한다. 기본 `ModelSerializer`의 `.create()`와 `.update()` 메서드는 작성 가능한 중첩된 표현에 관한 지원을 포함하지 않는다.
 
-그러나 자동으로 작성 가능한 중첩된 표현을 지원하는 [DRF Writable Nested](serializers.md/#drf-writable-nested)와 같은 서드파티 패키지를 사용할 수 있다.
+그러나 자동으로 작성 가능한 중첩된 표현을 지원하는 [DRF Writable Nested](#drf-writable-nested)와 같은 서드파티 패키지를 사용할 수 있다.
 
 ### Handling saving related instances in model manager classes
 시리얼라이저에서 복수의 연관된 인스턴스를 저장하는 다른 방법은 올바른 인스턴스 생성을 다루는 사용자 정의 모델 매니저 클래스를 작성하는 것이다.
