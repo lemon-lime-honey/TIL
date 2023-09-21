@@ -6,41 +6,47 @@
 
 관계 필드는 모델 관계를 나타내기 위해 사용된다. `ForeignKey`, `ManyToManyField`, `OneToOneField` 관계 뿐만 아니라 역관계, `GenericForeignKey`와 같은 사용자 정의 관계에 적용될 수 있다.
 
-- **Note**:<br>
-  관계 필드는 `relations.py`에서 선언되지만 관습적으로는 `from rest_framework import serializer`를 사용해 `serializers` 모듈에서 불러온 후 `serializers.<FieldName>`으로 참조한다.
+---
 
-- **Note**: <br>
-  REST Framework는 지나치게 마법 같을 것이므로 시리얼라이저로 전달된 queryset을 `selected_related`와 `prefetch_related`로 자동으로 최적화하려 하지 않는다. 원본 속성을 통해 orm 관계를 확장하는 필드를 가진 시리얼라이저는 데이터베이스로부터 관련 객체를 가져오기 위해 추가적인 데이터베이스 히트를 필요로 할 수 있다. 이러한 시리얼라이저를 사용하는 도중 발생할 수 있는 추가적인 데이터베이스 히트를 피하기 위해 쿼리를 최적화하는 것은 프로그래머의 책임이다.
+**Note**: 관계 필드는 `relations.py`에서 선언되지만 관습적으로는 `from rest_framework import serializer`를 사용해 `serializers` 모듈에서 불러온 후 `serializers.<FieldName>`으로 참조한다.
 
-  예를 들어, 다음의 시리얼라이저는 tracks 필드가 prefetch되지 않았다면 필드를 산출할 때마다 매번 데이터베이스 히트를 할 것이다.
+---
 
-  ```python
-  class AlbumSerializer(serializers.ModelSerializer):
-      tracks = serializers.SlugRelatedField(
-          many=True,
-          read_only=True,
-          slug_field='title'
-      )
+---
 
-      class Meta:
-          model = Album
-          fields = ['album_name', 'artist', 'tracks']
+**Note**: REST Framework는 지나치게 마법 같아지기 때문에 시리얼라이저로 전달된 queryset을 `selected_related`와 `prefetch_related`로 자동으로 최적화하려 하지 않는다. 원본 속성을 통해 orm 관계를 확장하는 필드를 가진 시리얼라이저는 데이터베이스로부터 관련 객체를 가져오기 위해 추가적인 데이터베이스 히트를 필요로 할 수 있다. 이러한 시리얼라이저를 사용하는 도중 발생할 수 있는 추가적인 데이터베이스 히트를 피하기 위해 쿼리를 최적화하는 것은 프로그래머의 책임이다.
 
-  # For each album object, tracks should be fetched from database
-  qs = Album.objects.all()
-  print(AlbumSerializer(qs, many=True).data)
-  ```
+예를 들어, 다음의 시리얼라이저는 tracks 필드가 prefetch되지 않았다면 필드를 산출할 때마다 매번 데이터베이스 히트를 할 것이다.
 
-  `AlbumSerializer`가 `many=True`를 가지고 있어 상당히 큰 queryset을 serialize하는데 사용된다면 심각한 성능 문제가 될 수 있다. `AlbumSeiralizer`로 전달되는 queryset을 다음과 같이 최적화하면 문제를 해결할 수 있다.
+```python
+class AlbumSerializer(serializers.ModelSerializer):
+    tracks = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='title'
+    )
 
-  ```python
-  qs = Album.objects.prefetch_related('tracks')
-  # No additional database hits required
-  print(AlbumSerializer(qs, many=True).data)
-  ```
+    class Meta:
+        model = Album
+        fields = ['album_name', 'artist', 'tracks']
+
+# 각 앨범 객체에 대해 데이터베이스에서 트랙을 가져와야 한다.
+qs = Album.objects.all()
+print(AlbumSerializer(qs, many=True).data)
+```
+
+`AlbumSerializer`가 `many=True`를 가지고 있어 상당히 큰 queryset을 직렬화하는데 사용된다면 심각한 성능 문제가 될 수 있다. `AlbumSeiralizer`로 전달되는 queryset을 다음과 같이 최적화하면 문제를 해결할 수 있다.
+
+```python
+qs = Album.objects.prefetch_related('tracks')
+# 추가적인 데이터베이스 히트를 필요로 하지 않는다.
+print(AlbumSerializer(qs, many=True).data)
+```
+
+---
 
 ### Inspecting relationships
-`ModelSerializer` 클래스를 사용할 때 시리얼라이저 필드와 관계가 자동으로 생성된다. 이 자동생성된 필드를 살펴보는 것은 관계 스타일을 어떻게 커스터마이즈할 것인지 정하기 위한 유용한 도구가 될 수 있다.
+`ModelSerializer` 클래스를 사용할 때 시리얼라이저 필드와 관계가 자동으로 생성된다. 관계 스타일을 수정하는 방법을 결정하기 위해 자동으로 생성된 필드를 확인하면 좋다.
 
 그렇게 하려면 `python manage.py shell`을 사용해 Django shell을 열고 시리얼라이저를 불러온 후 인스턴스화하고 객체 표현을 출력한다.
 
@@ -91,7 +97,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_name', 'artist', 'tracks']
 ```
 
-다음 표현으로 serialize된다.
+다음 표현으로 직렬화된다:
 
 ```
 {
@@ -125,7 +131,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_name', 'artist', 'tracks']
 ```
 
-다음 표현으로 serialize된다.
+다음 표현으로 직렬화된다:
 
 ```
 {
@@ -150,7 +156,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 - `allow_null`<br>
   `True`로 설정하면 필드가 null값을 가질 수 있는 관계를 위해 `None`이나 빈 문자열을 허용하게 된다. 기본값은 `False`.
 - `pk_field`<br>
-  기본키 값의 serialization/deserialization을 제어하기 위해 필드를 설정한다. 예를 들어, `pk_field=UUIDField(format='hex')`는 UUID 기본키를 압축된 16진법 표현으로 serialize한다.
+  기본키 값의 직렬화/역직렬화를 제어하기 위해 필드를 설정한다. 예를 들어, `pk_field=UUIDField(format='hex')`는 UUID 기본키를 압축된 16진법 표현으로 직렬화한다.
 
 ## HyperlinkedRelatedField
 `HyperlinkedRelatedField`는 하이퍼링크를 이용해 관계의 타겟을 나타내기 위해 사용된다.
@@ -170,7 +176,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_name', 'artist', 'tracks']
 ```
 
-다음 표현으로 serialize된다.
+다음 표현으로 직렬화된다.
 
 ```
 {
@@ -192,7 +198,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 
   URL의 일부로 하나의 기본키 또는 슬러그 인자를 포함하는 URL에 적합하다.
 
-  만약 더 복잡한 하이퍼링크 표현을 필요로 한다면 아래의 [custom hyperlinked fields](serializer_relations.md/#custom-hyperlinked-fields) 섹션에서 설명되어 있듯이 필드를 커스터마이즈해야 한다.
+  만약 더 복잡한 하이퍼링크 표현을 필요로 한다면 아래의 [사용자 정의 하이퍼링크 필드](#custom-hyperlinked-fields) 섹션에서 설명되어 있듯이 필드를 커스터마이즈해야 한다.
 
 **Arguments**:
 - `view_name`<br>
@@ -208,7 +214,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 - `lookup_url_kwarg`<br>
   검색 필드에 대응되는 URL 설정에서 정의된 키워드 인자의 이름. 기본값은 `lookup_field`와 같은 값을 사용하는 것이다.
 - `format`<br>
-  포맷 접미사를 사용하면 `format` 인자를 사용해 override 되지 않는 한 하이퍼링크된 필드가 타켓에 같은 포맷 접미사를 사용한다.
+  포맷 접미사를 사용하면 `format` 인자를 사용해 재정의 되지 않는 한 하이퍼링크된 필드가 타켓에 같은 포맷 접미사를 사용한다.
 
 ## SlugRelatedField
 `SlugRelatedField`는 타겟의 필드를 이용해 관계의 타겟을 나타내는데 사용된다.
@@ -228,7 +234,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_name', 'artist', 'tracks']
 ```
 
-다음 표현으로 serialize된다.
+다음 표현으로 직렬화된다.
 
 ```
 {
@@ -264,12 +270,13 @@ class AlbumSerializer(serializers.ModelSerializer):
 class AlbumSerializer(serializers.HyperlinkedModelSerializer):
     track_listing = serializers.HyperlinkedIdentityField(view_name='track-list')
 
+
     class Meta:
         model = Album
         fields = ['album_name', 'artist', 'track_listing']
 ```
 
-다음 표현으로 serialize된다.
+다음 표현으로 직렬화된다.
 
 ```
 {
@@ -289,7 +296,7 @@ class AlbumSerializer(serializers.HyperlinkedModelSerializer):
 - `lookup_url_kwarg`<br>
   검색 필드에 대응되는 URL 설정에서 정의된 키워드 인자의 이름. 기본값은 `lookup_field`와 같은 값을 사용하는 것이다.
 - `format`<br>
-  포맷 접미사를 사용하면 `format` 인자를 사용해 override 되지 않는 한 하이퍼링크된 필드가 타켓에 같은 포맷 접미사를 사용한다.
+  포맷 접미사를 사용하면 `format` 인자를 사용해 재정의 되지 않는 한 하이퍼링크된 필드가 타켓에 같은 포맷 접미사를 사용한다.
 
 # Nested relationships
 이전에 논의한 다른 엔터티에 관한 *참조*와는 달리, 참조된 엔터티는 그 엔터티를 참조하는 객체 표현에 포함되거나 *중첩*될 수 있다. 그러한 중첩된 관계는 필드로 시리얼라이저를 사용하여 표현될 수 있다.
@@ -305,6 +312,7 @@ class TrackSerializer(serializers.ModelSerializer):
         model = Track
         fields = ['order', 'title', 'duration']
 
+
 class AlbumSerializer(serializers.ModelSerializer):
     tracks = TrackSerializer(many=True, read_only=True)
 
@@ -313,7 +321,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_name', 'artist', 'tracks']
 ```
 
-다음의 중첩된 표현으로 serialize될 수 있다.
+다음의 중첩된 표현으로 직렬화될 수 있다.
 
 ```python
 >>> album = Album.objects.create(album_name='In Rainbows', artist='Radiohead')
@@ -381,14 +389,14 @@ True
 # Custom relational fields
 이미 존재하는 관계 스타일 중 필요로 하는 표현에 맞는 것이 없는 경우 모델 인스턴스로부터 출력 표현이 정확히 어떻게 생성되는지를 설명하는 사용자 정의 관계 필드를 구현할 수 있다.
 
-사용자 정의 필드를 구현하기 위해서는 `RelatedField`를 override해야 하고, `.to_representation(self, value)` 메서드를 구현해야 한다. 이 메서드는 필드의 타겟을 `value` 인자로 가지고, 타겟을 serialize하기 위해 사용되어야 할 표현을 반환한다. `value` 인자는 보통 모델 인스턴스이다.
+사용자 정의 필드를 구현하기 위해서는 `RelatedField`를 재정의해야 하고, `.to_representation(self, value)` 메서드를 구현해야 한다. 이 메서드는 필드의 타겟을 `value` 인자로 가지고, 타겟을 직렬화하기 위해 사용되어야 할 표현을 반환한다. `value` 인자는 보통 모델 인스턴스이다.
 
 읽기-쓰기 관계 필드를 구현해야 한다면 [`.to_internal_value(self, data)` 메서드](serializers.md/#to_internal_valueself-data)를 구현해야 한다.
 
-`context`에 기반한 동적 queryset을 제공하려면 클래스에서 혹은 필드를 초기화할 때 `.queryset`을 구체화하는 대신 `.get_queryset(self)`를 override하면 된다.
+`context`에 기반한 동적 queryset을 제공하려면 클래스에서 혹은 필드를 초기화할 때 `.queryset`을 구체화하는 대신 `.get_queryset(self)`를 재졍의하면 된다.
 
 ## Example
-예를 들어, 트랙을 그 순서, 제목, 그리고 시간을 사용한 사용자 정의 문자열 표현으로 serialize하기 위한 관계 필드를 정의할 수 있다.
+예를 들어, 트랙을 그 순서, 제목, 그리고 시간을 사용한 사용자 정의 문자열 표현으로 직렬화하기 위한 관계 필드를 정의할 수 있다.
 
 ```python
 import time
@@ -406,7 +414,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_name', 'artist', 'tracks']
 ```
 
-이 사용자 정의 필드는 다음 표현으로 serialize된다.
+이 사용자 정의 필드는 다음 표현으로 직렬화된다.
 
 ```
 {
@@ -424,7 +432,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 # Custom hyperlinked fields
 하나보다 많은 탐색 필드를 필요로 하는 URL을 표현하기 위해 하이퍼링크된 필드의 동작을 커스터마이즈해야 하는 경우가 있다.
 
-`HyperlinkedRelatedField`를 override하여 구현할 수 있다. 다음은 Override해야 할 두 메서드이다.
+`HyperlinkedRelatedField`를 재정의하여 구현할 수 있다. 다음은 재정의해야 할 두 메서드이다.
 
 #### get_url(self, obj, view_name, request, format)
 `get_url` 메서드는 객체 인스턴스를 URL 표현으로 매핑하는데 사용된다.
@@ -432,7 +440,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 `view_name`과 `lookup_field` 속성이 URL 설정에 정확히 맞지 않게 제공된다면 `NoReverseMatch`를 발생시킨다.
 
 #### get_object(self, view_name, view_args, view_kwargs)
-쓰기 가능한 하이퍼링크된 필드를 지원하고 싶다면 들어오는 URL을 대표하는 객체로 다시 매핑하기 위해 `get_object`를 override한다. 읽기 전용인 하이퍼링크된 필드는 이 메서드를 override할 필요가 없다.
+쓰기 가능한 하이퍼링크된 필드를 지원하고 싶다면 들어오는 URL을 대표하는 객체로 다시 매핑하기 위해 `get_object`를 재정의한다. 읽기 전용인 하이퍼링크된 필드는 이 메서드를 재정의할 필요가 없다.
 
 이 메서드의 반환값은 매치된 URL 설정 인자에 대응되는 객체이다.
 
@@ -447,7 +455,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 
 이것은 하나의 검색 필드만을 수용하는 기본 구현으로는 표현될 수 없다.
 
-이 경우 원하는 동작을 얻기 위해 `HyperlinkedRelatedField`를 override해야 한다.
+이 경우 원하는 동작을 얻기 위해 `HyperlinkedRelatedField`를 재정의해야 한다.
 
 ```python
 from rest_framework import serializers
@@ -473,7 +481,7 @@ class CustomerHyperlink(serializers.HyperlinkedRelatedField):
         return self.get_queryset().get(**lookup_kwargs)
 ```
 
-이 스타일을 제네릭 뷰와 함께 사용하고 싶다면 탐색이 올바르게 동작하도록 뷰의 `.get_object`를 override해야 한다.
+이 스타일을 제네릭 뷰와 함께 사용하고 싶다면 탐색이 올바르게 동작하도록 뷰의 `.get_object`를 재정의해야 한다.
 
 보통 가능하면 API 표현에 납작한 스타일을 권장하지만, 적절히 사용된다면 중첩된 URL 스타일 또한 타당하다.
 
@@ -490,7 +498,7 @@ class CustomerHyperlink(serializers.HyperlinkedRelatedField):
 ## Customizing the HTML display
 모델의 빌트인 `__str__` 메서드는 `choices` 속성을 채우기 위해 사용되는 객체의 문자열 표현을 생성하는데 사용된다. 이 선택지는 브라우징 가능한 API의 select HTML 입력을 채우는데 사용된다.
 
-그런 입력에 사용자 정의 표현을 제공하려면, `RelatedField` 서브클래스의 `display_value()`를 override한다. 이 메서드는 모델 객체를 받아 그것을 표현하기에 적절한 문자열을 반환한다. 예를 들면:
+그런 입력에 사용자 정의 표현을 제공하려면, `RelatedField` 서브클래스의 `display_value()`를 재정의한다. 이 메서드는 모델 객체를 받아 그것을 표현하기에 적절한 문자열을 반환한다. 예를 들면:
 
 ```python
 class TrackPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
@@ -550,7 +558,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 더 많은 정보는 [역관계](https://docs.djangoproject.com/en/stable/topics/db/queries/#following-relationships-backward)에 관한 Django 공식문서에서 확인할 수 있다.
 
 ## Generic relationships
-제네릭 외래키를 serialize하고 싶다면 관계의 타겟을 어떻게 serialize하는지 명시적으로 결정하기 위해 사용자 정의 필드를 정의해야 한다.
+제네릭 외래키를 직렬화하고 싶다면 관계의 타겟을 어떻게 직렬화하는지 명시적으로 결정하기 위해 사용자 정의 필드를 정의해야 한다.
 
 다음은 다른 임의의 모델과 제네릭한 관계를 가진 태그를 위한 모델의 예시이다.
 
@@ -589,7 +597,7 @@ class Note(models.Model):
     tags = GenericRelation(TaggedItem)
 ```
 
-어떻게 serialize될 것인지를 결정하기 위해 각 인스턴스의 타입을 사용해 태그된 인스턴스를 serialize하기 위해 사용되는 사용자 정의 필드를 정의한다.
+어떻게 직렬화될 것인지를 결정하기 위해 각 인스턴스의 타입을 사용해 태그된 인스턴스를 직렬화하기 위해 사용되는 사용자 정의 필드를 정의한다.
 
 ```python
 class TaggedObjectRelatedField(serializers.RelatedField):
@@ -625,7 +633,7 @@ def to_representation(self, value):
     return serializer.data
 ```
 
-관계 안의 타겟의 타입이 언제나 알려져 있기 때문에 `GenericRelation` 필드를 사용해 표현되는 역 제네릭 키가 일반적인 관계 필드 타입을 사용해 serialize될 수 있다는 점에 유의한다.
+관계 안의 타겟의 타입이 언제나 알려져 있기 때문에 `GenericRelation` 필드를 사용해 표현되는 역 제네릭 키가 일반적인 관계 필드 타입을 사용해 직렬화될 수 있다는 점에 유의한다.
 
 더 많은 정보는 [제네릭한 관계에 관한 Django 공식문서](https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/#id1)에서 확인한다.
 
@@ -634,7 +642,7 @@ def to_representation(self, value):
 
 through 모델을 사용한 `ManyToManyField`를 가리키는 관계 필드를 명시적으로 구체화하고 싶다면 `read_only`를 `True`로 설정해야 한다.
 
-[through 모델인 추가 필드](https://docs.djangoproject.com/en/stable/topics/db/models/#intermediary-manytomany)를 표현하고 싶다면 through 모델을 [중첩된 객체](serializers.md/#dealing-with-nested-objects)로 serialize한다.
+[through 모델인 추가 필드](https://docs.djangoproject.com/en/stable/topics/db/models/#intermediary-manytomany)를 표현하고 싶다면 through 모델을 [중첩된 객체](serializers.md/#dealing-with-nested-objects)로 직렬화한다.
 
 # Third Party Packages
 다음의 서드파티 패키지를 사용할 수 있다.
@@ -643,4 +651,4 @@ through 모델을 사용한 `ManyToManyField`를 가리키는 관계 필드를 �
 [drf-nested-routers](https://github.com/alanjds/drf-nested-routers) 패키지는 중첩된 요소를 다루기 위한 라우터와 관계 필드를 제공한다.
 
 # Rest Framework Generic Relations
-[rest-framework-generic-relations](https://github.com/Ian-Foote/rest-framework-generic-relations) 라이브러리는 제네릭한 외래키를 위한 읽기/쓰기 serialization을 제공한다.
+[rest-framework-generic-relations](https://github.com/Ian-Foote/rest-framework-generic-relations) 라이브러리는 제네릭한 외래키를 위한 읽기/쓰기 직렬화를 제공한다.
