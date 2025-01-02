@@ -1,0 +1,21 @@
+# Two Styles of Input: Canonical or Not
+
+- POSIX 시스템은 두 가지 기본 입력 모드를 지원함: 정규모드, 비정규모드
+- *정규 입력 프로세싱* 모드
+  - 터미널 입력은 개행(`\n`), EOF, EOL 문자로 종결되는 행으로 처리됨
+  - 사용자가 행 전체를 입력하기 전까지 어떤 입력도 읽힐 수 없으며, `read`([Input and Output Primitives](https://sourceware.org/glibc/manual/2.40/html_node/I_002fO-Primitives.html) 참조) 함수는 얼마나 많은 바이트가 요청되었는가와는 무관하게 최대 하나의 입력 행을 반환함
+- 정규 입력 모드
+  - 운영체제가 입력 수정 편의 기능을 제공함
+  - ERASE와 KILL과 같은 어떤 문자들은 텍스트의 현재 행 안에서 수정 연산을 수행하기 위해 특별하게 해석됨
+  - [Characters for Input Editing](https://sourceware.org/glibc/manual/2.40/html_node/Editing-Characters.html) 참조
+- `_POSIX_MAX_CANON`과 `MAX_CANON` 상수는 정규 입력 라인에 나타날 수 있는 최대 바이트 수를 파라미터화 함
+  - [Limits on File System Capacity](https://sourceware.org/glibc/manual/2.40/html_node/Limits-for-Files.html) 참조
+  - 최대 행 길이가 최소 `MAX_CANON` 바이트임이 보장되지만, 최대값은 더 크거나 동적으로 크기가 변할 수 있음
+- *비정규 입력 프로세싱* 모드
+  - 문자는 행으로 그룹화되지 않으며, ERASE와 KILL 처리는 수행되지 않음
+  - 비정규 입력 모드에서 바이트를 얼마나 세분화해서 읽을지는 MIN과 TIME 설정에 의해 제어됨
+  - [Noncanonical Input](https://sourceware.org/glibc/manual/2.40/html_node/Noncanonical-Input.html) 참조
+- 대부분의 프로그램은 사용자가 입력을 행마다 수정할 수 있도록 정규 입력 모드를 사용함
+  - 비정규 모드를 사용하는 주된 이유는 프로그램이 단일 문자 명령을 받을 수 있어야 하거나 자체적인 수정 방법을 제공하기 때문임
+- 정규 또는 비정규 입력 선택은 `struct termios`의 `c_lflag` 내의 `ICANON` 플래그에 의해 제어됨
+  - [Local Modes](https://sourceware.org/glibc/manual/2.40/html_node/Local-Modes.html) 참조
