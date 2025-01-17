@@ -287,6 +287,96 @@ str = "", r = 22
 
 </details>
 
+헤더 <string.h>에서 정의
+
+- `char* strncat(char* dest, const char* src, size_t count);` (1) (C99 이전)
+- `char* strncat(char* restrict dest, const char* restrict src, size_t count);` (1) (C99부터)
+  - `dest`가 가리키는 null 종단 바이트 문자열의 끝에 `src`가 가리키는 문자 배열의 최대 `count`개의 문자를 추가함
+    - null 문자를 만나면 중단
+    - 문자 `src[0]`이 `dest` 끝의 null 문자를 대체함
+    - null 문자는 언제나 마지막에 추가됨 (그러므로 함수가 저장할 수 있는 최대 바이트 수는 `count + 1`)
+  - 목적지 배열이 `dest`와 `src`의 처음 `count` 개의 문자, null 문자를 수용할 만한 공간을 가지고 있지 않거나 `src`와 `dest` 객체가 겹치거나 `dest`가 null 종단 바이트 문자열을 가리키는 포인터가 아니거나 `src`가 문자 배열을 가리키는 포인터가 아니면 undefined
+- `errno_t strncat_s(char* restrict dest, rsize_t destsz, const char* restrict src, rsize_t count);` (2) (C11부터)
+  - 다음을 제외하면 (1)과 같음
+    - 목적지 배열의 나머지(마지막으로 저장한 문자부터 `destsz`까지)를 덮어쓸 수 있음
+    - `destsz`가 0이거나 `RSIZE_MAX`보다 큼
+    - `dest`의 처음 `destsz` 바이트 안에 null 문자가 없음
+    - 문자열이 잘림 (`count` 또는 `src`의 최소값이 `dest`의 null 문자와 `destsz` 사이의 가용 공간을 초과할 때)
+    - `src`와 `dest`가 가리키는 문자열들이 겹침
+  - 다음의 경우 undefined
+    - (`dest`가 가리키는 문자 배열의 크기) <= `strnlen_s(dest, destsz) + strnlen(src, count) + 1` < `destsz`, 즉 `destsz`가 잘못된 값을 가지더라도 버퍼 오버플로우 발생을 일으키지 않음
+    - (`src`가 가리키는 문자 배열의 크기) <= `strnlen_s(src, count) < `destsz`, 즉 `count`가 잘못된 값을 가지더라도 버퍼 오버플로우 발생을 일으키지 않음
+  - 모든 bounds-checked 함수처럼, `strncat_s` 는 구현에 의해 `__STDC_LIB_EXT1__`이 정의되어 있거나 사용자가 `<string.h>` 을 include하기 전에 `__STDC_WANT_LIB_EXT1__` 을 1로 정의할 때 동작함
+
+### 파라미터
+
+- `dest`: 문자열이 추가될 null 종단 바이트 문자열을 가리키는 포인터
+- `src`: 복사할 문자 배열을 가리키는 포인터
+- `count`: 복사할 문자의 최대 개수
+- `destsz`: 목적지 버퍼의 크기
+
+### 반환값
+
+1. `dest`의 사본 반환
+2. 성공시 0, 오류 발생시 0이 아닌 값 반환
+  - 오류 발생시 `dest[0]`에 0을 저장 (`dest`가 null 포인터이거나 `destsz`가 0 또는 `RSIZE_MAX`보다 클 경우 제외)
+
+### 참고
+
+- `strncat`은 호출될 때마다 `dest`의 마지막 부분을 찾아야 하므로 `strncat`을 이용해 여러 개의 문자열을 하나로 합치는 것은 비효율적임
+- 목적지 버퍼에 맞추어 문자열을 자르면 보안 문제가 생길 위험성이 있고, 그러므로 `strncat_s`에 대한 런타임 제약 위반이지만 `count`를 목적지 배열의 크기 빼기 1로 명시해 문자열을 자르는 동작을 수행할 수 있음
+  - 늘 그렇듯이 처음 `count` 바이트를 복사하고 null 문자를 추가함
+  - `strncat_s(dst, sizeof dst, src, (sizeof dst) - strnlen_s(dst, sizeof dst) - 1);`
+
+### 예제
+
+```c
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(void) {
+  char str[50] = "Hello ";
+  char str2[50] = "World!";
+  strcat(str, str2);
+  strncat(str, " Goodbye World!", 3);
+  puts(str);
+
+#ifdef __STDC_LIB_EXT1__
+  set_constraint_handler_s(ignore_handler_s);
+  char s1[100] = "good";
+  char s5[1000] = "bye";
+  // r1 is 0, s1 holds "goodbye\0"
+  int r1 = strncat_s(s1, 100, s5, 100);
+  printf("s1 = %s, r1 = %d\n", s1, r1);
+  char s2[6] = "hello";
+  // r2 is 0, s2 holds "hello\0"
+  int r2 = strncat_s(s2, 6, "", 1);
+  printf("s2 = %s, r2 = %d\n", s2, r2);
+  char s3[6] = "hello";
+  // r3 is non-zero, s3 holds "\0"
+  int r3 = strncat_s(s3, 6, "X", 2);
+  printf("s3 = %s, r3 = %d\n", s3, r3);
+  // the strncat_s truncation idiom:
+  char s4[7] = "abc";
+  // r4 is 0, s4 holds "abcdef\0"
+  int r4 = strncat_s(s4, 7, "defghijklmn", 3);
+  printf("s4 = %s, r4 = %d\n", s4, r4);
+#endif
+}
+```
+
+가능한 출력:
+
+```text
+Hello World! Go
+s1 = goodbye, r1 = 0
+s2 = hello, r2 = 0
+s3 = , r3 = 22
+s4 = abcdef, r4 = 0
+```
+
 <details>
 
 <summary><h2><code>strxfrm</code></h2></summary>
