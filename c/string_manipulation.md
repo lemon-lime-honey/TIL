@@ -285,8 +285,6 @@ str = "", r = 22
 
 <summary><h2><code>strncat, strncat_s</code></h2></summary>
 
-</details>
-
 헤더 <string.h>에서 정의
 
 - `char* strncat(char* dest, const char* src, size_t count);` (1) (C99 이전)
@@ -319,7 +317,8 @@ str = "", r = 22
 
 1. `dest`의 사본 반환
 2. 성공시 0, 오류 발생시 0이 아닌 값 반환
-  - 오류 발생시 `dest[0]`에 0을 저장 (`dest`가 null 포인터이거나 `destsz`가 0 또는 `RSIZE_MAX`보다 클 경우 제외)
+
+- 오류 발생시 `dest[0]`에 0을 저장 (`dest`가 null 포인터이거나 `destsz`가 0 또는 `RSIZE_MAX`보다 클 경우 제외)
 
 ### 참고
 
@@ -376,6 +375,8 @@ s2 = hello, r2 = 0
 s3 = , r3 = 22
 s4 = abcdef, r4 = 0
 ```
+
+</details>
 
 <details>
 
