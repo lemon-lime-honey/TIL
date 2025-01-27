@@ -1,6 +1,6 @@
 # I/O Queues
 
-- 이 섹션에 있는 많은 함수는 터미널 디바이스의 입력과 출력 큐를 참조함
+- 이 섹션에 있는 여러 함수는 터미널 디바이스의 입력과 출력 큐를 참조함
 - 이러한 큐는 I/O 스트림에 의해 구현된 버퍼링과 독립적으로 *커널 내에서* 버퍼링 형태를 구현함 ([Input/Output on Streams](https://sourceware.org/glibc/manual/2.40/html_node/I_002fO-on-Streams.html) 참조)
 - 또한 *터미널 입력 큐* 는 간혹 *typeahead buffer* 로 불림
   - 터미널로부터 받았으나 어느 프로세스에 의해서도 읽히지 않은 문자들을 저장함

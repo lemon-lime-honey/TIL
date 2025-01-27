@@ -3,7 +3,7 @@
 - 터미널 모드를 확인하고 설정하는 일반적인 방법은 [Terminal Modes](https://sourceware.org/glibc/manual/2.40/html_node/Terminal-Modes.html)에서 설명한 함수를 사용하는 것
   - 어떤 운영체제에서는 같은 동작을 수행하기 위해 이 섹션에 있는 BSD 유래 함수를 사용할 수 있음
   - 많은 운영 체제에서는 이 함수들이 존재하지 않음
-  - GNU C 라이브러리에서도 Linux를 포함하여 많은 커널에서 `errno=ENOSYS`로 함수가 동작하지 못함
+  - GNU C 라이브러리에서도 Linux를 포함한 많은 커널에서 `errno=ENOSYS`로 함수가 동작하지 못함
 - 이 섹션에서 사용된 기호는 `sgtty.h`에서 선언됨
 
 ## Data Type: `struct sgttyb`
