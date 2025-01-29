@@ -4,7 +4,7 @@
 
 <summary><h2><code>atof</code></h2></summary>
 
-헤더 <stdlib.h>에서서 정의
+헤더 <stdlib.h>에서 정의
 
 - `double atof(const char* str);`
   - `str`가 가리키는 바이트 문자열의 부동소수점 값 변환
@@ -83,7 +83,7 @@ inf
 
 <summary><h2><code>atoi, atol, atoll</code></h2></summary>
 
-헤더 <stdlib.h>에서서 정의
+헤더 <stdlib.h>에서 정의
 
 - `int atoi(const char* str);`
 - `long atol(const char* str);`
