@@ -4,6 +4,9 @@
 - [readme](/c/README.md)
 - [string](/c/string.md)
 
+# cmake
+- [readme](/cmake/README.md)
+
 # database(mySQL)
 - [workbench guide](/db-mysql/guide.md)
 - [data modeling](/db-mysql/modeling.md)
